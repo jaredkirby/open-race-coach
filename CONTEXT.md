@@ -32,6 +32,10 @@ _Avoid_: Alias, display name.
 The version of one durable SIM-COACH artifact contract, such as session metadata, ticks, lap records, or Analysis Run outputs.
 _Avoid_: Global schema version.
 
+**Capture Time**:
+The monotonic elapsed time stored on telemetry ticks, measured in seconds from the start of capture. Capture Time is not a simulator clock value and must not move backward or freeze while SIM-COACH is recording.
+_Avoid_: Sim time when referring to the normalized `t` field.
+
 **Lap**:
 One complete traversal of the track within a Recorded Session, as identified from simulator lap state and validated by SIM-COACH.
 _Avoid_: Run, attempt.
@@ -55,6 +59,10 @@ _Avoid_: Session state when the value describes the car's capture state at a tic
 **Valid Lap**:
 A Lap eligible for Reference Lap selection and coaching delta aggregation. Slow laps are valid unless there is concrete invalidity evidence; invalid laps are stored for auditability but excluded from coaching evidence.
 _Avoid_: Clean lap when the question is eligibility for analysis.
+
+**Validity Method**:
+The Recorded Session-level provenance for Valid Lap decisions: simulator invalidation flags plus inferred checks, inferred checks alone, or inferred checks under unknown Vehicle State constraints.
+_Avoid_: Cleanliness method.
 
 **Reference Lap**:
 A valid Lap selected as the comparison baseline for coaching analysis. It may come from the same Recorded Session or from prior Recorded Sessions with the same sim, track, and car.
