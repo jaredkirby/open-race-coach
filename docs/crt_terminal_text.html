@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Open Race Coach CRT Terminal Text</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --phosphor: #ff9d00;
+      --phosphor-rgb: 255, 157, 0;
+      --phosphor-hot: #ffbf3f;
+      --phosphor-dim: #a75f00;
+      --glass: #10100f;
+      --glass-hot: #191713;
+      --case: #050505;
+      --shadow-blue: rgba(35, 80, 255, 0.22);
+      --shadow-red: rgba(255, 24, 56, 0.22);
+      --font-scale: 0.9;
+      --glow: 1;
+      --rgb-split: 1;
+      --scanline-opacity: 0.34;
+      --scanline-size: 3px;
+      --flicker-opacity: 0.31;
+      --flicker-speed: 0.16s;
+      --vignette-strength: 0.74;
+      --frame-padding: 12px;
+      --screen-radius: 2px;
+      --mono: "Courier New", Courier, monospace;
+    }
+
+    @keyframes crt-flicker {
+      0% { opacity: var(--flicker-opacity); }
+      5% { opacity: calc(var(--flicker-opacity) * 0.68); }
+      10% { opacity: calc(var(--flicker-opacity) * 1.1); }
+      15% { opacity: calc(var(--flicker-opacity) * 0.58); }
+      20% { opacity: calc(var(--flicker-opacity) * 1.26); }
+      25% { opacity: calc(var(--flicker-opacity) * 0.77); }
+      30% { opacity: calc(var(--flicker-opacity) * 1.06); }
+      35% { opacity: calc(var(--flicker-opacity) * 0.61); }
+      40% { opacity: calc(var(--flicker-opacity) * 0.94); }
+      45% { opacity: calc(var(--flicker-opacity) * 1.16); }
+      50% { opacity: calc(var(--flicker-opacity) * 0.52); }
+      55% { opacity: calc(var(--flicker-opacity) * 1.06); }
+      60% { opacity: calc(var(--flicker-opacity) * 0.74); }
+      65% { opacity: calc(var(--flicker-opacity) * 1.19); }
+      70% { opacity: calc(var(--flicker-opacity) * 0.65); }
+      75% { opacity: calc(var(--flicker-opacity) * 1.03); }
+      80% { opacity: calc(var(--flicker-opacity) * 0.84); }
+      85% { opacity: calc(var(--flicker-opacity) * 1.13); }
+      90% { opacity: calc(var(--flicker-opacity) * 0.61); }
+      95% { opacity: var(--flicker-opacity); }
+      100% { opacity: calc(var(--flicker-opacity) * 0.77); }
+    }
+
+    @keyframes text-shadow-drift {
+      0%, 100% {
+        text-shadow:
+          calc(var(--rgb-split) * 0.35px) 0 1px var(--shadow-blue),
+          calc(var(--rgb-split) * -0.35px) 0 1px var(--shadow-red),
+          0 0 calc(var(--glow) * 2px) var(--phosphor),
+          0 0 calc(var(--glow) * 10px) rgba(var(--phosphor-rgb), 0.42);
+      }
+
+      35% {
+        text-shadow:
+          calc(var(--rgb-split) * 1.15px) 0 1px var(--shadow-blue),
+          calc(var(--rgb-split) * -1.15px) 0 1px var(--shadow-red),
+          0 0 calc(var(--glow) * 3px) var(--phosphor-hot),
+          0 0 calc(var(--glow) * 14px) rgba(var(--phosphor-rgb), 0.5);
+      }
+
+      68% {
+        text-shadow:
+          calc(var(--rgb-split) * 0.1px) 0 1px var(--shadow-blue),
+          calc(var(--rgb-split) * -0.1px) 0 1px var(--shadow-red),
+          0 0 calc(var(--glow) * 2px) var(--phosphor),
+          0 0 calc(var(--glow) * 8px) rgba(var(--phosphor-rgb), 0.34);
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      width: 100%;
+      max-width: 100%;
+      min-height: 100%;
+      background:
+        radial-gradient(circle at 50% 45%, rgba(var(--phosphor-rgb), 0.07), transparent 56%),
+        #030303;
+    }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      overflow-x: hidden;
+      padding: clamp(10px, 3vw, 32px);
+      background:
+        radial-gradient(ellipse at center, rgba(var(--phosphor-rgb), 0.05), transparent 55%),
+        linear-gradient(145deg, #080807, #000 74%);
+      font-family: var(--mono);
+    }
+
+    button,
+    input,
+    output {
+      font: inherit;
+      min-width: 0;
+    }
+
+    button {
+      border: 1px solid rgba(var(--phosphor-rgb), 0.42);
+      background: rgba(var(--phosphor-rgb), 0.08);
+      color: var(--phosphor-hot);
+      cursor: pointer;
+      min-height: 32px;
+      overflow: hidden;
+      padding: 7px 9px;
+      text-overflow: ellipsis;
+      text-transform: uppercase;
+    }
+
+    button:hover,
+    button[aria-pressed="true"] {
+      border-color: var(--phosphor);
+      background: rgba(var(--phosphor-rgb), 0.18);
+      color: #fff2c8;
+    }
+
+    button:focus-visible,
+    input:focus-visible {
+      outline: 2px solid var(--phosphor-hot);
+      outline-offset: 2px;
+    }
+
+    .workbench {
+      min-height: calc(100vh - clamp(20px, 6vw, 64px));
+      width: 100%;
+      max-width: 100%;
+      display: grid;
+      grid-template-columns: minmax(420px, 920px) minmax(286px, 340px);
+      gap: clamp(12px, 2vw, 22px);
+      align-items: center;
+      justify-content: center;
+    }
+
+    .terminal-frame {
+      min-width: 0;
+      width: 100%;
+      aspect-ratio: 1.05;
+      border: 1px solid #24211c;
+      border-radius: 4px;
+      padding: var(--frame-padding);
+      background:
+        linear-gradient(180deg, #171511, #050505 58%, #010101),
+        var(--case);
+      box-shadow:
+        0 28px 90px rgba(0, 0, 0, 0.72),
+        inset 0 0 0 1px rgba(var(--phosphor-rgb), 0.08),
+        inset 0 0 32px rgba(var(--phosphor-rgb), 0.06);
+    }
+
+    .crt-screen {
+      position: relative;
+      isolation: isolate;
+      width: 100%;
+      min-width: 0;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      border: 1px solid #1c1a17;
+      border-radius: var(--screen-radius);
+      background:
+        radial-gradient(ellipse at center, rgba(var(--phosphor-rgb), 0.075), rgba(20, 19, 17, 0.98) 64%, #080808 100%),
+        linear-gradient(180deg, var(--glass-hot), var(--glass));
+      box-shadow:
+        inset 0 0 64px rgba(0, 0, 0, 0.86),
+        inset 0 0 22px rgba(var(--phosphor-rgb), 0.08);
+    }
+
+    .crt-screen::before,
+    .crt-screen::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    .crt-screen::before {
+      background:
+        linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, var(--scanline-opacity)) 50%),
+        linear-gradient(90deg, rgba(255, 0, 0, 0.055), rgba(var(--phosphor-rgb), 0.035), rgba(0, 65, 255, 0.055));
+      background-size: 100% var(--scanline-size), 3px 100%;
+      mix-blend-mode: screen;
+      opacity: 0.85;
+    }
+
+    .crt-screen::after {
+      animation: crt-flicker var(--flicker-speed) infinite;
+      background:
+        radial-gradient(ellipse at center, transparent 44%, rgba(0, 0, 0, 0.36) 74%, rgba(0, 0, 0, var(--vignette-strength)) 100%),
+        rgba(18, 16, 16, 0.13);
+    }
+
+    .terminal-text {
+      display: block;
+      position: relative;
+      z-index: 1;
+      height: 100%;
+      margin: 0;
+      padding: clamp(18px, 3vw, 32px);
+      color: var(--phosphor);
+      font-size: clamp(calc(12px * var(--font-scale)), calc(2.05vw * var(--font-scale)), calc(22px * var(--font-scale)));
+      line-height: 1.08;
+      letter-spacing: 0;
+      overflow: auto;
+      text-rendering: optimizeSpeed;
+      white-space: pre;
+      animation: text-shadow-drift 1.6s infinite;
+    }
+
+    .terminal-text::selection {
+      background: rgba(var(--phosphor-rgb), 0.24);
+      color: var(--phosphor-hot);
+    }
+
+    .control-panel {
+      align-self: stretch;
+      min-width: 0;
+      max-height: min(760px, calc(100vh - 64px));
+      overflow: auto;
+      border: 1px solid rgba(var(--phosphor-rgb), 0.34);
+      background:
+        linear-gradient(rgba(var(--phosphor-rgb), 0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(var(--phosphor-rgb), 0.025) 1px, transparent 1px),
+        rgba(7, 7, 6, 0.92);
+      background-size: 16px 16px;
+      box-shadow:
+        inset 0 0 38px rgba(0, 0, 0, 0.72),
+        0 20px 70px rgba(0, 0, 0, 0.48);
+      color: var(--phosphor);
+      padding: 12px;
+    }
+
+    .panel-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      border-bottom: 1px solid rgba(var(--phosphor-rgb), 0.3);
+      color: var(--phosphor-hot);
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      text-transform: uppercase;
+    }
+
+    .control-group {
+      border-bottom: 1px solid rgba(var(--phosphor-rgb), 0.2);
+      display: grid;
+      gap: 10px;
+      padding: 0 0 12px;
+      margin-bottom: 12px;
+    }
+
+    .control-group:last-child {
+      border-bottom: 0;
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .preset-row,
+    .swatch-row,
+    .action-row {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .action-row {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .swatch {
+      display: grid;
+      place-items: center;
+      min-height: 34px;
+      padding: 0;
+    }
+
+    .swatch::before {
+      content: "";
+      width: 18px;
+      height: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      background: var(--swatch-color);
+      box-shadow: 0 0 14px var(--swatch-color);
+    }
+
+    .color-line {
+      display: grid;
+      grid-template-columns: 1fr 46px;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .color-line span,
+    .slider-label {
+      color: var(--phosphor-hot);
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    input[type="color"] {
+      width: 46px;
+      height: 34px;
+      border: 1px solid rgba(var(--phosphor-rgb), 0.42);
+      background: transparent;
+      padding: 2px;
+    }
+
+    .control-row {
+      display: grid;
+      gap: 6px;
+    }
+
+    .slider-label {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    output {
+      color: var(--phosphor-dim);
+      font-variant-numeric: tabular-nums;
+      text-align: right;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--phosphor);
+    }
+
+    .css-output {
+      width: 100%;
+      min-height: 116px;
+      border: 1px solid rgba(var(--phosphor-rgb), 0.3);
+      background: rgba(0, 0, 0, 0.46);
+      color: var(--phosphor-hot);
+      font: 11px/1.35 var(--mono);
+      margin: 0;
+      overflow: auto;
+      padding: 8px;
+      white-space: pre-wrap;
+    }
+
+    .copy-status {
+      color: var(--phosphor-dim);
+      font-size: 11px;
+      min-height: 14px;
+      text-transform: uppercase;
+    }
+
+    @media (max-width: 720px) {
+      body {
+        padding: 8px;
+      }
+
+      .workbench {
+        min-height: 0;
+        width: min(100%, 374px);
+        max-width: calc(100vw - 16px);
+        margin: 0;
+        overflow: hidden;
+        display: block;
+      }
+
+      .terminal-frame,
+      .control-panel {
+        width: 100%;
+        max-width: 100%;
+      }
+
+      .terminal-frame {
+        aspect-ratio: 0.76;
+      }
+
+      .control-panel {
+        max-height: none;
+        margin-top: 12px;
+        overflow-x: hidden;
+      }
+
+      .preset-row,
+      .swatch-row {
+        gap: 6px;
+      }
+
+      .terminal-text {
+        font-size: clamp(8px, 2.55vw, 11px);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .crt-screen::after,
+      .terminal-text {
+        animation: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="workbench">
+    <main class="terminal-frame" aria-label="CRT terminal text sample">
+      <pre class="crt-screen"><code class="terminal-text">Sphinx of black quartz, judge my vow.
+
+OPEN RACE COACH / LOCAL TERMINAL
+
+       ___   ____   ______   _   __
+      / _ \ / __ \ / ____/  / | / /
+     / , _// /_/ // /      /  |/ /
+    /_/|_| \____//_/      /_/|__/
+
+    telemetry loaded: 6 laps / 6 valid
+    reference mode:   session best
+    selected delta:   C2 minimum speed
+    repeatability:    100 percent
+
+    next stint:
+    keep the car rolling through C2.
+    minimum speed is down 3.0 m/s.
+    median loss is +0.066s.
+
+    evidence:
+    lap 1  ref  1:29.625
+    lap 2  cmp  1:29.984
+    lap 3  cmp  1:29.984
+    lap 4  cmp  1:29.984
+    lap 5  cmp  1:29.984
+    lap 6  cmp  1:29.984
+
+    status: reportable
+    prompt: attack one thing.</code></pre>
+    </main>
+
+    <aside class="control-panel" aria-label="CRT calibration controls">
+      <div class="panel-title">
+        <span>Calibration</span>
+        <span id="activePreset">Amber</span>
+      </div>
+
+      <section class="control-group" aria-label="Presets">
+        <div class="preset-row">
+          <button type="button" data-preset="amber" aria-pressed="true">Amber</button>
+          <button type="button" data-preset="green" aria-pressed="false">Green</button>
+          <button type="button" data-preset="sharp" aria-pressed="false">Sharp</button>
+        </div>
+      </section>
+
+      <section class="control-group" aria-label="Phosphor color">
+        <div class="swatch-row">
+          <button class="swatch" type="button" data-color="#ff9d00" style="--swatch-color: #ff9d00" aria-label="Amber"></button>
+          <button class="swatch" type="button" data-color="#66ff33" style="--swatch-color: #66ff33" aria-label="Green"></button>
+          <button class="swatch" type="button" data-color="#d7ffe1" style="--swatch-color: #d7ffe1" aria-label="White green"></button>
+        </div>
+        <label class="color-line">
+          <span>Phosphor</span>
+          <input id="phosphorColor" type="color" value="#ff9d00" data-setting="phosphor">
+        </label>
+      </section>
+
+      <section class="control-group" aria-label="Image controls">
+        <label class="control-row">
+          <span class="slider-label">Glow <output for="glow">1.00</output></span>
+          <input id="glow" type="range" min="0" max="1.8" step="0.01" value="1" data-setting="glow">
+        </label>
+
+        <label class="control-row">
+          <span class="slider-label">RGB Split <output for="rgbSplit">1.00</output></span>
+          <input id="rgbSplit" type="range" min="0" max="3" step="0.01" value="1" data-setting="rgbSplit">
+        </label>
+
+        <label class="control-row">
+          <span class="slider-label">Scanlines <output for="scanlineOpacity">0.34</output></span>
+          <input id="scanlineOpacity" type="range" min="0" max="0.7" step="0.01" value="0.34" data-setting="scanlineOpacity">
+        </label>
+
+        <label class="control-row">
+          <span class="slider-label">Line Pitch <output for="scanlineSize">3 px</output></span>
+          <input id="scanlineSize" type="range" min="2" max="7" step="1" value="3" data-setting="scanlineSize">
+        </label>
+      </section>
+
+      <section class="control-group" aria-label="Screen controls">
+        <label class="control-row">
+          <span class="slider-label">Flicker <output for="flickerOpacity">0.31</output></span>
+          <input id="flickerOpacity" type="range" min="0" max="0.55" step="0.01" value="0.31" data-setting="flickerOpacity">
+        </label>
+
+        <label class="control-row">
+          <span class="slider-label">Flicker Rate <output for="flickerSpeed">0.16 s</output></span>
+          <input id="flickerSpeed" type="range" min="0.08" max="0.7" step="0.01" value="0.16" data-setting="flickerSpeed">
+        </label>
+
+        <label class="control-row">
+          <span class="slider-label">Vignette <output for="vignetteStrength">0.74</output></span>
+          <input id="vignetteStrength" type="range" min="0.15" max="0.95" step="0.01" value="0.74" data-setting="vignetteStrength">
+        </label>
+
+        <label class="control-row">
+          <span class="slider-label">Font Size <output for="fontScale">0.90</output></span>
+          <input id="fontScale" type="range" min="0.7" max="1.35" step="0.01" value="0.9" data-setting="fontScale">
+        </label>
+
+        <label class="control-row">
+          <span class="slider-label">Bezel <output for="framePadding">12 px</output></span>
+          <input id="framePadding" type="range" min="4" max="26" step="1" value="12" data-setting="framePadding">
+        </label>
+
+        <label class="control-row">
+          <span class="slider-label">Corners <output for="screenRadius">2 px</output></span>
+          <input id="screenRadius" type="range" min="0" max="18" step="1" value="2" data-setting="screenRadius">
+        </label>
+      </section>
+
+      <section class="control-group" aria-label="Actions">
+        <div class="action-row">
+          <button id="copyButton" type="button">Copy CSS</button>
+          <button id="resetButton" type="button">Reset</button>
+        </div>
+        <pre class="css-output" id="cssOutput" aria-label="Current CSS variables"></pre>
+        <div class="copy-status" id="copyStatus" aria-live="polite"></div>
+      </section>
+    </aside>
+  </div>
+
+  <script>
+    const root = document.documentElement;
+    const storageKey = "open-race-coach-crt-terminal-settings";
+    const controls = Array.from(document.querySelectorAll("[data-setting]"));
+    const outputs = new Map(Array.from(document.querySelectorAll("output")).map((output) => [output.htmlFor, output]));
+    const presetButtons = Array.from(document.querySelectorAll("[data-preset]"));
+    const activePreset = document.getElementById("activePreset");
+    const cssOutput = document.getElementById("cssOutput");
+    const copyStatus = document.getElementById("copyStatus");
+
+    const defaults = {
+      phosphor: "#ff9d00",
+      glow: 1,
+      rgbSplit: 1,
+      scanlineOpacity: 0.34,
+      scanlineSize: 3,
+      flickerOpacity: 0.31,
+      flickerSpeed: 0.16,
+      vignetteStrength: 0.74,
+      fontScale: 0.9,
+      framePadding: 12,
+      screenRadius: 2
+    };
+
+    const presets = {
+      amber: defaults,
+      green: {
+        ...defaults,
+        phosphor: "#66ff33",
+        glow: 0.95,
+        scanlineOpacity: 0.3,
+        flickerOpacity: 0.26
+      },
+      sharp: {
+        ...defaults,
+        phosphor: "#ffb000",
+        glow: 0.35,
+        rgbSplit: 0.25,
+        scanlineOpacity: 0.22,
+        scanlineSize: 2,
+        flickerOpacity: 0.08,
+        vignetteStrength: 0.58,
+        fontScale: 0.92,
+        framePadding: 10,
+        screenRadius: 0
+      }
+    };
+
+    let state = loadState();
+
+    controls.forEach((control) => {
+      control.addEventListener("input", () => {
+        state[control.dataset.setting] = control.type === "color" ? control.value : Number(control.value);
+        applyState(state, "Custom");
+        saveState(state);
+      });
+    });
+
+    document.querySelectorAll("[data-color]").forEach((button) => {
+      button.addEventListener("click", () => {
+        state.phosphor = button.dataset.color;
+        applyState(state, "Custom");
+        saveState(state);
+      });
+    });
+
+    presetButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        state = { ...presets[button.dataset.preset] };
+        applyState(state, button.textContent.trim());
+        saveState(state, button.dataset.preset);
+      });
+    });
+
+    document.getElementById("resetButton").addEventListener("click", () => {
+      state = { ...defaults };
+      try {
+        localStorage.removeItem(storageKey);
+        localStorage.removeItem(`${storageKey}:preset`);
+      } catch {
+        copyStatus.textContent = "Storage blocked";
+      }
+      applyState(state, "Amber");
+    });
+
+    document.getElementById("copyButton").addEventListener("click", async () => {
+      const text = cssOutput.textContent;
+      try {
+        await navigator.clipboard.writeText(text);
+        copyStatus.textContent = "Copied";
+      } catch {
+        copyStatus.textContent = "Clipboard blocked";
+      }
+    });
+
+    applyState(state, loadPresetLabel());
+
+    function applyState(next, label) {
+      const rgb = hexToRgb(next.phosphor);
+      const hot = mix(rgb, [255, 255, 255], 0.35);
+      const dim = mix(rgb, [0, 0, 0], 0.34);
+
+      root.style.setProperty("--phosphor", next.phosphor);
+      root.style.setProperty("--phosphor-rgb", rgb.join(", "));
+      root.style.setProperty("--phosphor-hot", rgbToHex(hot));
+      root.style.setProperty("--phosphor-dim", rgbToHex(dim));
+      root.style.setProperty("--glow", next.glow);
+      root.style.setProperty("--rgb-split", next.rgbSplit);
+      root.style.setProperty("--scanline-opacity", next.scanlineOpacity);
+      root.style.setProperty("--scanline-size", `${next.scanlineSize}px`);
+      root.style.setProperty("--flicker-opacity", next.flickerOpacity);
+      root.style.setProperty("--flicker-speed", `${next.flickerSpeed}s`);
+      root.style.setProperty("--vignette-strength", next.vignetteStrength);
+      root.style.setProperty("--font-scale", next.fontScale);
+      root.style.setProperty("--frame-padding", `${next.framePadding}px`);
+      root.style.setProperty("--screen-radius", `${next.screenRadius}px`);
+
+      controls.forEach((control) => {
+        const value = next[control.dataset.setting];
+        control.value = value;
+        const output = outputs.get(control.id);
+        if (output) output.textContent = formatOutput(control.dataset.setting, value);
+      });
+
+      activePreset.textContent = label;
+      presetButtons.forEach((button) => {
+        button.setAttribute("aria-pressed", button.textContent.trim() === label ? "true" : "false");
+      });
+      updateCssOutput(next, rgb, hot, dim);
+    }
+
+    function updateCssOutput(next, rgb, hot, dim) {
+      cssOutput.textContent = [
+        ":root {",
+        `  --phosphor: ${next.phosphor};`,
+        `  --phosphor-rgb: ${rgb.join(", ")};`,
+        `  --phosphor-hot: ${rgbToHex(hot)};`,
+        `  --phosphor-dim: ${rgbToHex(dim)};`,
+        `  --font-scale: ${next.fontScale};`,
+        `  --glow: ${next.glow};`,
+        `  --rgb-split: ${next.rgbSplit};`,
+        `  --scanline-opacity: ${next.scanlineOpacity};`,
+        `  --scanline-size: ${next.scanlineSize}px;`,
+        `  --flicker-opacity: ${next.flickerOpacity};`,
+        `  --flicker-speed: ${next.flickerSpeed}s;`,
+        `  --vignette-strength: ${next.vignetteStrength};`,
+        `  --frame-padding: ${next.framePadding}px;`,
+        `  --screen-radius: ${next.screenRadius}px;`,
+        "}"
+      ].join("\n");
+    }
+
+    function loadState() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(storageKey));
+        return saved ? { ...defaults, ...saved } : { ...defaults };
+      } catch {
+        return { ...defaults };
+      }
+    }
+
+    function loadPresetLabel() {
+      try {
+        return localStorage.getItem(`${storageKey}:preset`) || "Amber";
+      } catch {
+        return "Amber";
+      }
+    }
+
+    function saveState(next, preset) {
+      try {
+        localStorage.setItem(storageKey, JSON.stringify(next));
+        localStorage.setItem(`${storageKey}:preset`, preset || "Custom");
+      } catch {
+        copyStatus.textContent = "Storage blocked";
+      }
+    }
+
+    function formatOutput(setting, value) {
+      if (setting === "scanlineSize" || setting === "framePadding" || setting === "screenRadius") return `${value} px`;
+      if (setting === "flickerSpeed") return `${Number(value).toFixed(2)} s`;
+      return Number(value).toFixed(2);
+    }
+
+    function hexToRgb(hex) {
+      const normalized = hex.replace("#", "");
+      return [
+        Number.parseInt(normalized.slice(0, 2), 16),
+        Number.parseInt(normalized.slice(2, 4), 16),
+        Number.parseInt(normalized.slice(4, 6), 16)
+      ];
+    }
+
+    function mix(a, b, amount) {
+      return a.map((channel, index) => Math.round(channel + (b[index] - channel) * amount));
+    }
+
+    function rgbToHex(rgb) {
+      return `#${rgb.map((channel) => channel.toString(16).padStart(2, "0")).join("")}`;
+    }
+  </script>
+</body>
+</html>
