@@ -1,0 +1,1675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SIM-COACH Oldschool Driver Debrief</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --html-bg: #26231d;
+      --paper: #f4f0e6;
+      --paper-deep: #e4dcc9;
+      --ink: #191814;
+      --ink-soft: #555045;
+      --line: #bdb299;
+      --line-strong: #6f6758;
+      --frame-line: #7f745f;
+      --frame-line-strong: #514a3e;
+      --accent-line: #b8564d;
+      --blackboard: #11110f;
+      --chalk: #f3f1e9;
+      --red: #a8271c;
+      --red-soft: #fff0e9;
+      --green: #2d6b3f;
+      --amber: #9b6a15;
+      --blueprint: #253e4a;
+      --blueprint-soft: #dfe8e6;
+      --white: #fffdf6;
+      --paper-grain: rgba(25, 24, 20, 0.035);
+      --masthead-shadow: rgba(25, 24, 20, 0.18);
+      --panel-shadow: rgba(25, 24, 20, 0.16);
+      --pit-shadow: rgba(25, 24, 20, 0.28);
+      --pit-header-bg: #171714;
+      --pit-header-line: #2d2b25;
+      --pit-cell-line: #343127;
+      --pit-muted: #aba79b;
+      --pit-note: #d7d3c7;
+      --button-bg: var(--paper-deep);
+      --button-alt-bg: var(--white);
+      --engineer-bg: #fbf7ea;
+      --ticket-bg: #fff8ec;
+      --track-ink: #e8efe8;
+      --track-grid: rgba(232, 239, 232, 0.08);
+      --track-header-bg: #1d333d;
+      --track-header-line: #a7b6b4;
+      --track-highlight: #f5d372;
+      --track-accent-shadow: rgba(214, 90, 67, 0.45);
+      --track-muted: #a7b6b4;
+      --track-callout-bg: rgba(29, 51, 61, 0.94);
+      --track-rail-bg: rgba(17, 17, 15, 0.2);
+      --metric-bg: #fbf8ee;
+      --tearoff-bg: #faf6ea;
+      --report-bg: #fbf7ea;
+      --mono: "Courier New", Courier, monospace;
+      --sans: Arial, Helvetica, sans-serif;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        color-scheme: dark;
+        --html-bg: #090806;
+        --paper: #17130f;
+        --paper-deep: #2b241b;
+        --ink: #f4eddd;
+        --ink-soft: #9f927a;
+        --line: #423727;
+        --line-strong: #5e513d;
+        --frame-line: #6d5e48;
+        --frame-line-strong: #88785e;
+        --accent-line: #9f4c44;
+        --blackboard: #050504;
+        --chalk: #faf3df;
+        --red: #ff7466;
+        --red-soft: #351713;
+        --green: #79d18c;
+        --amber: #f0bd65;
+        --blueprint: #14282e;
+        --blueprint-soft: #1f3a40;
+        --white: #211b14;
+        --paper-grain: rgba(244, 237, 221, 0.035);
+        --masthead-shadow: rgba(0, 0, 0, 0.44);
+        --panel-shadow: rgba(0, 0, 0, 0.4);
+        --pit-shadow: rgba(0, 0, 0, 0.52);
+        --pit-header-bg: #0d0c0a;
+        --pit-header-line: #352d22;
+        --pit-cell-line: #473b2c;
+        --pit-muted: #9f927a;
+        --pit-note: #e5dbc8;
+        --button-bg: #342b20;
+        --button-alt-bg: #1b1611;
+        --engineer-bg: #2a2218;
+        --ticket-bg: #261c14;
+        --track-ink: #e3f1e8;
+        --track-grid: rgba(227, 241, 232, 0.1);
+        --track-header-bg: #102229;
+        --track-header-line: #4d706d;
+        --track-highlight: #ffd76e;
+        --track-accent-shadow: rgba(255, 116, 102, 0.5);
+        --track-muted: #829b95;
+        --track-callout-bg: rgba(16, 34, 41, 0.96);
+        --track-rail-bg: rgba(5, 5, 4, 0.32);
+        --metric-bg: #261f17;
+        --tearoff-bg: #251e16;
+        --report-bg: #221c15;
+      }
+    }
+
+    :root[data-theme="dark"] {
+      color-scheme: dark;
+      --html-bg: #090806;
+      --paper: #17130f;
+      --paper-deep: #2b241b;
+      --ink: #f4eddd;
+      --ink-soft: #9f927a;
+      --line: #423727;
+      --line-strong: #5e513d;
+      --frame-line: #6d5e48;
+      --frame-line-strong: #88785e;
+      --accent-line: #9f4c44;
+      --blackboard: #050504;
+      --chalk: #faf3df;
+      --red: #ff7466;
+      --red-soft: #351713;
+      --green: #79d18c;
+      --amber: #f0bd65;
+      --blueprint: #14282e;
+      --blueprint-soft: #1f3a40;
+      --white: #211b14;
+      --paper-grain: rgba(244, 237, 221, 0.035);
+      --masthead-shadow: rgba(0, 0, 0, 0.44);
+      --panel-shadow: rgba(0, 0, 0, 0.4);
+      --pit-shadow: rgba(0, 0, 0, 0.52);
+      --pit-header-bg: #0d0c0a;
+      --pit-header-line: #352d22;
+      --pit-cell-line: #473b2c;
+      --pit-muted: #9f927a;
+      --pit-note: #e5dbc8;
+      --button-bg: #342b20;
+      --button-alt-bg: #1b1611;
+      --engineer-bg: #2a2218;
+      --ticket-bg: #261c14;
+      --track-ink: #e3f1e8;
+      --track-grid: rgba(227, 241, 232, 0.1);
+      --track-header-bg: #102229;
+      --track-header-line: #4d706d;
+      --track-highlight: #ffd76e;
+      --track-accent-shadow: rgba(255, 116, 102, 0.5);
+      --track-muted: #829b95;
+      --track-callout-bg: rgba(16, 34, 41, 0.96);
+      --track-rail-bg: rgba(5, 5, 4, 0.32);
+      --metric-bg: #261f17;
+      --tearoff-bg: #251e16;
+      --report-bg: #221c15;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      background: var(--html-bg);
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      overflow-wrap: break-word;
+      background:
+        repeating-linear-gradient(
+          0deg,
+          var(--paper-grain) 0,
+          var(--paper-grain) 1px,
+          transparent 1px,
+          transparent 9px
+        ),
+        var(--paper);
+      color: var(--ink);
+      font-family: var(--sans);
+      font-size: 16px;
+      line-height: 1.45;
+      padding: 24px;
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    .page {
+      max-width: 1240px;
+      margin: 0 auto;
+    }
+
+    .masthead {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(280px, 360px);
+      gap: 20px;
+      align-items: start;
+      border: 1px solid var(--frame-line-strong);
+      background: var(--white);
+      box-shadow: 5px 5px 0 var(--masthead-shadow);
+      padding: 18px;
+    }
+
+    .stamp {
+      display: inline-block;
+      border: 1px solid var(--accent-line);
+      color: var(--red);
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      line-height: 1;
+      margin-bottom: 10px;
+      padding: 7px 9px;
+      text-transform: uppercase;
+      transform: rotate(-1.5deg);
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+      margin: 0;
+    }
+
+    h1 {
+      font-family: var(--mono);
+      font-size: clamp(31px, 6vw, 72px);
+      letter-spacing: 0;
+      line-height: 0.92;
+      text-transform: uppercase;
+    }
+
+    .subtitle {
+      max-width: 780px;
+      margin-top: 12px;
+      color: var(--ink-soft);
+      font-family: var(--mono);
+      font-size: 14px;
+      text-transform: uppercase;
+    }
+
+    .artifact-desk {
+      border: 1px solid var(--frame-line);
+      font-family: var(--mono);
+      padding: 10px;
+    }
+
+    .artifact-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      border-bottom: 1px solid var(--line);
+      color: var(--ink-soft);
+      font-size: 12px;
+      padding-bottom: 8px;
+      text-transform: uppercase;
+    }
+
+    .artifact-actions {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .file-button,
+    .desk-button {
+      min-height: 38px;
+      border: 1px solid var(--frame-line-strong);
+      background: var(--button-bg);
+      color: var(--ink);
+      cursor: pointer;
+      display: inline-grid;
+      place-items: center;
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 700;
+      padding: 8px 10px;
+      text-align: center;
+      text-transform: uppercase;
+    }
+
+    .desk-button {
+      background: var(--button-alt-bg);
+    }
+
+    .theme-control {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0;
+      border: 1px solid var(--frame-line-strong);
+      margin-top: 10px;
+    }
+
+    .theme-button {
+      min-height: 34px;
+      border: 0;
+      border-right: 1px solid var(--line-strong);
+      background: var(--button-alt-bg);
+      color: var(--ink-soft);
+      cursor: pointer;
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .theme-button:last-child {
+      border-right: 0;
+    }
+
+    .theme-button[aria-pressed="true"] {
+      background: var(--button-bg);
+      box-shadow: inset 0 -2px 0 var(--ink);
+      color: var(--ink);
+    }
+
+    .file-input {
+      position: absolute;
+      inline-size: 1px;
+      block-size: 1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+      white-space: nowrap;
+      clip-path: inset(50%);
+    }
+
+    .artifact-status {
+      margin-top: 9px;
+      color: var(--ink-soft);
+      font-size: 12px;
+      text-transform: uppercase;
+    }
+
+    .identity {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 18px;
+      font-family: var(--mono);
+    }
+
+    .identity-card {
+      border: 1px solid var(--frame-line);
+      min-width: 0;
+      padding: 8px;
+    }
+
+    .identity-label {
+      display: block;
+      color: var(--ink-soft);
+      font-size: 11px;
+      text-transform: uppercase;
+    }
+
+    .identity-value {
+      display: block;
+      font-size: 15px;
+      margin-top: 3px;
+      min-width: 0;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.12fr) minmax(340px, 0.88fr);
+      gap: 22px;
+      margin-top: 22px;
+    }
+
+    .stack {
+      display: grid;
+      gap: 22px;
+      min-width: 0;
+    }
+
+    .panel {
+      background: var(--white);
+      border: 1px solid var(--frame-line);
+      box-shadow: 4px 4px 0 var(--panel-shadow);
+      min-width: 0;
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      border-bottom: 1px solid var(--frame-line);
+      background: var(--paper-deep);
+      font-family: var(--mono);
+      font-size: 13px;
+      font-weight: 700;
+      padding: 9px 12px;
+      text-transform: uppercase;
+    }
+
+    .panel-code {
+      color: var(--ink-soft);
+      font-weight: 400;
+      text-align: right;
+    }
+
+    .panel-body {
+      padding: 16px;
+    }
+
+    .pit-board {
+      background: var(--blackboard);
+      border-color: var(--frame-line-strong);
+      color: var(--chalk);
+      box-shadow: 4px 4px 0 var(--pit-shadow);
+    }
+
+    .pit-board .panel-header {
+      border-bottom-color: var(--pit-header-line);
+      background: var(--pit-header-bg);
+      color: var(--chalk);
+    }
+
+    .pit-board .panel-code {
+      color: var(--pit-muted);
+    }
+
+    .board-grid {
+      display: grid;
+      grid-template-columns: 0.72fr 1fr;
+      gap: 12px;
+    }
+
+    .board-cell {
+      border: 1px solid var(--pit-cell-line);
+      min-height: 112px;
+      padding: 14px;
+    }
+
+    .board-cell.main-call {
+      grid-column: 1 / -1;
+      min-height: 190px;
+    }
+
+    .board-label {
+      color: var(--pit-muted);
+      font-family: var(--mono);
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .board-value {
+      display: block;
+      font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
+      font-size: clamp(36px, 8vw, 88px);
+      font-weight: 900;
+      letter-spacing: 0.03em;
+      line-height: 0.92;
+      margin-top: 8px;
+      text-transform: uppercase;
+    }
+
+    .board-value.small {
+      font-size: clamp(32px, 6vw, 56px);
+    }
+
+    .board-note {
+      border-top: 1px solid var(--pit-cell-line);
+      color: var(--pit-note);
+      font-family: var(--mono);
+      margin-top: 14px;
+      padding-top: 12px;
+      text-transform: uppercase;
+    }
+
+    .driver-card {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 168px;
+      gap: 18px;
+      align-items: stretch;
+    }
+
+    .instruction {
+      border-left: 6px solid var(--accent-line);
+      padding-left: 14px;
+    }
+
+    .instruction h2 {
+      font-family: var(--mono);
+      font-size: clamp(25px, 3.4vw, 38px);
+      line-height: 1;
+      text-transform: uppercase;
+    }
+
+    .engineer-note {
+      margin-top: 16px;
+      border: 1px solid var(--line);
+      background: var(--engineer-bg);
+      font-family: var(--mono);
+      font-size: 14px;
+      padding: 12px;
+    }
+
+    .loss-ticket {
+      display: grid;
+      align-content: center;
+      justify-items: center;
+      border: 1px dashed var(--accent-line);
+      background: var(--ticket-bg);
+      font-family: var(--mono);
+      min-height: 180px;
+      padding: 12px;
+      text-align: center;
+      text-transform: uppercase;
+    }
+
+    .loss-ticket strong {
+      color: var(--red);
+      font-size: clamp(30px, 4vw, 40px);
+      line-height: 1;
+      white-space: nowrap;
+      word-break: normal;
+    }
+
+    .loss-ticket span {
+      color: var(--ink-soft);
+      font-size: 12px;
+      margin-top: 6px;
+    }
+
+    .track-board {
+      background: var(--blueprint);
+      color: var(--track-ink);
+    }
+
+    .track-board .panel-header {
+      background: var(--track-header-bg);
+      border-bottom-color: var(--track-header-line);
+      color: var(--track-ink);
+    }
+
+    .track-wrap {
+      position: relative;
+      min-height: 350px;
+      overflow: hidden;
+    }
+
+    .track-wrap::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(var(--track-grid) 1px, transparent 1px),
+        linear-gradient(90deg, var(--track-grid) 1px, transparent 1px);
+      background-size: 22px 22px;
+      pointer-events: none;
+    }
+
+    .lap-tape {
+      position: relative;
+      z-index: 1;
+      min-height: 252px;
+      padding: 56px 18px 90px;
+    }
+
+    .tape-rail {
+      position: relative;
+      height: 74px;
+      border: 1px solid var(--track-muted);
+      background:
+        repeating-linear-gradient(
+          90deg,
+          color-mix(in srgb, var(--track-ink) 16%, transparent) 0,
+          color-mix(in srgb, var(--track-ink) 16%, transparent) 1px,
+          transparent 1px,
+          transparent 10%
+        ),
+        var(--track-rail-bg);
+    }
+
+    .tape-segment {
+      position: absolute;
+      top: 13px;
+      height: 44px;
+      min-width: 8px;
+      border: 1px solid color-mix(in srgb, var(--track-ink) 55%, transparent);
+      background: color-mix(in srgb, var(--track-ink) 12%, transparent);
+    }
+
+    .tape-segment.selected {
+      border-color: var(--track-highlight);
+      background: color-mix(in srgb, var(--track-highlight) 42%, transparent);
+      box-shadow: 0 0 0 3px var(--track-accent-shadow);
+    }
+
+    .tape-label {
+      position: absolute;
+      top: -31px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: var(--track-highlight);
+      font-family: var(--mono);
+      font-size: 15px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .tape-distance {
+      position: absolute;
+      bottom: -45px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: var(--track-ink);
+      font-family: var(--mono);
+      font-size: 11px;
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    .tape-segment:not(.selected) .tape-distance {
+      display: none;
+    }
+
+    .tape-start,
+    .tape-end {
+      position: absolute;
+      bottom: -32px;
+      color: var(--track-muted);
+      font-family: var(--mono);
+      font-size: 12px;
+      text-transform: uppercase;
+    }
+
+    .tape-start {
+      left: 0;
+    }
+
+    .tape-end {
+      right: 0;
+      text-align: right;
+    }
+
+    .callout {
+      position: relative;
+      z-index: 2;
+      width: min(100%, 560px);
+      border: 1px solid var(--track-muted);
+      background: var(--track-callout-bg);
+      font-family: var(--mono);
+      margin: 4px 18px 18px;
+      padding: 12px;
+      text-transform: uppercase;
+    }
+
+    .callout strong {
+      color: var(--track-highlight);
+      display: block;
+      font-size: 20px;
+      margin-bottom: 4px;
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .metric {
+      border: 1px solid var(--line);
+      background: var(--metric-bg);
+      font-family: var(--mono);
+      min-width: 0;
+      padding: 12px;
+    }
+
+    .metric span {
+      display: block;
+      color: var(--ink-soft);
+      font-size: 11px;
+      text-transform: uppercase;
+    }
+
+    .metric strong {
+      display: block;
+      font-size: 22px;
+      line-height: 1.1;
+      margin-top: 5px;
+      overflow-wrap: anywhere;
+    }
+
+    .timing-sheet {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: var(--mono);
+      font-size: 13px;
+      table-layout: fixed;
+    }
+
+    .timing-sheet th,
+    .timing-sheet td {
+      border-bottom: 1px solid var(--line);
+      padding: 8px 7px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    .timing-sheet th {
+      border-bottom: 1px solid var(--frame-line);
+      color: var(--ink-soft);
+      font-size: 11px;
+      text-transform: uppercase;
+    }
+
+    .timing-sheet tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .tag {
+      display: inline-block;
+      border: 1px solid currentColor;
+      font-size: 11px;
+      line-height: 1;
+      padding: 4px 5px;
+      text-transform: uppercase;
+    }
+
+    .tag-good {
+      color: var(--green);
+    }
+
+    .tag-warn {
+      color: var(--amber);
+    }
+
+    .tag-hot {
+      color: var(--red);
+      font-weight: 700;
+    }
+
+    .checks {
+      display: grid;
+      gap: 8px;
+      font-family: var(--mono);
+    }
+
+    .check-row {
+      display: grid;
+      grid-template-columns: 54px minmax(0, 1fr) 82px;
+      gap: 10px;
+      align-items: center;
+      border-bottom: 1px solid var(--line);
+      padding: 8px 0;
+    }
+
+    .check-row:last-child {
+      border-bottom: 0;
+    }
+
+    .check-id {
+      font-weight: 700;
+    }
+
+    .check-loss {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .clipboard-footer {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 14px;
+      margin-top: 12px;
+    }
+
+    .tearoff {
+      border: 1px solid var(--line);
+      background: var(--tearoff-bg);
+      font-family: var(--mono);
+      padding: 12px;
+    }
+
+    .tearoff-title {
+      color: var(--ink-soft);
+      font-size: 11px;
+      margin-bottom: 7px;
+      text-transform: uppercase;
+    }
+
+    .tearoff strong {
+      display: block;
+      font-size: 17px;
+      text-transform: uppercase;
+    }
+
+    .report-lines {
+      border: 1px solid var(--line);
+      background: var(--report-bg);
+      font-family: var(--mono);
+      font-size: 13px;
+      margin-top: 12px;
+      max-height: 210px;
+      overflow: auto;
+      padding: 12px;
+      white-space: pre-wrap;
+    }
+
+    .error-box {
+      display: none;
+      border: 1px solid var(--accent-line);
+      background: var(--red-soft);
+      color: var(--red);
+      font-family: var(--mono);
+      margin-top: 12px;
+      padding: 10px;
+      text-transform: uppercase;
+    }
+
+    .error-box.visible {
+      display: block;
+    }
+
+    @media (max-width: 960px) {
+      body {
+        padding: 14px;
+      }
+
+      .masthead,
+      .layout,
+      .driver-card,
+      .clipboard-footer {
+        grid-template-columns: 1fr;
+      }
+
+      .identity,
+      .board-grid,
+      .metrics {
+        grid-template-columns: 1fr;
+      }
+
+      .board-value {
+        font-size: clamp(34px, 13vw, 70px);
+      }
+
+      .timing-sheet {
+        font-size: 12px;
+      }
+
+      .timing-sheet th,
+      .timing-sheet td {
+        padding: 7px 5px;
+      }
+
+      .tape-label,
+      .tape-distance {
+        white-space: normal;
+      }
+    }
+
+    @media print {
+      html,
+      body {
+        background: #fff;
+      }
+
+      body {
+        padding: 0;
+      }
+
+      .page {
+        max-width: none;
+      }
+
+      .artifact-desk {
+        display: none;
+      }
+
+      .panel,
+      .masthead {
+        box-shadow: none;
+        break-inside: avoid;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="masthead">
+      <div>
+        <span class="stamp" id="runStamp">Garage Copy</span>
+        <h1>SIM-COACH Timing Stand Debrief</h1>
+        <p class="subtitle" id="subtitle">Driver-facing output rendered from Analysis Run artifacts.</p>
+        <div class="identity" aria-label="Session identity">
+          <div class="identity-card">
+            <span class="identity-label">Track</span>
+            <strong class="identity-value" id="trackValue"></strong>
+          </div>
+          <div class="identity-card">
+            <span class="identity-label">Car</span>
+            <strong class="identity-value" id="carValue"></strong>
+          </div>
+          <div class="identity-card">
+            <span class="identity-label">Run</span>
+            <strong class="identity-value" id="runValue"></strong>
+          </div>
+          <div class="identity-card">
+            <span class="identity-label">Ref</span>
+            <strong class="identity-value" id="refValue"></strong>
+          </div>
+        </div>
+      </div>
+      <aside class="artifact-desk" aria-label="Artifact loader">
+        <div class="artifact-title">
+          <span>Artifact Desk</span>
+          <span id="schemaValue"></span>
+        </div>
+        <div class="artifact-actions">
+          <label class="file-button" for="artifactInput">Load Artifacts</label>
+          <button class="desk-button" id="resetButton" type="button">Reset</button>
+          <input class="file-input" id="artifactInput" type="file" multiple
+            accept=".json,.jsonl,.yaml,.yml,.md,application/json,text/plain">
+        </div>
+        <div class="theme-control" aria-label="Theme mode">
+          <button class="theme-button" type="button" data-theme-choice="system">System</button>
+          <button class="theme-button" type="button" data-theme-choice="light">Light</button>
+          <button class="theme-button" type="button" data-theme-choice="dark">Dark</button>
+        </div>
+        <p class="artifact-status" id="artifactStatus"></p>
+        <div class="error-box" id="errorBox" role="alert"></div>
+      </aside>
+    </header>
+
+    <section class="layout" aria-label="Oldschool report layout">
+      <div class="stack">
+        <section class="panel pit-board" aria-label="Pit board">
+          <div class="panel-header">
+            <span>Pit Board</span>
+            <span class="panel-code" id="pitBoardCode"></span>
+          </div>
+          <div class="panel-body">
+            <div class="board-grid">
+              <div class="board-cell main-call">
+                <span class="board-label">Next run</span>
+                <strong class="board-value" id="pitCall"></strong>
+                <p class="board-note" id="pitNote"></p>
+              </div>
+              <div class="board-cell">
+                <span class="board-label">Loss</span>
+                <strong class="board-value small" id="pitLoss"></strong>
+              </div>
+              <div class="board-cell">
+                <span class="board-label">Gap</span>
+                <strong class="board-value small" id="pitGap"></strong>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel" aria-label="Driver debrief card">
+          <div class="panel-header">
+            <span>Driver Debrief Card</span>
+            <span class="panel-code" id="driverCardCode"></span>
+          </div>
+          <div class="panel-body driver-card">
+            <div class="instruction">
+              <h2 id="driverInstruction"></h2>
+              <p class="engineer-note" id="engineerNote"></p>
+            </div>
+            <aside class="loss-ticket" aria-label="Median loss ticket">
+              <span>Median loss</span>
+              <strong id="ticketLoss"></strong>
+              <span id="ticketBasis"></span>
+            </aside>
+          </div>
+        </section>
+
+        <section class="panel track-board" aria-label="Lap distance tape">
+          <div class="panel-header">
+            <span>Lap Distance Tape</span>
+            <span class="panel-code" id="trackBoardCode"></span>
+          </div>
+          <div class="panel-body track-wrap">
+            <div class="lap-tape" id="lapTape">
+              <div class="tape-rail" id="tapeRail" aria-label="Detected corner segments"></div>
+            </div>
+            <div class="callout" id="trackCallout"></div>
+          </div>
+        </section>
+      </div>
+
+      <aside class="stack">
+        <section class="panel" aria-label="Evidence ticket">
+          <div class="panel-header">
+            <span>Evidence Ticket</span>
+            <span class="panel-code">Engineer audit</span>
+          </div>
+          <div class="panel-body">
+            <div class="metrics">
+              <div class="metric">
+                <span id="referenceLabel">Reference</span>
+                <strong id="referenceMetric"></strong>
+              </div>
+              <div class="metric">
+                <span id="comparisonLabel">Comparison</span>
+                <strong id="comparisonMetric"></strong>
+              </div>
+              <div class="metric">
+                <span>Deficit</span>
+                <strong id="deficitMetric"></strong>
+              </div>
+            </div>
+            <div class="clipboard-footer">
+              <div class="tearoff">
+                <div class="tearoff-title">Repeatability</div>
+                <strong id="repeatabilityValue"></strong>
+              </div>
+              <div class="tearoff">
+                <div class="tearoff-title">Confidence basis</div>
+                <strong id="confidenceValue"></strong>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel" aria-label="Timing sheet">
+          <div class="panel-header">
+            <span>Timing Sheet</span>
+            <span class="panel-code">Run log</span>
+          </div>
+          <div class="panel-body">
+            <table class="timing-sheet">
+              <thead>
+                <tr>
+                  <th>Lap</th>
+                  <th>Time</th>
+                  <th>Valid</th>
+                  <th>Note</th>
+                </tr>
+              </thead>
+              <tbody id="lapRows"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="panel" aria-label="Checked areas">
+          <div class="panel-header">
+            <span>Checked Areas</span>
+            <span class="panel-code">Not driver advice</span>
+          </div>
+          <div class="panel-body">
+            <div class="checks" id="checkedAreas"></div>
+          </div>
+        </section>
+
+        <section class="panel" aria-label="Artifact receipt">
+          <div class="panel-header">
+            <span>Artifact Receipt</span>
+            <span class="panel-code" id="receiptCode"></span>
+          </div>
+          <div class="panel-body">
+            <div class="tearoff">
+              <div class="tearoff-title">Canonical inputs</div>
+              <strong id="canonicalInputs"></strong>
+            </div>
+            <div class="tearoff" style="margin-top: 10px;">
+              <div class="tearoff-title">Rendered report</div>
+              <strong id="renderedReportStatus"></strong>
+            </div>
+            <pre class="report-lines" id="reportPreview"></pre>
+          </div>
+        </section>
+      </aside>
+    </section>
+  </main>
+
+  <script>
+    const sampleData = {
+      sourceLabel: "Inspectable fixture",
+      session: {
+        recorded_session_id: "inspectable-actual-session",
+        sim: "ams2",
+        track_raw: "Interlagos GP",
+        track: "interlagos_gp",
+        car_raw: "Formula Inter",
+        car: "formula_inter",
+        session_type: "practice",
+        started_at: "2026-06-12T10:00:00-07:00",
+        ended_at: "2026-06-12T10:10:00-07:00",
+        tick_rate_hz: 60,
+        track_length_m: 4309.0,
+        lap_dist_m_source: "sim",
+        complete: true
+      },
+      analysis: {
+        analysis_schema_version: 1,
+        selected_delta_schema_version: 1,
+        corner_segments_schema_version: 1,
+        reference_mode: "best",
+        run_status: "complete",
+        analysis_status: "reportable",
+        coach_refinement_status: "not_requested",
+        reference_lap_id: "inspectable-actual-session:lap:1",
+        created_at: "2026-06-12T18:49:03-07:00"
+      },
+      laps: [
+        { lap: 1, lap_id: "inspectable-actual-session:lap:1", lap_time_s: 89.625, valid: true },
+        { lap: 2, lap_id: "inspectable-actual-session:lap:2", lap_time_s: 89.98425, valid: true },
+        { lap: 3, lap_id: "inspectable-actual-session:lap:3", lap_time_s: 89.98425, valid: true },
+        { lap: 4, lap_id: "inspectable-actual-session:lap:4", lap_time_s: 89.98425, valid: true },
+        { lap: 5, lap_id: "inspectable-actual-session:lap:5", lap_time_s: 89.98425, valid: true },
+        { lap: 6, lap_id: "inspectable-actual-session:lap:6", lap_time_s: 89.98425, valid: true }
+      ],
+      cornerSegments: {
+        corner_segments_schema_version: 1,
+        recorded_session_id: "inspectable-actual-session",
+        reference_lap_id: "inspectable-actual-session:lap:1",
+        empty_reason: null,
+        segments: [
+          { corner_segment_id: "C1", start_lap_dist_pct: 0.175, end_lap_dist_pct: 0.185, start_lap_dist_m: 754.075, end_lap_dist_m: 797.165 },
+          { corner_segment_id: "C2", start_lap_dist_pct: 0.275, end_lap_dist_pct: 0.326, start_lap_dist_m: 1184.975, end_lap_dist_m: 1404.734 },
+          { corner_segment_id: "C3", start_lap_dist_pct: 0.416, end_lap_dist_pct: 0.426, start_lap_dist_m: 1792.544, end_lap_dist_m: 1835.634 },
+          { corner_segment_id: "C4", start_lap_dist_pct: 0.613, end_lap_dist_pct: 0.626, start_lap_dist_m: 2641.417, end_lap_dist_m: 2697.434 },
+          { corner_segment_id: "C5", start_lap_dist_pct: 0.654, end_lap_dist_pct: 0.705, start_lap_dist_m: 2818.086, end_lap_dist_m: 3037.845 },
+          { corner_segment_id: "C6", start_lap_dist_pct: 0.734, end_lap_dist_pct: 0.747, start_lap_dist_m: 3162.806, end_lap_dist_m: 3218.823 }
+        ]
+      },
+      selectedDelta: {
+        selected_delta_schema_version: 1,
+        analysis_status: "reportable",
+        comparison_lap_count: 5,
+        reference_lap_id: "inspectable-actual-session:lap:1",
+        selected_delta: {
+          corner_segment_id: "C2",
+          dominant_cause: "min_speed",
+          dominant_cause_lap_fraction: 1.0,
+          comparison_lap_count: 5,
+          segment_range: {
+            start_lap_dist_pct: 0.275,
+            end_lap_dist_pct: 0.326,
+            start_lap_dist_m: 1184.975,
+            end_lap_dist_m: 1404.734,
+            lap_dist_m_source: "sim"
+          },
+          median_corner_loss_s: 0.065684,
+          robust_noise_s: 0.0,
+          cause_metric: {
+            metric: "min_speed",
+            unit: "m/s",
+            reference_value: 42.0,
+            comparison_median: 39.0,
+            signed_delta: -3.0,
+            bad_direction_delta: 3.0,
+            lap_dist_m_source: "sim"
+          },
+          lap_dist_m_source: "sim",
+          runner_up_margin_s: null
+        },
+        corner_summaries: [
+          { corner_segment_id: "C1", classification: "consistent", median_corner_loss_s: 0.002068, robust_noise_s: 0.0, dominant_cause: null, dominant_cause_lap_fraction: null, reason: "no_significant_repeatable_loss", segment_range: { start_lap_dist_pct: 0.175, end_lap_dist_pct: 0.185, start_lap_dist_m: 754.075, end_lap_dist_m: 797.165, lap_dist_m_source: "sim" } },
+          { corner_segment_id: "C2", classification: "reportable_candidate", median_corner_loss_s: 0.065684, robust_noise_s: 0.0, dominant_cause: "min_speed", dominant_cause_lap_fraction: 1.0, reason: "passes_loss_noise_and_cause_gates", segment_range: { start_lap_dist_pct: 0.275, end_lap_dist_pct: 0.326, start_lap_dist_m: 1184.975, end_lap_dist_m: 1404.734, lap_dist_m_source: "sim" } },
+          { corner_segment_id: "C3", classification: "consistent", median_corner_loss_s: 0.001969, robust_noise_s: 0.0, dominant_cause: null, dominant_cause_lap_fraction: null, reason: "no_significant_repeatable_loss", segment_range: { start_lap_dist_pct: 0.416, end_lap_dist_pct: 0.426, start_lap_dist_m: 1792.544, end_lap_dist_m: 1835.634, lap_dist_m_source: "sim" } },
+          { corner_segment_id: "C4", classification: "consistent", median_corner_loss_s: 0.00234, robust_noise_s: 0.0, dominant_cause: null, dominant_cause_lap_fraction: null, reason: "no_significant_repeatable_loss", segment_range: { start_lap_dist_pct: 0.613, end_lap_dist_pct: 0.626, start_lap_dist_m: 2641.417, end_lap_dist_m: 2697.434, lap_dist_m_source: "sim" } },
+          { corner_segment_id: "C5", classification: "consistent", median_corner_loss_s: 0.00918, robust_noise_s: 0.0, dominant_cause: null, dominant_cause_lap_fraction: null, reason: "no_significant_repeatable_loss", segment_range: { start_lap_dist_pct: 0.654, end_lap_dist_pct: 0.705, start_lap_dist_m: 2818.086, end_lap_dist_m: 3037.845, lap_dist_m_source: "sim" } },
+          { corner_segment_id: "C6", classification: "consistent", median_corner_loss_s: 0.00234, robust_noise_s: 0.0, dominant_cause: null, dominant_cause_lap_fraction: null, reason: "no_significant_repeatable_loss", segment_range: { start_lap_dist_pct: 0.734, end_lap_dist_pct: 0.747, start_lap_dist_m: 3162.806, end_lap_dist_m: 3218.823, lap_dist_m_source: "sim" } }
+        ]
+      },
+      coachReport: [
+        "# Coach Report - Interlagos GP / Formula Inter / 2026-06-12",
+        "**Session:** 6 laps, 6 valid. Best valid lap: 1:29.625. Reference: session-best lap 1.",
+        "",
+        "## The one thing",
+        "Next stint: use the corner segment at 1185 m-1405 m from lap start as the focus and try to keep the car rolling about 3.0 m/s (10.8 km/h) faster at the slowest point than your typical comparison lap. The data identifies the speed loss, not the exact input change. Basis: median of 5 comparison laps versus lap 1; repeatable loss 0.066s.",
+        "",
+        "## Why (the data)",
+        "Selected area: detected corner segment 2, 1185 m-1405 m from lap start.",
+        "Loss: 0.066s median over 5 comparison laps.",
+        "Measured gap: Minimum speed was 42.0 m/s (151.2 km/h) on the reference lap and 39.0 m/s (140.4 km/h) on your typical comparison lap, a 3.0 m/s (10.8 km/h) deficit.",
+        "Confidence: the minimum speed gap showed up on 100% of comparison laps and cleared the repeatability threshold."
+      ].join("\n")
+    };
+
+    let currentData = clone(sampleData);
+
+    const els = {
+      runStamp: document.getElementById("runStamp"),
+      subtitle: document.getElementById("subtitle"),
+      trackValue: document.getElementById("trackValue"),
+      carValue: document.getElementById("carValue"),
+      runValue: document.getElementById("runValue"),
+      refValue: document.getElementById("refValue"),
+      schemaValue: document.getElementById("schemaValue"),
+      artifactInput: document.getElementById("artifactInput"),
+      resetButton: document.getElementById("resetButton"),
+      themeButtons: Array.from(document.querySelectorAll("[data-theme-choice]")),
+      artifactStatus: document.getElementById("artifactStatus"),
+      errorBox: document.getElementById("errorBox"),
+      pitBoardCode: document.getElementById("pitBoardCode"),
+      pitCall: document.getElementById("pitCall"),
+      pitNote: document.getElementById("pitNote"),
+      pitLoss: document.getElementById("pitLoss"),
+      pitGap: document.getElementById("pitGap"),
+      driverCardCode: document.getElementById("driverCardCode"),
+      driverInstruction: document.getElementById("driverInstruction"),
+      engineerNote: document.getElementById("engineerNote"),
+      ticketLoss: document.getElementById("ticketLoss"),
+      ticketBasis: document.getElementById("ticketBasis"),
+      trackBoardCode: document.getElementById("trackBoardCode"),
+      tapeRail: document.getElementById("tapeRail"),
+      trackCallout: document.getElementById("trackCallout"),
+      referenceLabel: document.getElementById("referenceLabel"),
+      comparisonLabel: document.getElementById("comparisonLabel"),
+      referenceMetric: document.getElementById("referenceMetric"),
+      comparisonMetric: document.getElementById("comparisonMetric"),
+      deficitMetric: document.getElementById("deficitMetric"),
+      repeatabilityValue: document.getElementById("repeatabilityValue"),
+      confidenceValue: document.getElementById("confidenceValue"),
+      lapRows: document.getElementById("lapRows"),
+      checkedAreas: document.getElementById("checkedAreas"),
+      receiptCode: document.getElementById("receiptCode"),
+      canonicalInputs: document.getElementById("canonicalInputs"),
+      renderedReportStatus: document.getElementById("renderedReportStatus"),
+      reportPreview: document.getElementById("reportPreview")
+    };
+
+    els.artifactInput.addEventListener("change", async (event) => {
+      const files = Array.from(event.target.files || []);
+      if (!files.length) return;
+      try {
+        currentData = await readArtifacts(files);
+        render(currentData);
+        setError("");
+      } catch (error) {
+        setError(error instanceof Error ? error.message : String(error));
+      } finally {
+        els.artifactInput.value = "";
+      }
+    });
+
+    els.resetButton.addEventListener("click", () => {
+      currentData = clone(sampleData);
+      render(currentData);
+      setError("");
+    });
+
+    for (const button of els.themeButtons) {
+      button.addEventListener("click", () => {
+        setTheme(button.dataset.themeChoice || "system", true);
+      });
+    }
+
+    setTheme(readStoredTheme(), false);
+
+    function clone(value) {
+      return JSON.parse(JSON.stringify(value));
+    }
+
+    function readStoredTheme() {
+      try {
+        return localStorage.getItem("simcoach-oldschool-theme") || "system";
+      } catch (_error) {
+        return "system";
+      }
+    }
+
+    function setTheme(choice, persist) {
+      const theme = ["system", "light", "dark"].includes(choice) ? choice : "system";
+      if (theme === "system") {
+        document.documentElement.removeAttribute("data-theme");
+      } else {
+        document.documentElement.dataset.theme = theme;
+      }
+      for (const button of els.themeButtons) {
+        const pressed = button.dataset.themeChoice === theme;
+        button.setAttribute("aria-pressed", String(pressed));
+      }
+      if (persist) {
+        try {
+          localStorage.setItem("simcoach-oldschool-theme", theme);
+        } catch (_error) {
+          /* File URLs may block storage in hardened browsers. */
+        }
+      }
+    }
+
+    async function readArtifacts(files) {
+      const next = {
+        sourceLabel: `${files.length} loaded file${files.length === 1 ? "" : "s"}`,
+        session: {},
+        analysis: {},
+        laps: [],
+        cornerSegments: null,
+        selectedDelta: null,
+        coachReport: ""
+      };
+
+      for (const file of files) {
+        const name = file.name.toLowerCase();
+        const text = await file.text();
+        if (name === "selected_delta.json") {
+          next.selectedDelta = JSON.parse(text);
+        } else if (name === "corner_segments.json") {
+          next.cornerSegments = JSON.parse(text);
+        } else if (name === "laps.jsonl") {
+          next.laps = text.split(/\r?\n/).filter(Boolean).map((line) => JSON.parse(line));
+        } else if (name === "session.yaml" || name === "session.yml") {
+          next.session = parseFlatYaml(text);
+        } else if (name === "analysis.yaml" || name === "analysis.yml") {
+          next.analysis = parseFlatYaml(text);
+        } else if (name === "coach_report.md") {
+          next.coachReport = text;
+        }
+      }
+
+      if (!next.selectedDelta) {
+        throw new Error("selected_delta.json is required");
+      }
+
+      next.cornerSegments ||= { segments: [] };
+      next.session = { ...sampleData.session, ...next.session };
+      next.analysis = {
+        ...sampleData.analysis,
+        ...next.analysis,
+        analysis_status: next.selectedDelta.analysis_status,
+        reference_lap_id: next.selectedDelta.reference_lap_id || next.analysis.reference_lap_id
+      };
+      return next;
+    }
+
+    function parseFlatYaml(text) {
+      const out = {};
+      for (const line of text.split(/\r?\n/)) {
+        if (!line.trim() || line.trimStart().startsWith("#") || /^\s/.test(line)) continue;
+        const match = line.match(/^([^:]+):\s*(.*)$/);
+        if (!match) continue;
+        out[match[1].trim()] = parseYamlScalar(match[2].trim());
+      }
+      return out;
+    }
+
+    function parseYamlScalar(value) {
+      if (value === "" || value === "null" || value === "~") return null;
+      if (value === "true") return true;
+      if (value === "false") return false;
+      if (/^'.*'$/.test(value) || /^".*"$/.test(value)) return value.slice(1, -1);
+      if (/^-?\d+(\.\d+)?$/.test(value)) return Number(value);
+      return value;
+    }
+
+    function render(data) {
+      const session = data.session || {};
+      const analysis = data.analysis || {};
+      const selected = data.selectedDelta || {};
+      const status = selected.analysis_status || analysis.analysis_status || "unknown";
+      const delta = selected.selected_delta || null;
+      const summaries = selected.corner_summaries || [];
+      const laps = data.laps || [];
+      const validLaps = laps.filter((lap) => lap.valid === true);
+      const referenceLap = formatReferenceLap(selected.reference_lap_id || analysis.reference_lap_id);
+      const bestLap = bestValidLap(laps);
+      const date = formatDate(session.started_at || analysis.created_at);
+
+      els.runStamp.textContent = status === "reportable" ? "Actionable" : "No instruction";
+      els.subtitle.textContent = `${session.track_raw || "Unknown track"} / ${session.car_raw || "Unknown car"} / ${date}`;
+      els.trackValue.textContent = session.track_raw || "Unknown";
+      els.carValue.textContent = session.car_raw || "Unknown";
+      els.runValue.textContent = laps.length ? `${laps.length} laps / ${validLaps.length} valid` : `${selected.comparison_lap_count || 0} comparison laps`;
+      els.refValue.textContent = referenceLap || "None";
+      els.schemaValue.textContent = `schema ${selected.selected_delta_schema_version || "?"}`;
+      els.artifactStatus.textContent = `${data.sourceLabel || "Loaded artifacts"} / ${status.replaceAll("_", " ")}`;
+      els.pitBoardCode.textContent = analysis.run_status || "complete";
+      els.driverCardCode.textContent = status;
+      els.receiptCode.textContent = analysis.coach_refinement_status || "deterministic";
+
+      if (status === "reportable" && delta) {
+        renderReportable(session, selected, delta, summaries, laps, bestLap, data.coachReport);
+      } else {
+        renderNonReportable(selected, summaries, laps, bestLap, data.coachReport);
+      }
+
+      renderTape(session, data.cornerSegments, summaries, delta);
+      renderLaps(laps, selected.reference_lap_id || analysis.reference_lap_id, delta);
+      renderChecks(summaries, delta);
+      renderReceipt(data);
+    }
+
+    function renderReportable(session, selected, delta, summaries, laps, bestLap, coachReport) {
+      const metric = delta.cause_metric || {};
+      const location = formatSegmentRange(delta.segment_range, session);
+      const segment = delta.corner_segment_id || "C?";
+      const cause = metricLabel(delta.dominant_cause || metric.metric);
+      const instruction = extractNextStint(coachReport) || buildInstruction(delta, session);
+      const headline = headlineForDelta(delta);
+      const shortCall = `${segment} ${cause}`.toUpperCase();
+      const gap = formatMetricDelta(metric);
+      const repeatability = percent(delta.dominant_cause_lap_fraction);
+
+      els.pitCall.textContent = shortCall;
+      els.pitNote.textContent = "Keep it rolling. Do not chase a brake marker unless the selected cause says brake point.";
+      els.pitLoss.textContent = `+${formatSeconds(delta.median_corner_loss_s, 3)}`;
+      els.pitGap.textContent = gap;
+      els.driverInstruction.textContent = headline;
+      els.engineerNote.textContent = `${instruction} Selected ${segment} at ${location}. The deterministic analyzer selected ${cause.toLowerCase()} from ${delta.comparison_lap_count} comparison laps; model prose may refine wording only.`;
+      els.ticketLoss.textContent = `${formatSeconds(delta.median_corner_loss_s, 3)}s`;
+      els.ticketBasis.textContent = `Over ${delta.comparison_lap_count} comparison laps`;
+      els.referenceLabel.textContent = "Reference";
+      els.comparisonLabel.textContent = "Comparison";
+      els.referenceMetric.textContent = formatMetricValue(metric.reference_value, metric.unit);
+      els.comparisonMetric.textContent = formatMetricValue(metric.comparison_median, metric.unit);
+      els.deficitMetric.textContent = formatMetricValue(metric.bad_direction_delta, metric.unit);
+      els.repeatabilityValue.textContent = repeatability ? `${repeatability} of comparison laps` : "Not recorded";
+      els.confidenceValue.textContent = "Cleared loss and cause gates";
+      els.trackBoardCode.textContent = `${segment} selected`;
+      els.trackCallout.innerHTML = `<strong>${escapeHtml(segment)}</strong>${escapeHtml(location)}. ${escapeHtml(cause)} deficit: ${escapeHtml(formatMetricValue(metric.bad_direction_delta, metric.unit))}.`;
+    }
+
+    function renderNonReportable(selected, summaries, laps, bestLap, coachReport) {
+      const reason = reasonLabel(selected.reason || "unknown_reason");
+      els.pitCall.textContent = "NO CALL";
+      els.pitNote.textContent = reason;
+      els.pitLoss.textContent = "NONE";
+      els.pitGap.textContent = "N/A";
+      els.driverInstruction.textContent = "No data-supported Coaching Instruction.";
+      els.engineerNote.textContent = reason;
+      els.ticketLoss.textContent = "0.000s";
+      els.ticketBasis.textContent = `${selected.comparison_lap_count || 0} comparison laps`;
+      els.referenceMetric.textContent = "N/A";
+      els.comparisonMetric.textContent = "N/A";
+      els.deficitMetric.textContent = "N/A";
+      els.repeatabilityValue.textContent = "No dominant issue";
+      els.confidenceValue.textContent = selected.analysis_status || "non-reportable";
+      els.trackBoardCode.textContent = "No selected segment";
+      els.trackCallout.innerHTML = `<strong>No selected issue</strong>${escapeHtml(reason)}`;
+    }
+
+    function buildInstruction(delta, session) {
+      const metric = delta.cause_metric || {};
+      const location = formatSegmentRange(delta.segment_range, session);
+      if (metric.metric === "min_speed") {
+        return `Keep the car rolling about ${formatMetricValue(metric.bad_direction_delta, metric.unit)} faster at ${location}.`;
+      }
+      if (metric.metric === "brake_point") {
+        return `Move the brake point later at ${location} by the measured lap-distance gap.`;
+      }
+      if (metric.metric === "throttle_reapplication") {
+        return `Return to throttle earlier at ${location} by the measured lap-distance gap.`;
+      }
+      if (metric.metric === "coast_duration") {
+        return `Trim the extra coast duration at ${location}.`;
+      }
+      return `Focus on ${delta.corner_segment_id || "the selected segment"} at ${location}.`;
+    }
+
+    function headlineForDelta(delta) {
+      const segment = delta.corner_segment_id || "selected segment";
+      const metric = delta.cause_metric || {};
+      if (metric.metric === "min_speed") return `Carry more minimum speed through ${segment}.`;
+      if (metric.metric === "brake_point") return `Brake later into ${segment}.`;
+      if (metric.metric === "throttle_reapplication") return `Pick up throttle earlier at ${segment}.`;
+      if (metric.metric === "coast_duration") return `Trim the extra coast through ${segment}.`;
+      return `Focus the next run on ${segment}.`;
+    }
+
+    function renderTape(session, cornerSegments, summaries, delta) {
+      const selectedId = delta && delta.corner_segment_id;
+      const segments = (cornerSegments && cornerSegments.segments && cornerSegments.segments.length)
+        ? cornerSegments.segments
+        : summaries.map((summary) => ({
+            corner_segment_id: summary.corner_segment_id,
+            ...summary.segment_range
+          }));
+      const trackLength = Number(session.track_length_m) || null;
+      els.tapeRail.innerHTML = "";
+
+      for (const segment of segments) {
+        const start = Number(segment.start_lap_dist_pct ?? segment.segment_range?.start_lap_dist_pct ?? 0);
+        const end = Number(segment.end_lap_dist_pct ?? segment.segment_range?.end_lap_dist_pct ?? start);
+        const id = segment.corner_segment_id || "?";
+        const node = document.createElement("div");
+        node.className = `tape-segment${id === selectedId ? " selected" : ""}`;
+        node.style.left = `${clamp(start * 100, 0, 100)}%`;
+        node.style.width = `${Math.max(1.2, clamp((end - start) * 100, 0, 100))}%`;
+        node.innerHTML = `
+          <span class="tape-label">${escapeHtml(id)}</span>
+          <span class="tape-distance">${escapeHtml(formatSegmentRange(segment, session))}</span>
+        `;
+        els.tapeRail.appendChild(node);
+      }
+
+      const start = document.createElement("span");
+      start.className = "tape-start";
+      start.textContent = "lap start";
+      const end = document.createElement("span");
+      end.className = "tape-end";
+      end.textContent = trackLength ? `${Math.round(trackLength)} m` : "lap end";
+      els.tapeRail.append(start, end);
+    }
+
+    function renderLaps(laps, referenceLapId, delta) {
+      els.lapRows.innerHTML = "";
+      if (!laps.length) {
+        els.lapRows.innerHTML = `<tr><td colspan="4">No laps.jsonl loaded.</td></tr>`;
+        return;
+      }
+      for (const lap of laps) {
+        const row = document.createElement("tr");
+        const isReference = referenceLapId && lap.lap_id === referenceLapId;
+        const note = isReference ? "Reference" : delta ? `${delta.corner_segment_id} comparison` : (lap.invalid_reason || "");
+        row.innerHTML = `
+          <td>${escapeHtml(String(lap.lap ?? ""))}</td>
+          <td>${escapeHtml(formatLapTime(lap.lap_time_s))}</td>
+          <td><span class="tag ${lap.valid ? "tag-good" : "tag-warn"}">${lap.valid ? "Yes" : "No"}</span></td>
+          <td>${isReference ? '<span class="tag tag-hot">Reference</span>' : escapeHtml(note)}</td>
+        `;
+        els.lapRows.appendChild(row);
+      }
+    }
+
+    function renderChecks(summaries, delta) {
+      els.checkedAreas.innerHTML = "";
+      if (!summaries.length) {
+        els.checkedAreas.innerHTML = `<div class="check-row"><span class="check-id">--</span><span class="check-text">No corner summaries available</span><span class="check-loss">--</span></div>`;
+        return;
+      }
+      for (const summary of summaries) {
+        const selected = delta && summary.corner_segment_id === delta.corner_segment_id;
+        const row = document.createElement("div");
+        row.className = "check-row";
+        const classification = selected ? '<span class="tag tag-hot">Selected issue</span>' : escapeHtml(classificationLabel(summary.classification));
+        const cause = summary.dominant_cause ? ` ${escapeHtml(metricLabel(summary.dominant_cause).toLowerCase())}` : "";
+        row.innerHTML = `
+          <span class="check-id">${escapeHtml(summary.corner_segment_id || "--")}</span>
+          <span class="check-text">${classification}${cause}</span>
+          <span class="check-loss">+${escapeHtml(formatSeconds(summary.median_corner_loss_s, 3))}s</span>
+        `;
+        els.checkedAreas.appendChild(row);
+      }
+    }
+
+    function renderReceipt(data) {
+      const inputs = ["selected_delta.json"];
+      if (data.cornerSegments && data.cornerSegments.segments) inputs.push("corner_segments.json");
+      if (data.session) inputs.push("session.yaml");
+      if (data.analysis) inputs.push("analysis.yaml");
+      if (data.laps && data.laps.length) inputs.push("laps.jsonl");
+      els.canonicalInputs.textContent = inputs.join(" / ");
+      els.renderedReportStatus.textContent = data.coachReport ? "coach_report.md loaded" : "deterministic browser render";
+      els.reportPreview.textContent = data.coachReport || "No coach_report.md loaded.";
+    }
+
+    function bestValidLap(laps) {
+      return laps.filter((lap) => lap.valid).reduce((best, lap) => {
+        if (!best || Number(lap.lap_time_s) < Number(best.lap_time_s)) return lap;
+        return best;
+      }, null);
+    }
+
+    function extractNextStint(report) {
+      const match = String(report || "").match(/Next stint:\s*([^\n]+)/);
+      return match ? match[1].trim() : "";
+    }
+
+    function formatReferenceLap(id) {
+      if (!id) return "";
+      const text = String(id);
+      const match = text.match(/:lap:(\d+)/);
+      return match ? `Session-best lap ${match[1]}` : "Selected reference";
+    }
+
+    function formatDate(value) {
+      if (!value) return "unknown date";
+      return String(value).slice(0, 10);
+    }
+
+    function formatLapTime(value) {
+      if (value == null || Number.isNaN(Number(value))) return "Invalid";
+      const total = Number(value);
+      const minutes = Math.floor(total / 60);
+      const seconds = total - minutes * 60;
+      return `${minutes}:${seconds.toFixed(3).padStart(6, "0")}`;
+    }
+
+    function formatSeconds(value, digits) {
+      const n = Number(value);
+      return Number.isFinite(n) ? n.toFixed(digits) : "0.000";
+    }
+
+    function formatMetricValue(value, unit) {
+      const n = Number(value);
+      if (!Number.isFinite(n)) return "N/A";
+      if (unit === "m/s") return `${n.toFixed(1)} m/s`;
+      if (unit === "lap_dist_pct") return `${(n * 100).toFixed(1)} pct`;
+      if (unit === "s") return `${n.toFixed(3)}s`;
+      return `${n.toFixed(3)} ${unit || ""}`.trim();
+    }
+
+    function formatMetricDelta(metric) {
+      if (!metric || metric.bad_direction_delta == null) return "N/A";
+      const sign = metric.signed_delta != null && Number(metric.signed_delta) < 0 ? "-" : "+";
+      return `${sign}${formatMetricValue(metric.bad_direction_delta, metric.unit)}`.toUpperCase();
+    }
+
+    function formatSegmentRange(range, session) {
+      if (!range) return "range unavailable";
+      const source = range.lap_dist_m_source || session.lap_dist_m_source;
+      const startM = range.start_lap_dist_m;
+      const endM = range.end_lap_dist_m;
+      if ((source === "sim" || source === "derived_from_track_length") && startM != null && endM != null) {
+        return `${Math.round(Number(startM))} m-${Math.round(Number(endM))} m from lap start`;
+      }
+      const startPct = Number(range.start_lap_dist_pct);
+      const endPct = Number(range.end_lap_dist_pct);
+      if (Number.isFinite(startPct) && Number.isFinite(endPct)) {
+        return `${(startPct * 100).toFixed(1)}%-${(endPct * 100).toFixed(1)}% lap distance`;
+      }
+      return "range unavailable";
+    }
+
+    function metricLabel(metric) {
+      return {
+        brake_point: "Brake point",
+        min_speed: "Minimum speed",
+        throttle_reapplication: "Throttle reapplication",
+        coast_duration: "Coast duration"
+      }[metric] || String(metric || "Measured gap").replaceAll("_", " ");
+    }
+
+    function classificationLabel(value) {
+      return {
+        reportable_candidate: "selected issue",
+        consistent: "no meaningful repeatable loss",
+        inconsistent: "loss was not repeatable enough",
+        insufficient_data: "not enough comparable data"
+      }[value] || String(value || "unknown").replaceAll("_", " ");
+    }
+
+    function reasonLabel(value) {
+      return {
+        passes_loss_noise_and_cause_gates: "gap is large enough and repeatable enough to act on",
+        no_significant_repeatable_loss: "no significant repeatable loss was found",
+        significant_loss_without_dominant_repeatable_cause: "there was time loss, but no single repeatable cause dominated",
+        insufficient_comparable_data: "there was not enough comparable data",
+        fewer_than_minimum_comparison_laps: "not enough comparison laps survived reference selection",
+        no_usable_corner_segments: "the reference lap did not produce usable corner segments",
+        no_valid_reference_lap: "there was no valid reference lap",
+        all_corners_lacked_comparable_data: "all corner segments lacked comparable data",
+        top_candidates_inside_single_dominant_margin: "the top candidate issues were too close to choose only one"
+      }[value] || String(value || "unknown reason").replaceAll("_", " ");
+    }
+
+    function percent(value) {
+      if (value == null) return "";
+      return `${Math.round(Number(value) * 100)}%`;
+    }
+
+    function clamp(value, min, max) {
+      return Math.min(max, Math.max(min, value));
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
+    }
+
+    function setError(message) {
+      els.errorBox.textContent = message;
+      els.errorBox.classList.toggle("visible", Boolean(message));
+    }
+
+    render(currentData);
+  </script>
+</body>
+</html>
