@@ -153,6 +153,54 @@
       --report-bg: #221c15;
     }
 
+    :root[data-theme="crt"] {
+      color-scheme: dark;
+      --html-bg: #020403;
+      --paper: #06130b;
+      --paper-deep: #092316;
+      --ink: #d7ffe1;
+      --ink-soft: #7ee89c;
+      --line: rgba(95, 255, 139, 0.3);
+      --line-strong: rgba(158, 255, 181, 0.5);
+      --frame-line: rgba(95, 255, 139, 0.42);
+      --frame-line-strong: rgba(255, 176, 0, 0.74);
+      --accent-line: #ffb000;
+      --blackboard: #020704;
+      --chalk: #d7ffe1;
+      --red: #ff5f57;
+      --red-soft: #2b0807;
+      --green: #33ff77;
+      --amber: #ffb000;
+      --blueprint: #04100a;
+      --blueprint-soft: #0d2c1a;
+      --white: rgba(3, 16, 8, 0.92);
+      --paper-grain: rgba(127, 255, 164, 0.05);
+      --masthead-shadow: rgba(51, 255, 119, 0.24);
+      --panel-shadow: rgba(51, 255, 119, 0.16);
+      --pit-shadow: rgba(51, 255, 119, 0.28);
+      --pit-header-bg: rgba(1, 8, 4, 0.96);
+      --pit-header-line: rgba(95, 255, 139, 0.28);
+      --pit-cell-line: rgba(95, 255, 139, 0.22);
+      --pit-muted: #67d987;
+      --pit-note: #c4ffd0;
+      --button-bg: rgba(255, 176, 0, 0.16);
+      --button-alt-bg: rgba(9, 35, 22, 0.96);
+      --engineer-bg: rgba(9, 35, 22, 0.82);
+      --ticket-bg: rgba(33, 14, 3, 0.82);
+      --track-ink: #d7ffe1;
+      --track-grid: rgba(95, 255, 139, 0.13);
+      --track-header-bg: rgba(1, 8, 4, 0.96);
+      --track-header-line: rgba(95, 255, 139, 0.38);
+      --track-highlight: #ffb000;
+      --track-accent-shadow: rgba(255, 176, 0, 0.46);
+      --track-muted: #6fdc8c;
+      --track-callout-bg: rgba(2, 12, 6, 0.95);
+      --track-rail-bg: rgba(51, 255, 119, 0.06);
+      --metric-bg: rgba(9, 35, 22, 0.82);
+      --tearoff-bg: rgba(9, 35, 22, 0.82);
+      --report-bg: rgba(1, 8, 4, 0.94);
+    }
+
     * {
       box-sizing: border-box;
     }
@@ -176,9 +224,9 @@
         var(--paper);
       color: var(--ink);
       font-family: var(--sans);
-      font-size: 16px;
-      line-height: 1.45;
-      padding: 24px;
+      font-size: 14px;
+      line-height: 1.32;
+      padding: 14px;
     }
 
     button,
@@ -187,19 +235,128 @@
     }
 
     .page {
-      max-width: 1240px;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+      gap: 12px;
+      width: min(100%, 1480px);
+      max-width: 1480px;
+      min-height: calc(100vh - 28px);
       margin: 0 auto;
+    }
+
+    :root[data-theme="crt"] body {
+      position: relative;
+      background:
+        radial-gradient(ellipse at center, rgba(51, 255, 119, 0.14) 0, rgba(6, 19, 11, 0.96) 58%, #020403 100%),
+        repeating-linear-gradient(
+          0deg,
+          rgba(213, 255, 225, 0.07) 0,
+          rgba(213, 255, 225, 0.07) 1px,
+          rgba(0, 0, 0, 0.32) 2px,
+          rgba(0, 0, 0, 0.32) 4px
+        ),
+        var(--paper);
+      text-shadow: 0 0 6px rgba(51, 255, 119, 0.45);
+    }
+
+    :root[data-theme="crt"] body::before,
+    :root[data-theme="crt"] body::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 1000;
+    }
+
+    :root[data-theme="crt"] body::before {
+      background:
+        linear-gradient(
+          90deg,
+          rgba(255, 95, 87, 0.035),
+          rgba(51, 255, 119, 0.035),
+          rgba(90, 160, 255, 0.035)
+        ),
+        repeating-linear-gradient(
+          0deg,
+          transparent 0,
+          transparent 3px,
+          rgba(0, 0, 0, 0.26) 4px
+        );
+      opacity: 0.72;
+    }
+
+    :root[data-theme="crt"] body::after {
+      background: radial-gradient(ellipse at center, transparent 48%, rgba(0, 0, 0, 0.38) 78%, rgba(0, 0, 0, 0.84) 100%);
+      box-shadow:
+        inset 0 0 34px rgba(199, 255, 213, 0.14),
+        inset 0 0 120px rgba(0, 0, 0, 0.82);
+    }
+
+    :root[data-theme="crt"] .page {
+      max-width: 1540px;
+      border: 8px solid #151c16;
+      border-radius: 14px;
+      background: rgba(1, 8, 4, 0.62);
+      box-shadow:
+        0 0 0 2px rgba(255, 176, 0, 0.32),
+        0 0 54px rgba(51, 255, 119, 0.2),
+        inset 0 0 38px rgba(51, 255, 119, 0.08);
+      overflow: hidden;
+      padding: 12px;
+    }
+
+    :root[data-theme="crt"] .masthead,
+    :root[data-theme="crt"] .panel {
+      background:
+        linear-gradient(180deg, rgba(213, 255, 225, 0.03), transparent),
+        var(--white);
+      box-shadow:
+        0 0 0 1px rgba(51, 255, 119, 0.12),
+        0 0 18px rgba(51, 255, 119, 0.16),
+        inset 0 0 28px rgba(51, 255, 119, 0.07);
+    }
+
+    :root[data-theme="crt"] .masthead {
+      border-color: rgba(255, 176, 0, 0.58);
+    }
+
+    :root[data-theme="crt"] .panel-header {
+      box-shadow: inset 0 -1px 0 rgba(255, 176, 0, 0.18);
+      text-shadow: 0 0 8px rgba(51, 255, 119, 0.64);
+    }
+
+    :root[data-theme="crt"] .stamp {
+      background: rgba(255, 176, 0, 0.08);
+      border-color: var(--accent-line);
+      color: var(--accent-line);
+      text-shadow: 0 0 10px rgba(255, 176, 0, 0.7);
+    }
+
+    :root[data-theme="crt"] .pit-board,
+    :root[data-theme="crt"] .track-board {
+      background:
+        radial-gradient(ellipse at center, rgba(51, 255, 119, 0.1), transparent 72%),
+        var(--blackboard);
+    }
+
+    :root[data-theme="crt"] .board-value,
+    :root[data-theme="crt"] .loss-ticket strong,
+    :root[data-theme="crt"] .metric strong,
+    :root[data-theme="crt"] .tearoff strong {
+      text-shadow:
+        0 0 4px rgba(213, 255, 225, 0.64),
+        0 0 14px rgba(51, 255, 119, 0.42);
     }
 
     .masthead {
       display: grid;
-      grid-template-columns: minmax(0, 1fr) minmax(280px, 360px);
-      gap: 20px;
+      grid-template-columns: minmax(0, 1fr) minmax(320px, 420px);
+      gap: 12px;
       align-items: start;
       border: 1px solid var(--frame-line-strong);
       background: var(--white);
-      box-shadow: 5px 5px 0 var(--masthead-shadow);
-      padding: 18px;
+      box-shadow: 3px 3px 0 var(--masthead-shadow);
+      padding: 10px 12px;
     }
 
     .stamp {
@@ -207,12 +364,12 @@
       border: 1px solid var(--accent-line);
       color: var(--red);
       font-family: var(--mono);
-      font-size: 12px;
+      font-size: 10px;
       font-weight: 700;
       letter-spacing: 0.08em;
       line-height: 1;
-      margin-bottom: 10px;
-      padding: 7px 9px;
+      margin-bottom: 6px;
+      padding: 5px 7px;
       text-transform: uppercase;
       transform: rotate(-1.5deg);
     }
@@ -226,25 +383,25 @@
 
     h1 {
       font-family: var(--mono);
-      font-size: clamp(31px, 6vw, 72px);
+      font-size: clamp(24px, 2.3vw, 36px);
       letter-spacing: 0;
-      line-height: 0.92;
+      line-height: 0.96;
       text-transform: uppercase;
     }
 
     .subtitle {
       max-width: 780px;
-      margin-top: 12px;
+      margin-top: 6px;
       color: var(--ink-soft);
       font-family: var(--mono);
-      font-size: 14px;
+      font-size: 11px;
       text-transform: uppercase;
     }
 
     .artifact-desk {
       border: 1px solid var(--frame-line);
       font-family: var(--mono);
-      padding: 10px;
+      padding: 8px;
     }
 
     .artifact-title {
@@ -254,21 +411,21 @@
       gap: 10px;
       border-bottom: 1px solid var(--line);
       color: var(--ink-soft);
-      font-size: 12px;
-      padding-bottom: 8px;
+      font-size: 10px;
+      padding-bottom: 6px;
       text-transform: uppercase;
     }
 
     .artifact-actions {
       display: grid;
       grid-template-columns: minmax(0, 1fr) auto;
-      gap: 8px;
-      margin-top: 10px;
+      gap: 6px;
+      margin-top: 8px;
     }
 
     .file-button,
     .desk-button {
-      min-height: 38px;
+      min-height: 30px;
       border: 1px solid var(--frame-line-strong);
       background: var(--button-bg);
       color: var(--ink);
@@ -276,9 +433,9 @@
       display: inline-grid;
       place-items: center;
       font-family: var(--mono);
-      font-size: 12px;
+      font-size: 10px;
       font-weight: 700;
-      padding: 8px 10px;
+      padding: 6px 8px;
       text-align: center;
       text-transform: uppercase;
     }
@@ -289,21 +446,21 @@
 
     .theme-control {
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: 0;
       border: 1px solid var(--frame-line-strong);
-      margin-top: 10px;
+      margin-top: 8px;
     }
 
     .theme-button {
-      min-height: 34px;
+      min-height: 28px;
       border: 0;
       border-right: 1px solid var(--line-strong);
       background: var(--button-alt-bg);
       color: var(--ink-soft);
       cursor: pointer;
       font-family: var(--mono);
-      font-size: 11px;
+      font-size: 9px;
       font-weight: 700;
       text-transform: uppercase;
     }
@@ -329,58 +486,85 @@
     }
 
     .artifact-status {
-      margin-top: 9px;
+      margin-top: 7px;
       color: var(--ink-soft);
-      font-size: 12px;
+      font-size: 10px;
       text-transform: uppercase;
     }
 
     .identity {
       display: grid;
       grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 10px;
-      margin-top: 18px;
+      gap: 6px;
+      margin-top: 8px;
       font-family: var(--mono);
     }
 
     .identity-card {
       border: 1px solid var(--frame-line);
       min-width: 0;
-      padding: 8px;
+      padding: 5px 6px;
     }
 
     .identity-label {
       display: block;
       color: var(--ink-soft);
-      font-size: 11px;
+      font-size: 9px;
       text-transform: uppercase;
     }
 
     .identity-value {
       display: block;
-      font-size: 15px;
-      margin-top: 3px;
+      font-size: 12px;
+      margin-top: 2px;
       min-width: 0;
     }
 
-    .layout {
+    .dashboard-layout {
       display: grid;
-      grid-template-columns: minmax(0, 1.12fr) minmax(340px, 0.88fr);
-      gap: 22px;
-      margin-top: 22px;
+      grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+      grid-template-rows: minmax(250px, 0.95fr) minmax(280px, 1.05fr);
+      gap: 12px;
+      min-height: 0;
     }
 
     .stack {
       display: grid;
-      gap: 22px;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .at-a-glance {
+      grid-column: 1;
+      grid-row: 1;
+    }
+
+    .driver-detail-section {
+      grid-column: 2;
+      grid-row: 1;
+      min-height: 0;
+      min-width: 0;
+    }
+
+    .dense-detail {
+      grid-column: 1 / -1;
+      grid-row: 2;
+      display: grid;
+      grid-template-columns: minmax(0, 1.05fr) minmax(0, 1.3fr) minmax(0, 1.2fr);
+      gap: 12px;
+      min-height: 0;
       min-width: 0;
     }
 
     .panel {
       background: var(--white);
       border: 1px solid var(--frame-line);
-      box-shadow: 4px 4px 0 var(--panel-shadow);
+      box-shadow: 3px 3px 0 var(--panel-shadow);
+      display: flex;
+      flex-direction: column;
       min-width: 0;
+      min-height: 0;
+      overflow: hidden;
     }
 
     .panel-header {
@@ -391,9 +575,9 @@
       border-bottom: 1px solid var(--frame-line);
       background: var(--paper-deep);
       font-family: var(--mono);
-      font-size: 13px;
+      font-size: 11px;
       font-weight: 700;
-      padding: 9px 12px;
+      padding: 7px 10px;
       text-transform: uppercase;
     }
 
@@ -404,14 +588,17 @@
     }
 
     .panel-body {
-      padding: 16px;
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+      padding: 10px;
     }
 
     .pit-board {
       background: var(--blackboard);
       border-color: var(--frame-line-strong);
       color: var(--chalk);
-      box-shadow: 4px 4px 0 var(--pit-shadow);
+      box-shadow: 3px 3px 0 var(--pit-shadow);
     }
 
     .pit-board .panel-header {
@@ -426,25 +613,31 @@
 
     .board-grid {
       display: grid;
-      grid-template-columns: 0.72fr 1fr;
-      gap: 12px;
+      grid-template-columns: minmax(0, 1fr) minmax(150px, 0.42fr);
+      grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 10px;
+      height: 100%;
+      min-height: 0;
     }
 
     .board-cell {
       border: 1px solid var(--pit-cell-line);
-      min-height: 112px;
-      padding: 14px;
+      min-height: 0;
+      padding: 10px;
     }
 
     .board-cell.main-call {
-      grid-column: 1 / -1;
-      min-height: 190px;
+      display: flex;
+      flex-direction: column;
+      grid-column: 1;
+      grid-row: 1 / -1;
+      min-height: 0;
     }
 
     .board-label {
       color: var(--pit-muted);
       font-family: var(--mono);
-      font-size: 12px;
+      font-size: 10px;
       letter-spacing: 0.08em;
       text-transform: uppercase;
     }
@@ -452,7 +645,7 @@
     .board-value {
       display: block;
       font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
-      font-size: clamp(36px, 8vw, 88px);
+      font-size: clamp(38px, 4.6vw, 78px);
       font-weight: 900;
       letter-spacing: 0.03em;
       line-height: 0.92;
@@ -461,44 +654,48 @@
     }
 
     .board-value.small {
-      font-size: clamp(32px, 6vw, 56px);
+      font-size: clamp(24px, 2.55vw, 42px);
     }
 
     .board-note {
       border-top: 1px solid var(--pit-cell-line);
       color: var(--pit-note);
       font-family: var(--mono);
-      margin-top: 14px;
-      padding-top: 12px;
+      font-size: clamp(11px, 1vw, 15px);
+      margin-top: auto;
+      padding-top: 9px;
       text-transform: uppercase;
     }
 
     .driver-card {
       display: grid;
-      grid-template-columns: minmax(0, 1fr) 168px;
-      gap: 18px;
+      grid-template-columns: minmax(0, 1fr) 160px;
+      gap: 10px;
       align-items: stretch;
+      height: 100%;
     }
 
     .instruction {
-      border-left: 6px solid var(--accent-line);
-      padding-left: 14px;
+      border-left: 5px solid var(--accent-line);
+      padding-left: 10px;
+      min-width: 0;
     }
 
     .instruction h2 {
       font-family: var(--mono);
-      font-size: clamp(25px, 3.4vw, 38px);
+      font-size: clamp(21px, 2.2vw, 34px);
       line-height: 1;
       text-transform: uppercase;
     }
 
     .engineer-note {
-      margin-top: 16px;
+      margin-top: 10px;
       border: 1px solid var(--line);
       background: var(--engineer-bg);
       font-family: var(--mono);
-      font-size: 14px;
-      padding: 12px;
+      font-size: 12px;
+      line-height: 1.28;
+      padding: 9px;
     }
 
     .loss-ticket {
@@ -508,15 +705,15 @@
       border: 1px dashed var(--accent-line);
       background: var(--ticket-bg);
       font-family: var(--mono);
-      min-height: 180px;
-      padding: 12px;
+      min-height: 0;
+      padding: 10px;
       text-align: center;
       text-transform: uppercase;
     }
 
     .loss-ticket strong {
       color: var(--red);
-      font-size: clamp(30px, 4vw, 40px);
+      font-size: clamp(28px, 3vw, 38px);
       line-height: 1;
       white-space: nowrap;
       word-break: normal;
@@ -524,8 +721,8 @@
 
     .loss-ticket span {
       color: var(--ink-soft);
-      font-size: 12px;
-      margin-top: 6px;
+      font-size: 10px;
+      margin-top: 5px;
     }
 
     .track-board {
@@ -541,7 +738,7 @@
 
     .track-wrap {
       position: relative;
-      min-height: 350px;
+      min-height: 0;
       overflow: hidden;
     }
 
@@ -559,13 +756,13 @@
     .lap-tape {
       position: relative;
       z-index: 1;
-      min-height: 252px;
-      padding: 56px 18px 90px;
+      min-height: 0;
+      padding: 42px 14px 58px;
     }
 
     .tape-rail {
       position: relative;
-      height: 74px;
+      height: 54px;
       border: 1px solid var(--track-muted);
       background:
         repeating-linear-gradient(
@@ -580,8 +777,8 @@
 
     .tape-segment {
       position: absolute;
-      top: 13px;
-      height: 44px;
+      top: 10px;
+      height: 32px;
       min-width: 8px;
       border: 1px solid color-mix(in srgb, var(--track-ink) 55%, transparent);
       background: color-mix(in srgb, var(--track-ink) 12%, transparent);
@@ -595,24 +792,24 @@
 
     .tape-label {
       position: absolute;
-      top: -31px;
+      top: -27px;
       left: 50%;
       transform: translateX(-50%);
       color: var(--track-highlight);
       font-family: var(--mono);
-      font-size: 15px;
+      font-size: 12px;
       font-weight: 700;
       white-space: nowrap;
     }
 
     .tape-distance {
       position: absolute;
-      bottom: -45px;
+      bottom: -36px;
       left: 50%;
       transform: translateX(-50%);
       color: var(--track-ink);
       font-family: var(--mono);
-      font-size: 11px;
+      font-size: 9px;
       text-align: center;
       white-space: nowrap;
     }
@@ -624,10 +821,10 @@
     .tape-start,
     .tape-end {
       position: absolute;
-      bottom: -32px;
+      bottom: -25px;
       color: var(--track-muted);
       font-family: var(--mono);
-      font-size: 12px;
+      font-size: 10px;
       text-transform: uppercase;
     }
 
@@ -647,22 +844,23 @@
       border: 1px solid var(--track-muted);
       background: var(--track-callout-bg);
       font-family: var(--mono);
-      margin: 4px 18px 18px;
-      padding: 12px;
+      font-size: 11px;
+      margin: 0 14px 10px;
+      padding: 8px;
       text-transform: uppercase;
     }
 
     .callout strong {
       color: var(--track-highlight);
       display: block;
-      font-size: 20px;
-      margin-bottom: 4px;
+      font-size: 15px;
+      margin-bottom: 3px;
     }
 
     .metrics {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 10px;
+      gap: 8px;
     }
 
     .metric {
@@ -670,19 +868,19 @@
       background: var(--metric-bg);
       font-family: var(--mono);
       min-width: 0;
-      padding: 12px;
+      padding: 8px;
     }
 
     .metric span {
       display: block;
       color: var(--ink-soft);
-      font-size: 11px;
+      font-size: 9px;
       text-transform: uppercase;
     }
 
     .metric strong {
       display: block;
-      font-size: 22px;
+      font-size: 18px;
       line-height: 1.1;
       margin-top: 5px;
       overflow-wrap: anywhere;
@@ -692,22 +890,27 @@
       width: 100%;
       border-collapse: collapse;
       font-family: var(--mono);
-      font-size: 13px;
+      font-size: 9.5px;
       table-layout: fixed;
     }
 
     .timing-sheet th,
     .timing-sheet td {
       border-bottom: 1px solid var(--line);
-      padding: 8px 7px;
+      padding: 3px 4px;
       text-align: left;
       vertical-align: top;
+    }
+
+    .timing-sheet th:first-child,
+    .timing-sheet td:first-child {
+      width: 32px;
     }
 
     .timing-sheet th {
       border-bottom: 1px solid var(--frame-line);
       color: var(--ink-soft);
-      font-size: 11px;
+      font-size: 9px;
       text-transform: uppercase;
     }
 
@@ -718,9 +921,9 @@
     .tag {
       display: inline-block;
       border: 1px solid currentColor;
-      font-size: 11px;
+      font-size: 9px;
       line-height: 1;
-      padding: 4px 5px;
+      padding: 3px 4px;
       text-transform: uppercase;
     }
 
@@ -739,17 +942,18 @@
 
     .checks {
       display: grid;
-      gap: 8px;
+      gap: 0;
       font-family: var(--mono);
+      font-size: 10px;
     }
 
     .check-row {
       display: grid;
-      grid-template-columns: 54px minmax(0, 1fr) 82px;
-      gap: 10px;
+      grid-template-columns: 32px minmax(0, 1fr) 62px;
+      gap: 7px;
       align-items: center;
       border-bottom: 1px solid var(--line);
-      padding: 8px 0;
+      padding: 5px 0;
     }
 
     .check-row:last-child {
@@ -768,40 +972,80 @@
     .clipboard-footer {
       display: grid;
       grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-      gap: 14px;
-      margin-top: 12px;
+      gap: 8px;
+      margin-top: 8px;
     }
 
     .tearoff {
       border: 1px solid var(--line);
       background: var(--tearoff-bg);
       font-family: var(--mono);
-      padding: 12px;
+      padding: 8px;
     }
 
     .tearoff-title {
       color: var(--ink-soft);
-      font-size: 11px;
-      margin-bottom: 7px;
+      font-size: 9px;
+      margin-bottom: 5px;
       text-transform: uppercase;
     }
 
     .tearoff strong {
       display: block;
-      font-size: 17px;
+      font-size: 13px;
+      overflow-wrap: anywhere;
       text-transform: uppercase;
+    }
+
+    .receipt-panel .panel-body {
+      display: grid;
+      grid-template-rows: auto auto minmax(0, 1fr);
+      gap: 8px;
+    }
+
+    .receipt-summary {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 8px;
+      min-width: 0;
     }
 
     .report-lines {
       border: 1px solid var(--line);
       background: var(--report-bg);
       font-family: var(--mono);
-      font-size: 13px;
-      margin-top: 12px;
-      max-height: 210px;
+      font-size: 8.8px;
+      line-height: 1.16;
+      margin: 0;
+      min-height: 0;
+      max-height: none;
       overflow: auto;
-      padding: 12px;
+      padding: 8px;
       white-space: pre-wrap;
+    }
+
+    .run-detail-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 8px;
+      height: 100%;
+      min-height: 0;
+    }
+
+    .dense-subsection {
+      min-height: 0;
+      overflow: auto;
+    }
+
+    .dense-subtitle {
+      border-bottom: 1px solid var(--line);
+      color: var(--ink-soft);
+      font-family: var(--mono);
+      font-size: 9px;
+      font-weight: 700;
+      margin-bottom: 5px;
+      padding-bottom: 4px;
+      text-transform: uppercase;
     }
 
     .error-box {
@@ -810,8 +1054,9 @@
       background: var(--red-soft);
       color: var(--red);
       font-family: var(--mono);
-      margin-top: 12px;
-      padding: 10px;
+      margin-top: 8px;
+      padding: 8px;
+      font-size: 11px;
       text-transform: uppercase;
     }
 
@@ -819,22 +1064,153 @@
       display: block;
     }
 
-    @media (max-width: 960px) {
+    .dense-detail .panel-body {
+      overflow: auto;
+    }
+
+    @media (min-width: 1101px) {
+      html,
+      body {
+        height: 100%;
+      }
+
+      body {
+        overflow: hidden;
+      }
+
+      .page {
+        height: calc(100vh - 28px);
+        min-height: 0;
+      }
+    }
+
+    @media (min-width: 1101px) and (max-height: 820px) {
+      body {
+        padding: 10px;
+      }
+
+      .page {
+        gap: 8px;
+        height: calc(100vh - 20px);
+      }
+
+      :root[data-theme="crt"] .page {
+        border-width: 6px;
+        padding: 10px;
+      }
+
+      .masthead {
+        gap: 10px;
+        padding: 7px 10px;
+      }
+
+      .stamp {
+        font-size: 9px;
+        margin-bottom: 4px;
+        padding: 4px 6px;
+      }
+
+      h1 {
+        font-size: clamp(22px, 2vw, 28px);
+      }
+
+      .subtitle {
+        font-size: 10px;
+        margin-top: 4px;
+      }
+
+      .identity {
+        gap: 5px;
+        margin-top: 6px;
+      }
+
+      .identity-card {
+        padding: 4px 5px;
+      }
+
+      .artifact-desk {
+        padding: 6px;
+      }
+
+      .artifact-actions,
+      .theme-control {
+        margin-top: 6px;
+      }
+
+      .file-button,
+      .desk-button {
+        min-height: 28px;
+        padding: 5px 7px;
+      }
+
+      .theme-button {
+        min-height: 26px;
+      }
+
+      .artifact-status {
+        margin-top: 5px;
+      }
+
+      .dashboard-layout {
+        gap: 10px;
+      }
+
+      .instruction h2 {
+        font-size: clamp(18px, 2vw, 28px);
+      }
+
+      .engineer-note {
+        font-size: 10.5px;
+        line-height: 1.2;
+        margin-top: 7px;
+        padding: 7px;
+      }
+
+      .loss-ticket {
+        padding: 7px;
+      }
+
+      .loss-ticket strong {
+        font-size: clamp(24px, 2.4vw, 32px);
+      }
+    }
+
+    @media (max-width: 1100px) {
       body {
         padding: 14px;
+        overflow: auto;
+      }
+
+      .page {
+        min-height: 0;
+      }
+
+      :root[data-theme="crt"] .page {
+        padding: 10px;
       }
 
       .masthead,
-      .layout,
+      .dashboard-layout,
       .driver-card,
-      .clipboard-footer {
+      .clipboard-footer,
+      .driver-detail-section,
+      .dense-detail {
         grid-template-columns: 1fr;
+        grid-template-rows: none;
       }
 
       .identity,
       .board-grid,
-      .metrics {
+      .metrics,
+      .receipt-summary {
         grid-template-columns: 1fr;
+      }
+
+      .at-a-glance,
+      .driver-detail-section,
+      .dense-detail {
+        grid-column: auto;
+        grid-row: auto;
       }
 
       .board-value {
@@ -848,6 +1224,10 @@
       .timing-sheet th,
       .timing-sheet td {
         padding: 7px 5px;
+      }
+
+      .track-wrap {
+        min-height: 300px;
       }
 
       .tape-label,
@@ -878,6 +1258,11 @@
       .masthead {
         box-shadow: none;
         break-inside: avoid;
+      }
+
+      :root[data-theme="crt"] body::before,
+      :root[data-theme="crt"] body::after {
+        display: none;
       }
     }
   </style>
@@ -923,57 +1308,58 @@
           <button class="theme-button" type="button" data-theme-choice="system">System</button>
           <button class="theme-button" type="button" data-theme-choice="light">Light</button>
           <button class="theme-button" type="button" data-theme-choice="dark">Dark</button>
+          <button class="theme-button" type="button" data-theme-choice="crt">CRT</button>
         </div>
         <p class="artifact-status" id="artifactStatus"></p>
         <div class="error-box" id="errorBox" role="alert"></div>
       </aside>
     </header>
 
-    <section class="layout" aria-label="Oldschool report layout">
-      <div class="stack">
-        <section class="panel pit-board" aria-label="Pit board">
-          <div class="panel-header">
-            <span>Pit Board</span>
-            <span class="panel-code" id="pitBoardCode"></span>
-          </div>
-          <div class="panel-body">
-            <div class="board-grid">
-              <div class="board-cell main-call">
-                <span class="board-label">Next run</span>
-                <strong class="board-value" id="pitCall"></strong>
-                <p class="board-note" id="pitNote"></p>
-              </div>
-              <div class="board-cell">
-                <span class="board-label">Loss</span>
-                <strong class="board-value small" id="pitLoss"></strong>
-              </div>
-              <div class="board-cell">
-                <span class="board-label">Gap</span>
-                <strong class="board-value small" id="pitGap"></strong>
-              </div>
+    <section class="dashboard-layout" aria-label="Driver dashboard layout">
+      <section class="panel pit-board at-a-glance" aria-label="Driver glance">
+        <div class="panel-header">
+          <span>Driver Glance</span>
+          <span class="panel-code" id="pitBoardCode"></span>
+        </div>
+        <div class="panel-body">
+          <div class="board-grid">
+            <div class="board-cell main-call">
+              <span class="board-label">Next run</span>
+              <strong class="board-value" id="pitCall"></strong>
+              <p class="board-note" id="pitNote"></p>
+            </div>
+            <div class="board-cell">
+              <span class="board-label">Loss</span>
+              <strong class="board-value small" id="pitLoss"></strong>
+            </div>
+            <div class="board-cell">
+              <span class="board-label">Gap</span>
+              <strong class="board-value small" id="pitGap"></strong>
             </div>
           </div>
-        </section>
+        </div>
+      </section>
 
-        <section class="panel" aria-label="Driver debrief card">
-          <div class="panel-header">
-            <span>Driver Debrief Card</span>
-            <span class="panel-code" id="driverCardCode"></span>
+      <section class="panel driver-detail-section" aria-label="Driver debrief card">
+        <div class="panel-header">
+          <span>Driver Detail</span>
+          <span class="panel-code" id="driverCardCode"></span>
+        </div>
+        <div class="panel-body driver-card">
+          <div class="instruction">
+            <h2 id="driverInstruction"></h2>
+            <p class="engineer-note" id="engineerNote"></p>
           </div>
-          <div class="panel-body driver-card">
-            <div class="instruction">
-              <h2 id="driverInstruction"></h2>
-              <p class="engineer-note" id="engineerNote"></p>
-            </div>
-            <aside class="loss-ticket" aria-label="Median loss ticket">
-              <span>Median loss</span>
-              <strong id="ticketLoss"></strong>
-              <span id="ticketBasis"></span>
-            </aside>
-          </div>
-        </section>
+          <aside class="loss-ticket" aria-label="Median loss ticket">
+            <span>Median loss</span>
+            <strong id="ticketLoss"></strong>
+            <span id="ticketBasis"></span>
+          </aside>
+        </div>
+      </section>
 
-        <section class="panel track-board" aria-label="Lap distance tape">
+      <section class="dense-detail" aria-label="Dense detail">
+        <section class="panel track-board dense-track" aria-label="Lap distance tape">
           <div class="panel-header">
             <span>Lap Distance Tape</span>
             <span class="panel-code" id="trackBoardCode"></span>
@@ -985,13 +1371,40 @@
             <div class="callout" id="trackCallout"></div>
           </div>
         </section>
-      </div>
 
-      <aside class="stack">
-        <section class="panel" aria-label="Evidence ticket">
+        <section class="panel dense-run-detail" aria-label="Run detail">
           <div class="panel-header">
-            <span>Evidence Ticket</span>
-            <span class="panel-code">Engineer audit</span>
+            <span>Run Detail</span>
+            <span class="panel-code">Dense data</span>
+          </div>
+          <div class="panel-body">
+            <div class="run-detail-grid">
+              <div class="dense-subsection">
+                <div class="dense-subtitle">Timing Sheet</div>
+                <table class="timing-sheet">
+                  <thead>
+                    <tr>
+                      <th>Lap</th>
+                      <th>Time</th>
+                      <th>Valid</th>
+                      <th>Note</th>
+                    </tr>
+                  </thead>
+                  <tbody id="lapRows"></tbody>
+                </table>
+              </div>
+              <div class="dense-subsection">
+                <div class="dense-subtitle">Checked Areas</div>
+                <div class="checks" id="checkedAreas"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel receipt-panel dense-receipt" aria-label="Artifact receipt">
+          <div class="panel-header">
+            <span>Proof & Receipt</span>
+            <span class="panel-code" id="receiptCode"></span>
           </div>
           <div class="panel-body">
             <div class="metrics">
@@ -1018,57 +1431,20 @@
                 <strong id="confidenceValue"></strong>
               </div>
             </div>
-          </div>
-        </section>
-
-        <section class="panel" aria-label="Timing sheet">
-          <div class="panel-header">
-            <span>Timing Sheet</span>
-            <span class="panel-code">Run log</span>
-          </div>
-          <div class="panel-body">
-            <table class="timing-sheet">
-              <thead>
-                <tr>
-                  <th>Lap</th>
-                  <th>Time</th>
-                  <th>Valid</th>
-                  <th>Note</th>
-                </tr>
-              </thead>
-              <tbody id="lapRows"></tbody>
-            </table>
-          </div>
-        </section>
-
-        <section class="panel" aria-label="Checked areas">
-          <div class="panel-header">
-            <span>Checked Areas</span>
-            <span class="panel-code">Not driver advice</span>
-          </div>
-          <div class="panel-body">
-            <div class="checks" id="checkedAreas"></div>
-          </div>
-        </section>
-
-        <section class="panel" aria-label="Artifact receipt">
-          <div class="panel-header">
-            <span>Artifact Receipt</span>
-            <span class="panel-code" id="receiptCode"></span>
-          </div>
-          <div class="panel-body">
-            <div class="tearoff">
-              <div class="tearoff-title">Canonical inputs</div>
-              <strong id="canonicalInputs"></strong>
-            </div>
-            <div class="tearoff" style="margin-top: 10px;">
-              <div class="tearoff-title">Rendered report</div>
-              <strong id="renderedReportStatus"></strong>
+            <div class="receipt-summary">
+              <div class="tearoff">
+                <div class="tearoff-title">Canonical inputs</div>
+                <strong id="canonicalInputs"></strong>
+              </div>
+              <div class="tearoff">
+                <div class="tearoff-title">Rendered report</div>
+                <strong id="renderedReportStatus"></strong>
+              </div>
             </div>
             <pre class="report-lines" id="reportPreview"></pre>
           </div>
         </section>
-      </aside>
+      </section>
     </section>
   </main>
 
@@ -1262,7 +1638,7 @@
     }
 
     function setTheme(choice, persist) {
-      const theme = ["system", "light", "dark"].includes(choice) ? choice : "system";
+      const theme = ["system", "light", "dark", "crt"].includes(choice) ? choice : "system";
       if (theme === "system") {
         document.documentElement.removeAttribute("data-theme");
       } else {
@@ -1394,7 +1770,7 @@
       const repeatability = percent(delta.dominant_cause_lap_fraction);
 
       els.pitCall.textContent = shortCall;
-      els.pitNote.textContent = "Keep it rolling. Do not chase a brake marker unless the selected cause says brake point.";
+      els.pitNote.textContent = `${location}. ${gap} deficit, +${formatSeconds(delta.median_corner_loss_s, 3)}s median loss.`;
       els.pitLoss.textContent = `+${formatSeconds(delta.median_corner_loss_s, 3)}`;
       els.pitGap.textContent = gap;
       els.driverInstruction.textContent = headline;
@@ -1503,12 +1879,12 @@
       for (const lap of laps) {
         const row = document.createElement("tr");
         const isReference = referenceLapId && lap.lap_id === referenceLapId;
-        const note = isReference ? "Reference" : delta ? `${delta.corner_segment_id} comparison` : (lap.invalid_reason || "");
+        const note = isReference ? "Ref" : delta ? `${delta.corner_segment_id} cmp` : (lap.invalid_reason || "");
         row.innerHTML = `
           <td>${escapeHtml(String(lap.lap ?? ""))}</td>
           <td>${escapeHtml(formatLapTime(lap.lap_time_s))}</td>
           <td><span class="tag ${lap.valid ? "tag-good" : "tag-warn"}">${lap.valid ? "Yes" : "No"}</span></td>
-          <td>${isReference ? '<span class="tag tag-hot">Reference</span>' : escapeHtml(note)}</td>
+          <td>${isReference ? '<span class="tag tag-hot">Ref</span>' : escapeHtml(note)}</td>
         `;
         els.lapRows.appendChild(row);
       }
