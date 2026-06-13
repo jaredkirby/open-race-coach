@@ -5,6 +5,8 @@
 **Repo:** fresh (this spec is the founding document — commit it as `docs/SPEC_v0.1.md`)
 **Date:** 2026-06-12
 
+**Current evidence note (2026-06-13):** local Phase 0–3 scaffolding, deterministic tests, coach-mode plumbing, and self-contained AMS2/ACC adapter code exist in the worktree. The code has been exercised with synthetic fixtures and two public Project CARS/Project CARS 2 shared-memory-derived JSON samples, including one CREST sample with real `mCurrentLapDistance`, participant, car-state, timing, event, and track-length values. That is useful compatibility evidence for overlapping PC2/AMS2 field names and adapter normalization, but it is **not** a substitute for raw `$pcars2$` mmap bytes or a live Windows AMS2 capture. v0 is not done until the Definition of Done in §10 is satisfied with real simulator sessions.
+
 ---
 
 ## 1. What this is
@@ -99,7 +101,10 @@ sim-coach/
 ├── scripts/
 │   ├── record.py                 # CLI entry: start a recording session
 │   ├── analyze.py                # CLI entry: analyze a session dir, emit coach report
-│   └── validate_ams2.py          # struct sanity asserts (see §5.1)
+│   ├── validate_session.py       # offline Recorded Session artifact/invariant validation
+│   ├── validate_ams2.py          # struct sanity asserts (see §5.1)
+│   ├── capture_ams2_fixture.py   # Windows-only raw $pcars2$ fixture capture
+│   └── capture_acc_fixture.py    # Windows-only raw ACC page fixture capture
 ├── .gitignore                    # data/, .venv/, logs/, __pycache__
 ├── pyproject.toml
 └── README.md                     # quickstart: enable shared memory, record, analyze
@@ -376,6 +381,7 @@ Configuration:
 
 1. Implement `adapters/acc.py` against ACC's three shared-memory pages (Physics / Graphics / Static).
 2. **No analysis or coach changes permitted.** Adapter-base or schema changes are allowed only if they remain backward-compatible with AMS2 fixtures and are logged in `DECISIONS.md`. If ACC needs analysis-specific branching, that's an architecture bug — fix the abstraction.
+3. Capture raw ACC page fixtures with `scripts/capture_acc_fixture.py` after a live ACC validation run, storing all three page dumps plus their JSON sidecar together.
 
 **Acceptance:** full record → analyze → coach loop on a real ACC session with no analysis/coach code modified.
 
@@ -394,7 +400,9 @@ Configuration:
 
 ## 6. Testing strategy
 
-- **Fixture-first for adapters:** capture raw shared-memory byte dumps to `tests/fixtures/` during Phase 1 validation; adapter tests parse fixtures, never require a running sim.
+- **Fixture-first for adapters:** capture raw shared-memory byte dumps to `tests/fixtures/` during Phase 1 validation with `scripts/capture_ams2_fixture.py`; adapter tests parse fixtures, never require a running sim. `tests/test_raw_fixtures.py` skips when no raw live captures are present, and becomes an adapter regression check as soon as reviewed raw sidecars plus `.bin` dumps are committed. Public shared-memory-derived samples are allowed as secondary evidence only when provenance is recorded and limitations are explicit. They may validate real field names and overlapping adapter mappings, but they do not prove raw mmap layout, field offsets, or live simulator behavior.
+- **Known public PC2-derived fixture:** `tests/fixtures/pcars2/rest-cars_example.json` is Project CARS 2 shared-memory-derived JSON from `ocindev/rest-cars`. It validates real PC2 field names such as `mSpeed`, `mThrottle`, `mBrake`, `mSteering`, `mGear`, `mRPM`, `mTrackLocation`, `mTrackVariation`, `mTrackLength`, `mLapInvalidated`, and participant world position after mapping into the AMS2/PC2 `ctypes` struct. It does **not** include `mCurrentLapDistance`, and must not be used to claim live lap-distance extraction is validated.
+- **Known public lap-distance fixture:** `tests/fixtures/pcars2/crest_example.json` is Project CARS shared-memory-derived JSON from `NLxAROSA/CREST`. It validates real `mCurrentLapDistance`, participant array, car-state, timing, event, and track-length values after mapping into the AMS2/PC2 adapter path. It records `mVersion: 5`, not AMS2's expected live shared-memory version, so it is compatibility evidence only.
 - **Synthetic traces for segmentation:** generate a parametric track (e.g., two straights + four arcs) where corner boundaries are known analytically; assert detection within tolerance. Then add one recorded real-lap fixture as a regression anchor.
 - **Golden-file test for deltas:** one recorded session fixture with hand-verified expected deltas, asserted with realistic tolerances (`≤ 0.02s` for recorded timing deltas; tighter tolerances only for synthetic data).
 - Coach layer: test prompt construction, OpenAI API payload construction, ChatGPT prompt-file generation, ChatGPT response import validation, and output validation with mocked responses. No live API calls in tests.
@@ -430,6 +438,15 @@ python scripts/analyze.py <session_dir> --analysis-run <analysis_run_dir> --chat
 
 python scripts/validate_ams2.py
     # Interactive struct sanity check. Run once per AMS2 update.
+
+python scripts/validate_session.py data/sessions/<session_dir>
+    # Offline artifact and invariant validation for a finalized Recorded Session.
+
+python scripts/capture_ams2_fixture.py --out tests/fixtures/ams2 --count 5
+    # Windows-only. Captures raw $pcars2$ mmap bytes plus JSON sidecars for adapter regression fixtures.
+
+python scripts/capture_acc_fixture.py --out tests/fixtures/acc --count 5
+    # Windows-only. Captures raw ACC physics/graphics/static page bytes plus JSON sidecars.
 ```
 
 ---
@@ -460,6 +477,8 @@ This repo will be developed iteratively with a coding agent; logs are the primar
 
 ## 10. Definition of done (v0)
 
+Current local status: the repo can run the CI-runnable test suite without a simulator, and schema/adapter/recorder/analyzer/coach scaffolding exists. This is not v0 completion evidence. The unchecked items below remain the authority.
+
 - [ ] Phase 1–3 acceptance criteria met on real AMS2 sessions
 - [ ] Phase 0 schema docs exist and match §4 data contracts
 - [ ] Phase 4 acceptance met on a real ACC session with no analysis/coach changes
@@ -475,3 +494,48 @@ This repo will be developed iteratively with a coding agent; logs are the primar
 1. AMS2 shared-memory mode: **Project CARS 2 mode** is assumed; confirm field fidelity vs. Project CARS 1 mode during validation.
 2. Lap Progress usability thresholds: tune exact max-gap, reversal-tolerance, long-flat-spot, and coverage thresholds from AMS2 fixtures before freezing `bad_lap_progress` behavior.
 3. Corner-segmentation thresholds (curvature cutoff, min segment length, merge distance): tune on 2–3 real tracks, then freeze and document.
+
+---
+
+## 12. Current validation ledger
+
+This section is a working evidence map for the build. It prevents local tests, public fixture checks, and real simulator acceptance from being blurred together.
+
+### Proven locally without a simulator
+
+- Schema docs exist for every v0 durable artifact listed in §4.
+- AMS2/PC2 and ACC adapters expose fixture-friendly snapshot parsing seams.
+- The AMS2 adapter has offset tests for the locally pinned `ctypes` struct and maps speed, inputs, gear, rpm, lap invalidation, vehicle state, track/car metadata, track length, lap progress, and world position into `NormalizedTick` / `session.yaml` contracts.
+- `scripts/capture_ams2_fixture.py` can summarize raw AMS2/PC2 fixture bytes into a provenance sidecar in CI-safe unit tests; the actual byte capture path still requires Windows shared memory.
+- `scripts/capture_acc_fixture.py` can summarize raw ACC physics/graphics/static page bytes into a provenance sidecar in CI-safe unit tests; the actual byte capture path still requires Windows shared memory.
+- `tests/test_raw_fixtures.py` is ready to parse committed raw AMS2/ACC sidecars and byte dumps in CI; it currently skips because no reviewed live raw captures are committed.
+- The public `rest-cars` Project CARS 2 shared-memory-derived JSON sample maps into the AMS2/PC2 adapter path for the fields it contains.
+- Recorder finalization writes `session.yaml`, `ticks.parquet`, and `laps.jsonl`, derives final lap records from finalized ticks, and invalidates laps for bad Lap Progress, non-running Vehicle State, teleport/reset evidence, missing tick ranges, and simulator invalidation evidence.
+- `scripts/validate_session.py` re-reads finalized Recorded Session artifacts and validates required `session.yaml` metadata, schema support, completion, tick invariants, full tick-row coverage by lap ranges, lap IDs, derived lap timing, and lap invalidity consistency before analysis.
+- Deterministic analysis, personal-best reference selection, segmentation, delta/cause selection, confidence gating, deterministic report rendering, OpenAI API refinement plumbing, ChatGPT manual prompt/response workflow, and CLI refusal rules are covered by CI-runnable tests with synthetic fixtures and mocked model responses.
+
+### Not proven until live simulator validation
+
+- Raw AMS2 `$pcars2$` mmap layout and field fidelity against the installed AMS2 build.
+- Whether AMS2 `mCurrentLap`, `mCurrentLapDistance`, `mLapInvalidated`, `mGameState`, `mSessionState`, `mPitMode`, and `mWorldPosition` have the exact semantics assumed by the adapter.
+- Whether a real 10-lap AMS2 practice recording produces complete artifacts whose lap times match the simulator timing screen within 0.05s.
+- Whether curvature segmentation thresholds produce plausible Corner Segment counts on real AMS2 tracks.
+- Whether a real ACC recording can complete the record → analyze → coach loop without analysis or coach changes.
+- README quickstart from a genuinely clean clone on Windows with simulator shared memory enabled.
+
+### Live validation commands
+
+```bash
+uv run python scripts/validate_ams2.py
+uv run python scripts/capture_ams2_fixture.py --out tests/fixtures/ams2 --count 5
+uv run python scripts/record.py --sim ams2 --out data/sessions
+uv run python scripts/validate_session.py data/sessions/<ams2_session_dir>
+uv run python scripts/analyze.py data/sessions/<ams2_session_dir>
+uv run python scripts/analyze.py data/sessions/<ams2_session_dir> --coach --coach-mode chatgpt
+uv run python scripts/record.py --sim acc --out data/sessions
+uv run python scripts/capture_acc_fixture.py --out tests/fixtures/acc --count 5
+uv run python scripts/validate_session.py data/sessions/<acc_session_dir>
+uv run python scripts/analyze.py data/sessions/<acc_session_dir>
+```
+
+After each live validation finding, update `docs/DECISIONS.md` with the evidence and adjust this spec only when the contract changes.
