@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SIM-COACH Oldschool Driver Debrief</title>
+  <title>Open Race Coach Driver Debrief</title>
   <style>
     :root {
       color-scheme: light;
@@ -887,7 +887,7 @@
     <header class="masthead">
       <div>
         <span class="stamp" id="runStamp">Garage Copy</span>
-        <h1>SIM-COACH Timing Stand Debrief</h1>
+        <h1>Open Race Coach Timing Stand Debrief</h1>
         <p class="subtitle" id="subtitle">Driver-facing output rendered from Analysis Run artifacts.</p>
         <div class="identity" aria-label="Session identity">
           <div class="identity-card">
@@ -1255,7 +1255,7 @@
 
     function readStoredTheme() {
       try {
-        return localStorage.getItem("simcoach-oldschool-theme") || "system";
+        return localStorage.getItem("openracecoach-driver-debrief-theme") || "system";
       } catch (_error) {
         return "system";
       }
@@ -1274,7 +1274,7 @@
       }
       if (persist) {
         try {
-          localStorage.setItem("simcoach-oldschool-theme", theme);
+          localStorage.setItem("openracecoach-driver-debrief-theme", theme);
         } catch (_error) {
           /* File URLs may block storage in hardened browsers. */
         }

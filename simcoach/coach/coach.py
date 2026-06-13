@@ -172,7 +172,7 @@ def call_openai_responses_api(
         text={
             "format": {
                 "type": "json_schema",
-                "name": "simcoach_coach_response",
+                "name": "open_race_coach_response",
                 "schema": COACH_RESPONSE_JSON_SCHEMA,
                 "strict": True,
             },
@@ -271,15 +271,15 @@ def render_refined_report(
     lines = report.splitlines()
     one_idx = lines.index("## The one thing")
     why_idx = lines.index("## Why (the data)")
-    data_idx = lines.index("## Consistency check")
+    data_idx = lines.index("## Checked areas")
     one_text = response["instruction"] or (
         f"No data-supported Coaching Instruction. {response['why']}"
     )
     refined = (
         lines[: one_idx + 1]
         + [one_text, ""]
-        + lines[why_idx : why_idx + 1]
-        + [response["why"], response["confidence_note"], ""]
+        + lines[why_idx:data_idx]
+        + ["Coach refinement:", response["why"], response["confidence_note"], ""]
         + lines[data_idx:]
     )
     return "\n".join(refined).rstrip() + "\n"

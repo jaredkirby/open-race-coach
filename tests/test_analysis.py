@@ -51,9 +51,13 @@ def test_analyze_session_writes_complete_deterministic_artifacts(tmp_path: Path)
     assert analysis_yaml["analysis_status"] == "reportable"
     assert selected_delta["analysis_status"] == "reportable"
     assert selected_delta["selected_delta"]["dominant_cause"] == "min_speed"
+    assert "segment_range" in selected_delta["selected_delta"]
     assert len(corner_segments["segments"]) >= 1
     assert "## The one thing" in report
-    assert "carry more minimum speed" in report
+    assert "try to keep the car rolling about 3.0 m/s" in report
+    assert "The data identifies the speed loss, not the exact input change." in report
+    assert "Reference: session-best lap 1." in report
+    assert "comparison-lap median" not in report
     assert (paths.root / "coach_report.md").read_text() == report
 
 
@@ -253,8 +257,43 @@ def test_unavailable_lap_distance_report_uses_percentage_not_meters() -> None:
         selected_delta,
     )
 
-    assert "lap_dist_pct" in report
+    assert "lap distance" in report
+    assert "lap_dist_pct" not in report
     assert "meter" not in report.lower()
+
+
+def test_insufficient_comparison_laps_report_is_human_readable() -> None:
+    info = session_info()
+    session = {
+        **info,
+        "recorded_session_id": "session01",
+        "started_at": "2026-06-12T10:00:00-07:00",
+        "complete": True,
+    }
+    selected_delta = {
+        "analysis_status": "insufficient_data",
+        "reason": "fewer_than_minimum_comparison_laps",
+        "comparison_lap_count": 1,
+        "reference_lap_id": "session01:lap:1",
+        "selected_delta": None,
+        "corner_summaries": [],
+    }
+
+    report = render_coach_report(
+        session,
+        Path("analysis/2026-06-12_100000_best"),
+        [
+            {"valid": True, "lap_time_s": 90.0},
+            {"valid": True, "lap_time_s": 91.0},
+        ],
+        "best",
+        selected_delta,
+    )
+
+    assert "only 1 comparison lap(s) remained" in report
+    assert "needs at least 4" in report
+    assert "fewer_than_minimum_comparison_laps" not in report
+    assert "insufficient_data" not in report
 
 
 def create_finalized_session(out_dir: Path, name: str) -> Path:
@@ -304,7 +343,7 @@ def build_synthetic_reportable_ticks() -> list[NormalizedTick]:
             in_loss_region = 0.18 <= pct <= 0.42
             corner_delay = 0.0 if is_reference else 0.18 * smoothstep(0.18, 0.42, pct)
             elapsed = pct * lap_duration + corner_delay
-            angle = 2.0 * math.pi * pct
+            pos_x, pos_y = track_position(pct)
             speed = 45.0
             if in_loss_region:
                 speed = 42.0 if is_reference else 39.0
@@ -321,8 +360,8 @@ def build_synthetic_reportable_ticks() -> list[NormalizedTick]:
                     gear=4,
                     rpm=8500.0,
                     vehicle_state="running",
-                    pos_x=100.0 * math.cos(angle),
-                    pos_y=100.0 * math.sin(angle),
+                    pos_x=pos_x,
+                    pos_y=pos_y,
                     pos_z=0.0,
                 )
             )
@@ -337,3 +376,15 @@ def smoothstep(start: float, end: float, value: float) -> float:
         return 1.0
     x = (value - start) / (end - start)
     return x * x * (3.0 - 2.0 * x)
+
+
+def track_position(pct: float) -> tuple[float, float]:
+    x = pct * 1000.0
+    y = 0.0
+    if 0.18 <= pct <= 0.42:
+        phase = (pct - 0.18) / 0.24
+        y = 90.0 * math.sin(math.pi * phase)
+    elif 0.62 <= pct <= 0.74:
+        phase = (pct - 0.62) / 0.12
+        y = -35.0 * math.sin(math.pi * phase)
+    return x, y

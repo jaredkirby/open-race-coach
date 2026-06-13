@@ -1,11 +1,11 @@
-# SIM-COACH
+# Open Race Coach
 
-SIM-COACH is a local-first post-session coaching tool for sim racing. It turns recorded driving telemetry into one data-supported coaching instruction for the next session.
+Open Race Coach is a local-first post-session coaching tool for sim racing. It turns recorded driving telemetry into one data-supported coaching instruction for the next session.
 
 ## Language
 
 **Recorded Session**:
-The immutable analysis unit captured by SIM-COACH. A Recorded Session is homogeneous for sim, track, car, session type, adapter version, and artifact schema versions; pit stops, pauses, slow laps, invalid laps, and multiple stints may remain inside it as long as that context does not change.
+The immutable analysis unit captured by Open Race Coach. A Recorded Session is homogeneous for sim, track, car, session type, adapter version, and artifact schema versions; pit stops, pauses, slow laps, invalid laps, and multiple stints may remain inside it as long as that context does not change.
 _Avoid_: Session when the meaning could be confused with a simulator session, stint, lap, or filesystem directory.
 
 **Recorded Session ID**:
@@ -17,11 +17,11 @@ A Recorded Session whose capture or finalization failed before all required arti
 _Avoid_: Partial session when eligibility for analysis matters.
 
 **Recorded Session Boundary**:
-The point where SIM-COACH must finalize one Recorded Session and start another because the recorded context changes.
+The point where Open Race Coach must finalize one Recorded Session and start another because the recorded context changes.
 _Avoid_: Split when the domain event is a change in recording context.
 
 **Simulator Label**:
-The raw track or car name reported by the simulator for display and audit. SIM-COACH stores normalized matching keys separately.
+The raw track or car name reported by the simulator for display and audit. Open Race Coach stores normalized matching keys separately.
 _Avoid_: Name when matching semantics are being discussed.
 
 **Matching Key**:
@@ -29,15 +29,15 @@ A deterministic normalized value used to group Recorded Sessions for exact-match
 _Avoid_: Alias, display name.
 
 **Artifact Schema Version**:
-The version of one durable SIM-COACH artifact contract, such as session metadata, ticks, lap records, or Analysis Run outputs.
+The version of one durable Open Race Coach artifact contract, such as session metadata, ticks, lap records, or Analysis Run outputs.
 _Avoid_: Global schema version.
 
 **Capture Time**:
-The monotonic elapsed time stored on telemetry ticks, measured in seconds from the start of capture. Capture Time is not a simulator clock value and must not move backward or freeze while SIM-COACH is recording.
+The monotonic elapsed time stored on telemetry ticks, measured in seconds from the start of capture. Capture Time is not a simulator clock value and must not move backward or freeze while Open Race Coach is recording.
 _Avoid_: Sim time when referring to the normalized `t` field.
 
 **Lap**:
-One complete traversal of the track within a Recorded Session, as identified from simulator lap state and validated by SIM-COACH.
+One complete traversal of the track within a Recorded Session, as identified from simulator lap state and validated by Open Race Coach.
 _Avoid_: Run, attempt.
 
 **Lap ID**:
@@ -81,7 +81,7 @@ The fastest Valid Lap found across stored Recorded Sessions with the same sim, t
 _Avoid_: Historical best when current-session laps are eligible.
 
 **Analysis Run**:
-One execution of SIM-COACH analysis for a Recorded Session using a specific Reference Lap selection and confidence policy.
+One execution of Open Race Coach analysis for a Recorded Session using a specific Reference Lap selection and confidence policy.
 _Avoid_: Session analysis, report run.
 
 **Comparison Lap**:

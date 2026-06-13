@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate a recorded SIM-COACH session directory."""
+"""Validate a recorded Open Race Coach session directory."""
 
 from __future__ import annotations
 

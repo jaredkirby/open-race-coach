@@ -34,9 +34,9 @@ def test_chatgpt_prompt_and_response_import(tmp_path: Path) -> None:
         json.dumps(
             {
                 "analysis_status": "reportable",
-                "corner_segment_id": "C1",
-                "instruction": "Carry more speed through C1.",
-                "why": "The deterministic analysis selected C1 with repeatable minimum-speed loss.",
+                "corner_segment_id": "C2",
+                "instruction": "Carry more speed through C2.",
+                "why": "The deterministic analysis selected C2 with repeatable minimum-speed loss.",
                 "confidence_note": (
                     "The instruction is bounded to the selected deterministic delta."
                 ),
@@ -52,8 +52,10 @@ def test_chatgpt_prompt_and_response_import(tmp_path: Path) -> None:
     assert analysis["coach_refinement_status"] == "complete"
     assert analysis["coach_response_schema_version"] == 1
     assert wrapper["provider"] == "chatgpt_manual"
-    assert wrapper["response"]["instruction"] == "Carry more speed through C1."
-    assert "Carry more speed through C1." in report
+    assert wrapper["response"]["instruction"] == "Carry more speed through C2."
+    assert "Carry more speed through C2." in report
+    assert "Minimum speed was 42.0 m/s" in report
+    assert "10.8 km/h" in report
     assert (session_dir / "coach_report.md").read_text() == report
 
 
@@ -99,9 +101,9 @@ def test_chatgpt_response_rejects_unexpected_keys_without_response_artifact(
         json.dumps(
             {
                 "analysis_status": "reportable",
-                "corner_segment_id": "C1",
-                "instruction": "Carry more speed through C1.",
-                "why": "The deterministic analysis selected C1.",
+                "corner_segment_id": "C2",
+                "instruction": "Carry more speed through C2.",
+                "why": "The deterministic analysis selected C2.",
                 "confidence_note": "Bounded to deterministic evidence.",
                 "raw_ticks": [{"t": 0.1, "speed": 42.0}],
             }
@@ -124,9 +126,9 @@ def test_openai_api_refinement_uses_mocked_responses_client(tmp_path: Path) -> N
         json.dumps(
             {
                 "analysis_status": "reportable",
-                "corner_segment_id": "C1",
-                "instruction": "Carry more minimum speed in C1.",
-                "why": "C1 has the selected repeatable minimum-speed delta.",
+                "corner_segment_id": "C2",
+                "instruction": "Carry more minimum speed in C2.",
+                "why": "C2 has the selected repeatable minimum-speed delta.",
                 "confidence_note": "The model did not alter deterministic evidence.",
             }
         )
@@ -185,9 +187,9 @@ def test_openai_api_failure_preserves_deterministic_artifacts_and_allows_retry(
         json.dumps(
             {
                 "analysis_status": "reportable",
-                "corner_segment_id": "C1",
-                "instruction": "Carry more minimum speed in C1.",
-                "why": "C1 is the deterministic selected issue.",
+                "corner_segment_id": "C2",
+                "instruction": "Carry more minimum speed in C2.",
+                "why": "C2 is the deterministic selected issue.",
                 "confidence_note": "This retry stayed within deterministic evidence.",
             }
         )
@@ -200,8 +202,8 @@ def test_openai_api_failure_preserves_deterministic_artifacts_and_allows_retry(
     assert retried_analysis["coach_refinement_mode"] == "api"
     assert retried_analysis["coach_refinement_status"] == "complete"
     assert retried_analysis["coach_refinement_error"] is None
-    assert wrapper["response"]["instruction"] == "Carry more minimum speed in C1."
-    assert "Carry more minimum speed in C1." in (run_dir / "coach_report.md").read_text()
+    assert wrapper["response"]["instruction"] == "Carry more minimum speed in C2."
+    assert "Carry more minimum speed in C2." in (run_dir / "coach_report.md").read_text()
 
 
 def test_refinement_refuses_mismatched_recorded_session_without_mutation(
@@ -266,7 +268,7 @@ def test_coach_prompt_allowlists_deterministic_aggregate_evidence(
     assert "raw_ticks" not in prompt
     assert "raw_samples" not in prompt
     assert "debug_lap_rows" not in prompt
-    assert evidence["selected_delta"]["corner_segment_id"] == "C1"
+    assert evidence["selected_delta"]["corner_segment_id"] == "C2"
     assert evidence["selected_delta"]["dominant_cause"] == "min_speed"
     assert "median_corner_loss_s" in evidence["corner_summaries"][0]
 
@@ -280,7 +282,7 @@ def analyzed_session(tmp_path: Path) -> tuple[Path, Path]:
     run_dir = analyze_session(paths.root)
     selected_delta = json.loads((run_dir / "selected_delta.json").read_text())
     assert selected_delta["analysis_status"] == "reportable"
-    assert selected_delta["selected_delta"]["corner_segment_id"] == "C1"
+    assert selected_delta["selected_delta"]["corner_segment_id"] == "C2"
     return paths.root, run_dir
 
 

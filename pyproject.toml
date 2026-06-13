@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "sim-coach"
+name = "open-race-coach"
 version = "0.1.0"
 description = "Local-first post-session sim-racing telemetry coach"
 readme = "README.md"

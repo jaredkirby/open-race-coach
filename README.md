@@ -1,6 +1,8 @@
-# SIM-COACH
+# Open Race Coach
 
-SIM-COACH records simulator telemetry into local files and later turns the data into at most one data-supported coaching instruction.
+Open Race Coach records simulator telemetry into local files and later turns the data into at most one data-supported coaching instruction.
+
+Public home: https://openracecoach.com
 
 ## Status
 
@@ -20,7 +22,7 @@ In Automobilista 2, set shared memory to Project CARS 2 mode, start a practice s
 uv run python scripts/record.py --sim ams2 --out data/sessions
 ```
 
-Stop recording with `Ctrl+C`. SIM-COACH attempts to finalize `session.yaml`, `ticks.parquet`, and `laps.jsonl`.
+Stop recording with `Ctrl+C`. Open Race Coach attempts to finalize `session.yaml`, `ticks.parquet`, and `laps.jsonl`.
 
 ## Record ACC
 

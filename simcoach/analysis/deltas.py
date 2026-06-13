@@ -197,6 +197,7 @@ def analyze_deltas(
         summary = {
             "corner_segment_id": segment_id,
             "classification": classification,
+            "segment_range": segment_range(segment, lap_dist_m_source),
             "median_corner_loss_s": round(median_loss, 6),
             "robust_noise_s": round(noise, 6),
             "dominant_cause": dominant_cause,
@@ -217,7 +218,9 @@ def analyze_deltas(
             candidate = {
                 "corner_segment_id": segment_id,
                 "dominant_cause": dominant_cause,
+                "dominant_cause_lap_fraction": round(dominant_fraction, 6),
                 "comparison_lap_count": len(comparison_records),
+                "segment_range": segment_range(segment, lap_dist_m_source),
                 "median_corner_loss_s": round(median_loss, 6),
                 "robust_noise_s": round(noise, 6),
                 "cause_metric": cause_metric(
@@ -327,6 +330,16 @@ def non_reportable_selected_delta(
         "reference_lap_id": reference_lap["lap_id"] if reference_lap else None,
         "selected_delta": None,
         "corner_summaries": corner_summaries,
+    }
+
+
+def segment_range(segment: dict[str, Any], lap_dist_m_source: str) -> dict[str, Any]:
+    return {
+        "start_lap_dist_pct": round(float(segment["start_lap_dist_pct"]), 6),
+        "end_lap_dist_pct": round(float(segment["end_lap_dist_pct"]), 6),
+        "start_lap_dist_m": segment.get("start_lap_dist_m"),
+        "end_lap_dist_m": segment.get("end_lap_dist_m"),
+        "lap_dist_m_source": lap_dist_m_source,
     }
 
 

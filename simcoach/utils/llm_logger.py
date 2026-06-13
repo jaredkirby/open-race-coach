@@ -1,4 +1,4 @@
-"""Structured logging wrapper used across SIM-COACH."""
+"""Structured logging wrapper used across Open Race Coach."""
 
 from __future__ import annotations
 

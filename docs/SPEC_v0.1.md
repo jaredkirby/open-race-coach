@@ -1,9 +1,11 @@
-# SIM-COACH — Project Bootstrap Spec v0.1
+# Open Race Coach — Project Bootstrap Spec v0.1
 
 **Status:** Draft for dev-agent execution
 **Owner:** Jared Kirby
 **Repo:** fresh (this spec is the founding document — commit it as `docs/SPEC_v0.1.md`)
 **Date:** 2026-06-12
+**Public domain:** https://openracecoach.com
+**Internal Python package:** `simcoach` remains the import namespace for v0.
 
 **Current evidence note (2026-06-13):** local Phase 0–3 scaffolding, deterministic tests, coach-mode plumbing, and self-contained AMS2/ACC adapter code exist in the worktree. The code has been exercised with synthetic fixtures and two public Project CARS/Project CARS 2 shared-memory-derived JSON samples, including one CREST sample with real `mCurrentLapDistance`, participant, car-state, timing, event, and track-length values. That is useful compatibility evidence for overlapping PC2/AMS2 field names and adapter normalization, but it is **not** a substitute for raw `$pcars2$` mmap bytes or a live Windows AMS2 capture. v0 is not done until the Definition of Done in §10 is satisfied with real simulator sessions.
 
@@ -13,7 +15,7 @@
 
 A local-first, post-session telemetry coaching tool for sim racing. It ingests telemetry from multiple sims via shared memory, normalizes it into a common schema stored as Parquet on disk, analyzes lap-over-lap deltas at the corner level, and produces **at most one plain-English coaching instruction per session** — the biggest repeatable, data-supported divergence from the selected reference lap, or an explicit no-instruction status when the data does not support one.
 
-**One-sentence product:** "Drive a session; before your next one, the tool tells you the one repeatable driving delta most worth attacking, or says the data does not support one."
+**One-sentence product:** "Drive a session; before your next one, Open Race Coach tells you the one repeatable driving delta most worth attacking, or says the data does not support one."
 
 ### Design philosophy
 - **Filesystem-as-API.** No database. YAML for metadata, Parquet for telemetry, JSONL for lap records, Markdown for human-readable output. Every artifact is inspectable with `cat`, `head`, or pandas.
@@ -42,7 +44,7 @@ A local-first, post-session telemetry coaching tool for sim racing. It ingests t
 ## 3. Repo layout (create exactly this)
 
 ```
-sim-coach/
+open-race-coach/
 ├── docs/
 │   ├── SPEC_v0.1.md              # this document
 │   └── DECISIONS.md              # running ADR-lite log (date, decision, why)
@@ -120,7 +122,7 @@ This is the **only** schema the analysis layer ever sees. Adapters do all the tr
 
 | Field | Type | Unit | Notes |
 |---|---|---|---|
-| `t` | float64 | seconds | Monotonic Capture Time from the start of SIM-COACH recording. Use a recorder-owned monotonic clock; do not use a simulator clock that can pause, reset, freeze, or jump backward. |
+| `t` | float64 | seconds | Monotonic Capture Time from the start of Open Race Coach recording. Use a recorder-owned monotonic clock; do not use a simulator clock that can pause, reset, freeze, or jump backward. |
 | `lap` | int32 | — | Current lap number (sim-reported, 1-indexed) |
 | `lap_dist_pct` | float32 | 0.0–1.0 | Normalized Lap Progress. **Primary alignment key for all comparisons** |
 | `lap_dist_m` | float32 nullable | meters | Distance around current lap. Use sim-provided value when exposed; otherwise derive from `track_length_m` if known. Required for meter-based coaching language; provenance lives in `session.yaml.lap_dist_m_source`. |
@@ -161,7 +163,7 @@ This is the **only** schema the analysis layer ever sees. Adapters do all the tr
 - `lap_time_source` is `sim` when the simulator exposes a final lap time for that lap; otherwise it is `derived_from_ticks`, using the elapsed `t` delta across the finalized half-open `tick_range`.
 - `sector_times_s` is nullable. Use simulator sector times only when exposed and trustworthy; do not invent official sector timing by splitting the lap into thirds. If sector timing is unavailable, write `null`.
 - `tick_range` is zero-based, half-open row indexes into `ticks.parquet`: `[start_idx, end_idx_exclusive]`.
-- `valid` comes from simulator invalidation evidence plus SIM-COACH hard hygiene checks. A sim cut/invalid flag or explicit off-track/cut field invalidates the lap when exposed, but simulator flags do not bypass inferred checks for teleport/reset, unusable Lap Progress (`lap_dist_pct` gaps, reversals, long flat spots, or discontinuities that prevent fixed-grid resampling), missing tick ranges, or non-running Vehicle State during the lap. `vehicle_state=unknown` does not automatically invalidate a lap, but laps with unknown state must pass all other validity checks strictly. If any analyzed lap contains unknown Vehicle State, set `session.yaml.validity_method` to `unknown_plus_inferred`. If any tick in a lap is known `paused`, `menu`, or `replay`, invalidate the lap. If `pit` appears within a completed timed lap, invalidate the lap. If more than 20% of lap ticks are known non-running states, invalidate the lap. **Slow laps are not invalid by themselves.** Document which Validity Method was used in `session.yaml`.
+- `valid` comes from simulator invalidation evidence plus Open Race Coach hard hygiene checks. A sim cut/invalid flag or explicit off-track/cut field invalidates the lap when exposed, but simulator flags do not bypass inferred checks for teleport/reset, unusable Lap Progress (`lap_dist_pct` gaps, reversals, long flat spots, or discontinuities that prevent fixed-grid resampling), missing tick ranges, or non-running Vehicle State during the lap. `vehicle_state=unknown` does not automatically invalidate a lap, but laps with unknown state must pass all other validity checks strictly. If any analyzed lap contains unknown Vehicle State, set `session.yaml.validity_method` to `unknown_plus_inferred`. If any tick in a lap is known `paused`, `menu`, or `replay`, invalidate the lap. If `pit` appears within a completed timed lap, invalidate the lap. If more than 20% of lap ticks are known non-running states, invalidate the lap. **Slow laps are not invalid by themselves.** Document which Validity Method was used in `session.yaml`.
 - `invalid_reason` is nullable for valid laps and otherwise one of: `sim_invalidated`, `bad_lap_progress`, `missing_tick_range`, `non_running_vehicle_state`, `teleport_or_reset`, `metadata_boundary`, or `unknown_invalidity`.
 - Invalid laps are stored but **never** used as Reference Laps, Comparison Laps, noise-estimation inputs, consistency-classification inputs, or personal-best candidates.
 
@@ -194,7 +196,7 @@ Required metadata for starting and continuing a Recorded Session is: `sim`, `tra
 
 Matching Keys for `track` and `car` are derived from the corresponding Simulator Label by lowercasing, trimming leading/trailing whitespace, replacing every run of non-alphanumeric characters with `_`, and stripping leading/trailing `_`. If normalization produces an empty Matching Key, treat the required metadata as unavailable. v0 does not use alias tables, fuzzy matching, or per-sim hand mappings for Matching Keys.
 
-`validity_method` is `sim_flag_plus_inferred` when the adapter exposes a trusted simulator invalidation flag and SIM-COACH also ran inferred hygiene checks, `inferred` when Valid Lap decisions used SIM-COACH hard evidence without simulator invalidation flags, and `unknown_plus_inferred` when any analyzed lap includes `vehicle_state=unknown` and therefore passed stricter inferred checks. There is no v0 `sim_flag_only` mode: simulator invalidation flags are useful evidence, not permission to ignore broken Lap Progress, missing tick ranges, teleport/reset evidence, or non-running Vehicle State.
+`validity_method` is `sim_flag_plus_inferred` when the adapter exposes a trusted simulator invalidation flag and Open Race Coach also ran inferred hygiene checks, `inferred` when Valid Lap decisions used Open Race Coach hard evidence without simulator invalidation flags, and `unknown_plus_inferred` when any analyzed lap includes `vehicle_state=unknown` and therefore passed stricter inferred checks. There is no v0 `sim_flag_only` mode: simulator invalidation flags are useful evidence, not permission to ignore broken Lap Progress, missing tick ranges, teleport/reset evidence, or non-running Vehicle State.
 
 `failure_reason` is `null` when `complete: true`. When `complete: false`, it must be one of: `metadata_unavailable`, `artifact_write_failed`, `recording_interrupted`, `no_ticks_collected`, `directory_collision`, `session_boundary_finalization_failed`, or `unknown_failure`.
 
@@ -226,17 +228,16 @@ Markdown, human-first. Structure:
 
 ```markdown
 # Coach Report — {track} / {car} / {date}
-**Analysis Run:** `analysis/{YYYY-MM-DD_HHMMSS}_{reference_mode}/`.
-**Session:** {n} laps, {n_valid} valid. Best: {time_or_none}. Reference Mode: {best|personal}. Reference Lap: {reference_lap_id_or_none}.
+**Session:** {n} laps, {n_valid} valid. Best valid lap: {time_or_none}. Reference: {session-best|personal-best|none} {lap_number_or_selected_lap}.
 
 ## The one thing
-{If `analysis_status=reportable`: one Coaching Instruction, 1–3 sentences, driver language, with Corner Segment ID and concrete action. If non-reportable: no Coaching Instruction; state the exact non-reportable status in driver language. No invented corner names, official turn numbers, or generic coaching tips.}
+{If `analysis_status=reportable`: one Coaching Instruction, 1–3 sentences, driver language, with location, magnitude, comparison basis, and confidence basis. If the selected difference identifies an outcome but not a proven input change, say so explicitly. If non-reportable: no Coaching Instruction; state the exact non-reportable status in driver language and say what data is needed next. No invented corner names, official turn numbers, generic coaching tips, raw enum values, or filesystem paths.}
 
 ## Why (the data)
-{Corner Segment, time delta, what differs: brake point, min speed, throttle point. Show meters only when supported by `lap_dist_m_source`; otherwise show lap-distance percentages.}
+{Detected corner segment in human wording, time delta, measured difference: brake point, min speed, throttle point, or coast duration. Show meters only when supported by `lap_dist_m_source`; otherwise show lap-distance percentages. Preserve deterministic evidence even after LLM refinement.}
 
-## Consistency check
-{Per-corner noise summary. Corners where driver is already consistent get a one-line "no action" note.}
+## Checked areas
+{Per-corner summary in human wording. Corners where driver is already consistent get a one-line "no action" note.}
 ```
 
 ### 4.5 Invariants (assert these in code)
@@ -271,7 +272,7 @@ Supported coach modes:
 | Mode | CLI | What happens | Billing/token source |
 |---|---|---|---|
 | OpenAI API | `--coach --coach-mode api` | Calls the OpenAI Responses API with the structured deterministic analysis payload and refines the deterministic `coach_report.md` prose. | OpenAI API billing; charged separately from ChatGPT subscriptions. |
-| ChatGPT manual | `--coach --coach-mode chatgpt` | Writes `coach_prompt.md`, prints instructions to paste it into ChatGPT, then exits. A separate `--analysis-run <dir> --chatgpt-response <path>` invocation imports the pasted JSON response. | User's ChatGPT subscription message allowance; no API tokens consumed by SIM-COACH. |
+| ChatGPT manual | `--coach --coach-mode chatgpt` | Writes `coach_prompt.md`, prints instructions to paste it into ChatGPT, then exits. A separate `--analysis-run <dir> --chatgpt-response <path>` invocation imports the pasted JSON response. | User's ChatGPT subscription message allowance; no API tokens consumed by Open Race Coach. |
 
 Hard rules:
 

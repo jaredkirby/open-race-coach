@@ -256,12 +256,12 @@ def render_coach_report(
         f"{session['started_at'][:10]}"
     )
     summary = (
-        f"**Session:** {len(laps)} laps, {len(valid_laps)} valid. Best: {format_time(best)}. "
-        f"Reference Mode: {reference_mode}. Reference Lap: {reference_lap_id or 'none'}."
+        f"**Session:** {len(laps)} laps, {len(valid_laps)} valid. "
+        f"Best valid lap: {format_time(best)}. "
+        f"{reference_summary(reference_mode, reference_lap_id)}"
     )
     lines = [
         title,
-        f"**Analysis Run:** `{run_dir}`.",
         summary,
         "",
         "## The one thing",
@@ -269,62 +269,271 @@ def render_coach_report(
     status = selected_delta["analysis_status"]
     if status == "reportable":
         delta = selected_delta["selected_delta"]
-        lines.append(instruction_for_delta(delta))
+        lines.append(instruction_for_delta(delta, session, selected_delta.get("reference_lap_id")))
     else:
-        lines.append(non_reportable_message(status, selected_delta.get("reason", "unknown_reason")))
+        lines.append(non_reportable_message(selected_delta, len(valid_laps)))
 
     lines.extend(["", "## Why (the data)"])
     if status == "reportable":
         delta = selected_delta["selected_delta"]
-        metric = delta["cause_metric"]
-        lines.append(
-            f"{delta['corner_segment_id']}: median loss {delta['median_corner_loss_s']:.3f}s "
-            f"over {delta['comparison_lap_count']} comparison laps. Dominant cause: "
-            f"{delta['dominant_cause']} "
-            f"({metric['bad_direction_delta']} {metric['unit']} bad-direction delta)."
-        )
+        lines.extend(reportable_evidence_lines(delta, session))
     else:
-        lines.append(
-            f"No Coaching Instruction was selected because `{status}`: "
-            f"{selected_delta.get('reason', 'unknown_reason')}."
-        )
+        lines.append(non_reportable_data_message(selected_delta, len(valid_laps)))
 
-    lines.extend(["", "## Consistency check"])
+    lines.extend(["", "## Checked areas"])
     summaries = selected_delta.get("corner_summaries") or []
     if not summaries:
         lines.append("No usable Corner Segment summaries were available.")
     else:
         for summary in summaries[:8]:
+            cause = summary.get("dominant_cause")
+            fraction = format_percent(summary.get("dominant_cause_lap_fraction"))
+            classification = classification_label(summary["classification"])
+            cause_text = (
+                f"; {metric_label(str(cause)).lower()} gap on {fraction} of comparison laps"
+                if cause and fraction
+                else ""
+            )
             lines.append(
-                f"- {summary['corner_segment_id']}: {summary['classification']}; "
+                f"- {segment_display_name(summary['corner_segment_id'])}: {classification}; "
+                f"{format_segment_range(summary.get('segment_range'), session)}; "
                 f"median loss {summary['median_corner_loss_s']:.3f}s; "
-                f"noise {summary['robust_noise_s']:.3f}s; {summary['reason']}."
+                f"variation estimate {summary['robust_noise_s']:.3f}s{cause_text}; "
+                f"{reason_label(summary['reason'])}."
             )
     lines.append("")
     return "\n".join(lines)
 
 
-def instruction_for_delta(delta: dict[str, Any]) -> str:
-    cause = delta["dominant_cause"]
-    segment_id = delta["corner_segment_id"]
-    if cause == "brake_point":
-        action = "brake later"
-    elif cause == "min_speed":
-        action = "carry more minimum speed"
-    elif cause == "throttle_reapplication":
-        action = "return to throttle earlier"
-    else:
-        action = "reduce coasting"
+def instruction_for_delta(
+    delta: dict[str, Any],
+    session: dict[str, Any],
+    reference_lap_id: object,
+) -> str:
     return (
-        f"{action} in {segment_id}. The repeatable loss is {delta['median_corner_loss_s']:.3f}s, "
-        f"and the deterministic cause gate selected `{cause}`."
+        f"Next stint: {instruction_target(delta, session)} "
+        f"Basis: median of {delta['comparison_lap_count']} comparison laps versus "
+        f"{format_reference_lap(reference_lap_id) or 'the Reference Lap'}; "
+        f"repeatable loss {delta['median_corner_loss_s']:.3f}s."
     )
 
 
-def non_reportable_message(status: str, reason: str) -> str:
+def instruction_target(delta: dict[str, Any], session: dict[str, Any]) -> str:
+    metric = delta["cause_metric"]
+    bad_delta = float(metric["bad_direction_delta"])
+    location = format_instruction_location(delta.get("segment_range"), session)
+    if metric["unit"] == "m/s":
+        return (
+            f"use {location} as the focus and try to keep the car rolling about "
+            f"{format_speed_delta(bad_delta)} faster at the slowest point than your typical "
+            f"comparison lap. The data identifies the speed loss, not the exact input change."
+        )
+    if metric["metric"] == "brake_point":
+        return f"brake about {format_lap_delta(bad_delta, session)} later at {location}."
+    if metric["metric"] == "throttle_reapplication":
+        return (
+            f"return to throttle about {format_lap_delta(bad_delta, session)} earlier "
+            f"at {location}."
+        )
+    if metric["metric"] == "coast_duration":
+        return f"trim about {bad_delta:.3f}s of extra coasting at {location}."
+    return f"close a {format_lap_delta(bad_delta, session)} gap at {location}."
+
+
+def non_reportable_message(selected_delta: dict[str, Any], valid_lap_count: int) -> str:
+    reason = selected_delta.get("reason", "unknown_reason")
+    comparison_count = int(selected_delta.get("comparison_lap_count", 0))
+    minimum = AnalysisThresholds().min_comparison_laps
+    if reason == "fewer_than_minimum_comparison_laps":
+        needed = max(0, minimum - comparison_count)
+        return (
+            "No data-supported Coaching Instruction. "
+            f"There were {valid_lap_count} valid laps, but after selecting the reference lap "
+            f"only {comparison_count} comparison lap(s) remained; Open Race Coach needs at least "
+            f"{minimum}. Record {needed} more valid comparison lap(s) before trusting a coach tip."
+        )
+    return f"No data-supported Coaching Instruction. {reason_label(reason)}."
+
+
+def non_reportable_data_message(selected_delta: dict[str, Any], valid_lap_count: int) -> str:
+    reason = selected_delta.get("reason", "unknown_reason")
+    comparison_count = int(selected_delta.get("comparison_lap_count", 0))
+    minimum = AnalysisThresholds().min_comparison_laps
+    if reason == "fewer_than_minimum_comparison_laps":
+        return (
+            f"Evidence was too thin: {valid_lap_count} valid lap(s), {comparison_count} "
+            f"comparison lap(s) after reference selection, minimum required {minimum}."
+        )
+    return f"No instruction was selected: {reason_label(reason)}."
+
+
+def reportable_evidence_lines(delta: dict[str, Any], session: dict[str, Any]) -> list[str]:
+    metric = delta["cause_metric"]
+    fraction = format_percent(delta.get("dominant_cause_lap_fraction"))
+    segment_name = segment_display_name(delta["corner_segment_id"])
+    return [
+        (
+            f"Selected area: {segment_name}, "
+            f"{format_segment_range(delta.get('segment_range'), session)}."
+        ),
+        (
+            f"Loss: {delta['median_corner_loss_s']:.3f}s median over "
+            f"{delta['comparison_lap_count']} comparison laps."
+        ),
+        f"Measured gap: {format_cause_metric(metric, session)}",
+        consistency_line(delta, fraction),
+    ]
+
+
+def consistency_line(delta: dict[str, Any], fraction: str | None) -> str:
+    if fraction is None:
+        return "Confidence: repeatability count was not recorded for this area."
     return (
-        f"No data-supported Coaching Instruction. Deterministic status is `{status}` (`{reason}`)."
+        f"Confidence: the {metric_label(delta['dominant_cause']).lower()} gap showed up on "
+        f"{fraction} of comparison laps and cleared the repeatability threshold."
     )
+
+
+def format_cause_metric(metric: dict[str, Any], session: dict[str, Any]) -> str:
+    unit = metric["unit"]
+    reference = float(metric["reference_value"])
+    comparison = float(metric["comparison_median"])
+    bad_delta = float(metric["bad_direction_delta"])
+    name = str(metric["metric"])
+    if unit == "m/s":
+        return (
+            f"{metric_label(name)} was {format_speed(reference)} on the reference lap and "
+            f"{format_speed(comparison)} on your typical comparison lap, a "
+            f"{format_speed_delta(bad_delta)} deficit."
+        )
+    if unit == "lap_dist_pct":
+        return (
+            f"{metric_label(name)} was {format_lap_point(reference, session)} on the reference lap "
+            f"and {format_lap_point(comparison, session)} on your typical comparison lap, "
+            f"{format_lap_delta(bad_delta, session)} worse."
+        )
+    return (
+        f"{metric_label(name)} was {reference:.3f}s on the reference lap and "
+        f"{comparison:.3f}s on your typical comparison lap, {bad_delta:.3f}s worse."
+    )
+
+
+def metric_label(metric: str) -> str:
+    return {
+        "brake_point": "Brake point",
+        "min_speed": "Minimum speed",
+        "throttle_reapplication": "Throttle reapplication",
+        "coast_duration": "Coast duration",
+    }.get(metric, metric)
+
+
+def format_segment_range(range_data: dict[str, Any] | None, session: dict[str, Any]) -> str:
+    if not range_data:
+        return "segment range unavailable"
+    start_pct = float(range_data["start_lap_dist_pct"])
+    end_pct = float(range_data["end_lap_dist_pct"])
+    start_m = range_data.get("start_lap_dist_m")
+    end_m = range_data.get("end_lap_dist_m")
+    source = range_data.get("lap_dist_m_source")
+    if source in {"sim", "derived_from_track_length"} and start_m is not None and end_m is not None:
+        start_text = format_distance(float(start_m), source)
+        end_text = format_distance(float(end_m), source)
+        return f"{start_text}-{end_text} from lap start"
+    return f"{start_pct:.1%}-{end_pct:.1%} lap distance"
+
+
+def format_instruction_location(range_data: dict[str, Any] | None, session: dict[str, Any]) -> str:
+    range_text = format_segment_range(range_data, session)
+    if is_broad_segment(range_data):
+        return f"the broad corner segment at {range_text}"
+    return f"the corner segment at {range_text}"
+
+
+def is_broad_segment(range_data: dict[str, Any] | None) -> bool:
+    if not range_data:
+        return False
+    span = float(range_data["end_lap_dist_pct"]) - float(range_data["start_lap_dist_pct"])
+    return span >= 0.35
+
+
+def format_lap_point(value: float, session: dict[str, Any]) -> str:
+    pct_text = f"{value:.1%} lap distance"
+    meters = lap_pct_to_meters(value, session)
+    if meters is None:
+        return pct_text
+    source = session.get("lap_dist_m_source")
+    return f"{pct_text} ({format_distance(meters, source)})"
+
+
+def format_lap_delta(value: float, session: dict[str, Any]) -> str:
+    pct_points = value * 100.0
+    meters = lap_pct_to_meters(value, session)
+    if meters is None:
+        return f"{pct_points:.1f} percentage points of lap distance"
+    source = session.get("lap_dist_m_source")
+    return f"{pct_points:.1f} percentage points ({format_distance(meters, source)})"
+
+
+def lap_pct_to_meters(value: float, session: dict[str, Any]) -> float | None:
+    if session.get("lap_dist_m_source") not in {"sim", "derived_from_track_length"}:
+        return None
+    track_length = session.get("track_length_m")
+    if track_length is None:
+        return None
+    return abs(value) * float(track_length)
+
+
+def format_distance(value: float, source: object) -> str:
+    if source == "derived_from_track_length":
+        rounded = round(value / 10.0) * 10
+        return f"about {rounded:.0f} m"
+    return f"{value:.0f} m"
+
+
+def format_speed(value_mps: float) -> str:
+    return f"{value_mps:.1f} m/s ({value_mps * 3.6:.1f} km/h)"
+
+
+def format_speed_delta(value_mps: float) -> str:
+    return f"{value_mps:.1f} m/s ({value_mps * 3.6:.1f} km/h)"
+
+
+def format_percent(value: object) -> str | None:
+    if value is None:
+        return None
+    return f"{float(value):.0%}"
+
+
+def classification_label(classification: str) -> str:
+    return {
+        "reportable_candidate": "selected issue",
+        "consistent": "no meaningful repeatable loss",
+        "inconsistent": "loss was not repeatable enough",
+        "insufficient_data": "not enough comparable data",
+    }.get(classification, classification.replace("_", " "))
+
+
+def reason_label(reason: str) -> str:
+    return {
+        "passes_loss_noise_and_cause_gates": (
+            "gap is large enough and repeatable enough to act on"
+        ),
+        "no_significant_repeatable_loss": "no significant repeatable loss was found",
+        "significant_loss_without_dominant_repeatable_cause": (
+            "there was time loss, but no single repeatable cause dominated"
+        ),
+        "insufficient_comparable_data": "there was not enough comparable data",
+        "fewer_than_minimum_comparison_laps": (
+            "not enough comparison laps survived reference selection"
+        ),
+        "no_usable_corner_segments": "the reference lap did not produce usable corner segments",
+        "no_valid_reference_lap": "there was no valid reference lap",
+        "all_corners_lacked_comparable_data": "all corner segments lacked comparable data",
+        "top_candidates_inside_single_dominant_margin": (
+            "the top candidate issues were too close to choose only one"
+        ),
+        "unknown_reason": "the analyzer did not record a specific reason",
+    }.get(reason, reason.replace("_", " "))
 
 
 def format_time(value: float | None) -> str:
@@ -333,6 +542,40 @@ def format_time(value: float | None) -> str:
     minutes = int(value // 60)
     seconds = value - minutes * 60
     return f"{minutes}:{seconds:06.3f}"
+
+
+def reference_summary(reference_mode: str, reference_lap_id: object) -> str:
+    lap_text = format_reference_lap(reference_lap_id)
+    if reference_mode == "best":
+        if lap_text:
+            return f"Reference: session-best {lap_text}."
+        return "Reference: no valid session-best lap."
+    if reference_mode == "personal":
+        if lap_text:
+            return f"Reference: personal-best {lap_text}."
+        return "Reference: no valid personal-best lap."
+    if lap_text:
+        return f"Reference: {lap_text}."
+    return "Reference: none."
+
+
+def format_reference_lap(reference_lap_id: object) -> str | None:
+    if not reference_lap_id:
+        return None
+    text = str(reference_lap_id)
+    marker = ":lap:"
+    if marker in text:
+        lap = text.rsplit(marker, 1)[1]
+        if lap:
+            return f"lap {lap}"
+    return "selected lap"
+
+
+def segment_display_name(segment_id: object) -> str:
+    text = str(segment_id)
+    if text.startswith("C") and text[1:].isdigit():
+        return f"detected corner segment {int(text[1:])}"
+    return f"detected corner segment {text}"
 
 
 def write_json(path: Path, data: dict[str, Any]) -> None:

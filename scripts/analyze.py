@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run deterministic SIM-COACH analysis."""
+"""Run deterministic Open Race Coach analysis."""
 
 from __future__ import annotations
 

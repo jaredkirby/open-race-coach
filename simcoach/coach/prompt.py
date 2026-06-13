@@ -30,7 +30,7 @@ def build_coach_prompt(
     }
     return "\n".join(
         [
-            "You are refining a SIM-COACH deterministic Coach Report.",
+            "You are refining an Open Race Coach deterministic Coach Report.",
             "Return JSON only. Do not return Markdown.",
             "Do not choose a different analysis_status, Corner Segment, cause, or reference.",
             "Use concrete driver language. Do not invent corner names or official turn numbers.",
@@ -81,6 +81,8 @@ def prompt_selected_delta(delta: dict[str, Any] | None) -> dict[str, Any] | None
         "corner_segment_id",
         "dominant_cause",
         "comparison_lap_count",
+        "dominant_cause_lap_fraction",
+        "segment_range",
         "median_corner_loss_s",
         "robust_noise_s",
         "cause_metric",
@@ -112,6 +114,7 @@ def prompt_corner_summary(summary: dict[str, Any]) -> dict[str, Any]:
         "classification",
         "median_corner_loss_s",
         "robust_noise_s",
+        "segment_range",
         "dominant_cause",
         "dominant_cause_lap_fraction",
         "reason",
