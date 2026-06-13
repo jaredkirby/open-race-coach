@@ -3,202 +3,62 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Open Race Coach Driver Debrief</title>
+  <title>Open Race Coach CRT Dashboard</title>
   <style>
     :root {
-      color-scheme: light;
-      --html-bg: #26231d;
-      --paper: #f4f0e6;
-      --paper-deep: #e4dcc9;
-      --ink: #191814;
-      --ink-soft: #555045;
-      --line: #bdb299;
-      --line-strong: #6f6758;
-      --frame-line: #7f745f;
-      --frame-line-strong: #514a3e;
-      --accent-line: #b8564d;
-      --blackboard: #11110f;
-      --chalk: #f3f1e9;
-      --red: #a8271c;
-      --red-soft: #fff0e9;
-      --green: #2d6b3f;
-      --amber: #9b6a15;
-      --blueprint: #253e4a;
-      --blueprint-soft: #dfe8e6;
-      --white: #fffdf6;
-      --paper-grain: rgba(25, 24, 20, 0.035);
-      --masthead-shadow: rgba(25, 24, 20, 0.18);
-      --panel-shadow: rgba(25, 24, 20, 0.16);
-      --pit-shadow: rgba(25, 24, 20, 0.28);
-      --pit-header-bg: #171714;
-      --pit-header-line: #2d2b25;
-      --pit-cell-line: #343127;
-      --pit-muted: #aba79b;
-      --pit-note: #d7d3c7;
-      --button-bg: var(--paper-deep);
-      --button-alt-bg: var(--white);
-      --engineer-bg: #fbf7ea;
-      --ticket-bg: #fff8ec;
-      --track-ink: #e8efe8;
-      --track-grid: rgba(232, 239, 232, 0.08);
-      --track-header-bg: #1d333d;
-      --track-header-line: #a7b6b4;
-      --track-highlight: #f5d372;
-      --track-accent-shadow: rgba(214, 90, 67, 0.45);
-      --track-muted: #a7b6b4;
-      --track-callout-bg: rgba(29, 51, 61, 0.94);
-      --track-rail-bg: rgba(17, 17, 15, 0.2);
-      --metric-bg: #fbf8ee;
-      --tearoff-bg: #faf6ea;
-      --report-bg: #fbf7ea;
+      color-scheme: dark;
+      --bg: #020403;
+      --bg-deep: #000f07;
+      --screen: #031707;
+      --screen-hot: #06270d;
+      --grid: rgba(84, 230, 55, 0.26);
+      --grid-soft: rgba(84, 230, 55, 0.13);
+      --phosphor: #59e83b;
+      --phosphor-hot: #b4ff85;
+      --phosphor-dim: #289b24;
+      --amber: #ff9b15;
+      --amber-hot: #ffc85a;
+      --red: #ff5a1e;
+      --red-soft: rgba(255, 90, 30, 0.12);
+      --panel: rgba(0, 24, 7, 0.72);
+      --panel-deep: rgba(0, 12, 5, 0.86);
+      --ink-muted: #59b846;
+      --cyan-shadow: rgba(60, 180, 255, 0.2);
+      --magenta-shadow: rgba(255, 44, 90, 0.18);
+      --black: #000;
       --mono: "Courier New", Courier, monospace;
       --sans: Arial, Helvetica, sans-serif;
     }
 
-    @media (prefers-color-scheme: dark) {
-      :root:not([data-theme="light"]) {
-        color-scheme: dark;
-        --html-bg: #090806;
-        --paper: #17130f;
-        --paper-deep: #2b241b;
-        --ink: #f4eddd;
-        --ink-soft: #9f927a;
-        --line: #423727;
-        --line-strong: #5e513d;
-        --frame-line: #6d5e48;
-        --frame-line-strong: #88785e;
-        --accent-line: #9f4c44;
-        --blackboard: #050504;
-        --chalk: #faf3df;
-        --red: #ff7466;
-        --red-soft: #351713;
-        --green: #79d18c;
-        --amber: #f0bd65;
-        --blueprint: #14282e;
-        --blueprint-soft: #1f3a40;
-        --white: #211b14;
-        --paper-grain: rgba(244, 237, 221, 0.035);
-        --masthead-shadow: rgba(0, 0, 0, 0.44);
-        --panel-shadow: rgba(0, 0, 0, 0.4);
-        --pit-shadow: rgba(0, 0, 0, 0.52);
-        --pit-header-bg: #0d0c0a;
-        --pit-header-line: #352d22;
-        --pit-cell-line: #473b2c;
-        --pit-muted: #9f927a;
-        --pit-note: #e5dbc8;
-        --button-bg: #342b20;
-        --button-alt-bg: #1b1611;
-        --engineer-bg: #2a2218;
-        --ticket-bg: #261c14;
-        --track-ink: #e3f1e8;
-        --track-grid: rgba(227, 241, 232, 0.1);
-        --track-header-bg: #102229;
-        --track-header-line: #4d706d;
-        --track-highlight: #ffd76e;
-        --track-accent-shadow: rgba(255, 116, 102, 0.5);
-        --track-muted: #829b95;
-        --track-callout-bg: rgba(16, 34, 41, 0.96);
-        --track-rail-bg: rgba(5, 5, 4, 0.32);
-        --metric-bg: #261f17;
-        --tearoff-bg: #251e16;
-        --report-bg: #221c15;
+    @keyframes crtFlicker {
+      0%, 100% { opacity: 0.16; }
+      17% { opacity: 0.09; }
+      34% { opacity: 0.18; }
+      58% { opacity: 0.12; }
+      77% { opacity: 0.2; }
+    }
+
+    @keyframes glyphDrift {
+      0%, 100% {
+        text-shadow:
+          0.35px 0 0 var(--cyan-shadow),
+          -0.35px 0 0 var(--magenta-shadow),
+          0 0 5px rgba(98, 255, 53, 0.42);
       }
-    }
 
-    :root[data-theme="dark"] {
-      color-scheme: dark;
-      --html-bg: #090806;
-      --paper: #17130f;
-      --paper-deep: #2b241b;
-      --ink: #f4eddd;
-      --ink-soft: #9f927a;
-      --line: #423727;
-      --line-strong: #5e513d;
-      --frame-line: #6d5e48;
-      --frame-line-strong: #88785e;
-      --accent-line: #9f4c44;
-      --blackboard: #050504;
-      --chalk: #faf3df;
-      --red: #ff7466;
-      --red-soft: #351713;
-      --green: #79d18c;
-      --amber: #f0bd65;
-      --blueprint: #14282e;
-      --blueprint-soft: #1f3a40;
-      --white: #211b14;
-      --paper-grain: rgba(244, 237, 221, 0.035);
-      --masthead-shadow: rgba(0, 0, 0, 0.44);
-      --panel-shadow: rgba(0, 0, 0, 0.4);
-      --pit-shadow: rgba(0, 0, 0, 0.52);
-      --pit-header-bg: #0d0c0a;
-      --pit-header-line: #352d22;
-      --pit-cell-line: #473b2c;
-      --pit-muted: #9f927a;
-      --pit-note: #e5dbc8;
-      --button-bg: #342b20;
-      --button-alt-bg: #1b1611;
-      --engineer-bg: #2a2218;
-      --ticket-bg: #261c14;
-      --track-ink: #e3f1e8;
-      --track-grid: rgba(227, 241, 232, 0.1);
-      --track-header-bg: #102229;
-      --track-header-line: #4d706d;
-      --track-highlight: #ffd76e;
-      --track-accent-shadow: rgba(255, 116, 102, 0.5);
-      --track-muted: #829b95;
-      --track-callout-bg: rgba(16, 34, 41, 0.96);
-      --track-rail-bg: rgba(5, 5, 4, 0.32);
-      --metric-bg: #261f17;
-      --tearoff-bg: #251e16;
-      --report-bg: #221c15;
-    }
+      39% {
+        text-shadow:
+          0.8px 0 0 var(--cyan-shadow),
+          -0.8px 0 0 var(--magenta-shadow),
+          0 0 7px rgba(98, 255, 53, 0.5);
+      }
 
-    :root[data-theme="crt"] {
-      color-scheme: dark;
-      --html-bg: #020403;
-      --paper: #06130b;
-      --paper-deep: #092316;
-      --ink: #d7ffe1;
-      --ink-soft: #7ee89c;
-      --line: rgba(95, 255, 139, 0.3);
-      --line-strong: rgba(158, 255, 181, 0.5);
-      --frame-line: rgba(95, 255, 139, 0.42);
-      --frame-line-strong: rgba(255, 176, 0, 0.74);
-      --accent-line: #ffb000;
-      --blackboard: #020704;
-      --chalk: #d7ffe1;
-      --red: #ff5f57;
-      --red-soft: #2b0807;
-      --green: #33ff77;
-      --amber: #ffb000;
-      --blueprint: #04100a;
-      --blueprint-soft: #0d2c1a;
-      --white: rgba(3, 16, 8, 0.92);
-      --paper-grain: rgba(127, 255, 164, 0.05);
-      --masthead-shadow: rgba(51, 255, 119, 0.24);
-      --panel-shadow: rgba(51, 255, 119, 0.16);
-      --pit-shadow: rgba(51, 255, 119, 0.28);
-      --pit-header-bg: rgba(1, 8, 4, 0.96);
-      --pit-header-line: rgba(95, 255, 139, 0.28);
-      --pit-cell-line: rgba(95, 255, 139, 0.22);
-      --pit-muted: #67d987;
-      --pit-note: #c4ffd0;
-      --button-bg: rgba(255, 176, 0, 0.16);
-      --button-alt-bg: rgba(9, 35, 22, 0.96);
-      --engineer-bg: rgba(9, 35, 22, 0.82);
-      --ticket-bg: rgba(33, 14, 3, 0.82);
-      --track-ink: #d7ffe1;
-      --track-grid: rgba(95, 255, 139, 0.13);
-      --track-header-bg: rgba(1, 8, 4, 0.96);
-      --track-header-line: rgba(95, 255, 139, 0.38);
-      --track-highlight: #ffb000;
-      --track-accent-shadow: rgba(255, 176, 0, 0.46);
-      --track-muted: #6fdc8c;
-      --track-callout-bg: rgba(2, 12, 6, 0.95);
-      --track-rail-bg: rgba(51, 255, 119, 0.06);
-      --metric-bg: rgba(9, 35, 22, 0.82);
-      --tearoff-bg: rgba(9, 35, 22, 0.82);
-      --report-bg: rgba(1, 8, 4, 0.94);
+      66% {
+        text-shadow:
+          0.18px 0 0 var(--cyan-shadow),
+          -0.18px 0 0 var(--magenta-shadow),
+          0 0 4px rgba(98, 255, 53, 0.36);
+      }
     }
 
     * {
@@ -206,26 +66,23 @@
     }
 
     html {
-      background: var(--html-bg);
+      min-height: 100%;
+      background:
+        radial-gradient(circle at 50% 48%, rgba(27, 83, 18, 0.28), transparent 58%),
+        linear-gradient(135deg, #030806, #000 72%);
     }
 
     body {
       margin: 0;
       min-height: 100vh;
-      overflow-wrap: break-word;
       background:
-        repeating-linear-gradient(
-          0deg,
-          var(--paper-grain) 0,
-          var(--paper-grain) 1px,
-          transparent 1px,
-          transparent 9px
-        ),
-        var(--paper);
-      color: var(--ink);
-      font-family: var(--sans);
+        radial-gradient(ellipse at center, rgba(98, 255, 53, 0.05), transparent 54%),
+        var(--bg);
+      color: var(--phosphor);
+      font-family: var(--mono);
       font-size: 14px;
-      line-height: 1.32;
+      line-height: 1.28;
+      overflow-wrap: anywhere;
       padding: 14px;
     }
 
@@ -234,144 +91,35 @@
       font: inherit;
     }
 
-    .page {
-      display: grid;
-      grid-template-rows: auto minmax(0, 1fr);
-      gap: 12px;
-      width: min(100%, 1480px);
-      max-width: 1480px;
-      min-height: calc(100vh - 28px);
-      margin: 0 auto;
-    }
-
-    :root[data-theme="crt"] body {
-      position: relative;
-      background:
-        radial-gradient(ellipse at center, rgba(51, 255, 119, 0.14) 0, rgba(6, 19, 11, 0.96) 58%, #020403 100%),
-        repeating-linear-gradient(
-          0deg,
-          rgba(213, 255, 225, 0.07) 0,
-          rgba(213, 255, 225, 0.07) 1px,
-          rgba(0, 0, 0, 0.32) 2px,
-          rgba(0, 0, 0, 0.32) 4px
-        ),
-        var(--paper);
-      text-shadow: 0 0 6px rgba(51, 255, 119, 0.45);
-    }
-
-    :root[data-theme="crt"] body::before,
-    :root[data-theme="crt"] body::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-      z-index: 1000;
-    }
-
-    :root[data-theme="crt"] body::before {
-      background:
-        linear-gradient(
-          90deg,
-          rgba(255, 95, 87, 0.035),
-          rgba(51, 255, 119, 0.035),
-          rgba(90, 160, 255, 0.035)
-        ),
-        repeating-linear-gradient(
-          0deg,
-          transparent 0,
-          transparent 3px,
-          rgba(0, 0, 0, 0.26) 4px
-        );
-      opacity: 0.72;
-    }
-
-    :root[data-theme="crt"] body::after {
-      background: radial-gradient(ellipse at center, transparent 48%, rgba(0, 0, 0, 0.38) 78%, rgba(0, 0, 0, 0.84) 100%);
-      box-shadow:
-        inset 0 0 34px rgba(199, 255, 213, 0.14),
-        inset 0 0 120px rgba(0, 0, 0, 0.82);
-    }
-
-    :root[data-theme="crt"] .page {
-      max-width: 1540px;
-      border: 8px solid #151c16;
-      border-radius: 14px;
-      background: rgba(1, 8, 4, 0.62);
-      box-shadow:
-        0 0 0 2px rgba(255, 176, 0, 0.32),
-        0 0 54px rgba(51, 255, 119, 0.2),
-        inset 0 0 38px rgba(51, 255, 119, 0.08);
-      overflow: hidden;
-      padding: 12px;
-    }
-
-    :root[data-theme="crt"] .masthead,
-    :root[data-theme="crt"] .panel {
-      background:
-        linear-gradient(180deg, rgba(213, 255, 225, 0.03), transparent),
-        var(--white);
-      box-shadow:
-        0 0 0 1px rgba(51, 255, 119, 0.12),
-        0 0 18px rgba(51, 255, 119, 0.16),
-        inset 0 0 28px rgba(51, 255, 119, 0.07);
-    }
-
-    :root[data-theme="crt"] .masthead {
-      border-color: rgba(255, 176, 0, 0.58);
-    }
-
-    :root[data-theme="crt"] .panel-header {
-      box-shadow: inset 0 -1px 0 rgba(255, 176, 0, 0.18);
-      text-shadow: 0 0 8px rgba(51, 255, 119, 0.64);
-    }
-
-    :root[data-theme="crt"] .stamp {
-      background: rgba(255, 176, 0, 0.08);
-      border-color: var(--accent-line);
-      color: var(--accent-line);
-      text-shadow: 0 0 10px rgba(255, 176, 0, 0.7);
-    }
-
-    :root[data-theme="crt"] .pit-board,
-    :root[data-theme="crt"] .track-board {
-      background:
-        radial-gradient(ellipse at center, rgba(51, 255, 119, 0.1), transparent 72%),
-        var(--blackboard);
-    }
-
-    :root[data-theme="crt"] .board-value,
-    :root[data-theme="crt"] .loss-ticket strong,
-    :root[data-theme="crt"] .metric strong,
-    :root[data-theme="crt"] .tearoff strong {
-      text-shadow:
-        0 0 4px rgba(213, 255, 225, 0.64),
-        0 0 14px rgba(51, 255, 119, 0.42);
-    }
-
-    .masthead {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) minmax(320px, 420px);
-      gap: 12px;
-      align-items: start;
-      border: 1px solid var(--frame-line-strong);
-      background: var(--white);
-      box-shadow: 3px 3px 0 var(--masthead-shadow);
-      padding: 10px 12px;
-    }
-
-    .stamp {
-      display: inline-block;
-      border: 1px solid var(--accent-line);
-      color: var(--red);
-      font-family: var(--mono);
-      font-size: 10px;
+    button,
+    .file-button {
+      min-height: 34px;
+      border: 1px solid var(--grid);
+      background: rgba(98, 255, 53, 0.08);
+      color: var(--phosphor-hot);
+      cursor: pointer;
+      display: inline-grid;
+      place-items: center;
+      font-size: 11px;
       font-weight: 700;
-      letter-spacing: 0.08em;
+      letter-spacing: 0;
       line-height: 1;
-      margin-bottom: 6px;
-      padding: 5px 7px;
+      padding: 7px 10px;
+      text-align: center;
       text-transform: uppercase;
-      transform: rotate(-1.5deg);
+    }
+
+    button:hover,
+    .file-button:hover {
+      border-color: var(--phosphor);
+      background: rgba(98, 255, 53, 0.16);
+      color: #d6ffbd;
+    }
+
+    button:focus-visible,
+    .file-button:focus-visible {
+      outline: 2px solid var(--amber-hot);
+      outline-offset: 2px;
     }
 
     h1,
@@ -381,98 +129,152 @@
       margin: 0;
     }
 
-    h1 {
+    .page {
+      min-height: calc(100vh - 28px);
+      width: min(100%, 1760px);
+      margin: 0 auto;
+    }
+
+    .crt-shell {
+      min-height: calc(100vh - 28px);
+      border: 2px solid rgba(98, 255, 53, 0.34);
+      border-radius: 8px;
+      background:
+        linear-gradient(145deg, rgba(98, 255, 53, 0.07), transparent 18%),
+        linear-gradient(315deg, rgba(255, 157, 0, 0.05), transparent 22%),
+        #010704;
+      box-shadow:
+        0 0 0 8px rgba(0, 0, 0, 0.7),
+        0 0 30px rgba(98, 255, 53, 0.14),
+        inset 0 0 36px rgba(0, 0, 0, 0.94);
+      padding: 10px;
+    }
+
+    .crt-screen {
+      position: relative;
+      isolation: isolate;
+      min-height: calc(100vh - 52px);
+      border: 1px solid rgba(98, 255, 53, 0.54);
+      border-radius: 8px;
+      overflow: hidden;
+      background:
+        radial-gradient(ellipse at center, rgba(45, 255, 25, 0.09), rgba(0, 9, 4, 0.92) 57%, #000 100%),
+        linear-gradient(180deg, rgba(98, 255, 53, 0.04), rgba(0, 0, 0, 0.2)),
+        var(--screen);
+      box-shadow:
+        inset 0 0 42px rgba(98, 255, 53, 0.12),
+        inset 0 0 145px rgba(0, 0, 0, 0.82);
+    }
+
+    .crt-screen::before,
+    .crt-screen::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 4;
+    }
+
+    .crt-screen::before {
+      background:
+        linear-gradient(
+          90deg,
+          rgba(255, 95, 30, 0.045),
+          rgba(98, 255, 53, 0.028),
+          rgba(50, 126, 255, 0.05)
+        ),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.02) 50%, rgba(0, 0, 0, 0.34) 50%);
+      background-size: 4px 100%, 100% 3px;
+      mix-blend-mode: screen;
+      opacity: 0.82;
+    }
+
+    .crt-screen::after {
+      animation: crtFlicker 0.2s infinite;
+      background:
+        radial-gradient(ellipse at center, transparent 45%, rgba(0, 0, 0, 0.34) 76%, rgba(0, 0, 0, 0.82) 100%),
+        linear-gradient(180deg, rgba(98, 255, 53, 0.04), rgba(255, 255, 255, 0.015), rgba(0, 0, 0, 0.12));
+    }
+
+    .screen-content {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr) auto;
+      gap: 8px;
+      min-height: calc(100vh - 52px);
+      padding: 18px 20px 16px;
+    }
+
+    .status-strip {
+      display: grid;
+      grid-template-columns: minmax(240px, 0.72fr) minmax(320px, 1.2fr) minmax(290px, 0.78fr);
+      gap: 12px;
+      align-items: start;
+    }
+
+    .session-meta,
+    .artifact-console {
+      border: 1px solid var(--grid);
+      background: rgba(0, 17, 6, 0.58);
+      padding: 8px 10px;
+    }
+
+    .meta-row {
+      display: grid;
+      grid-template-columns: 80px minmax(0, 1fr);
+      gap: 8px;
+      min-height: 18px;
+      color: var(--phosphor-hot);
+      font-size: 13px;
+      text-transform: uppercase;
+    }
+
+    .meta-row span:first-child {
+      color: var(--ink-muted);
+    }
+
+    .title-cell {
+      text-align: center;
+      text-transform: uppercase;
+    }
+
+    .terminal-title {
+      animation: glyphDrift 1.9s infinite;
+      color: var(--phosphor-hot);
       font-family: var(--mono);
-      font-size: clamp(24px, 2.3vw, 36px);
+      font-size: clamp(30px, 3.55vw, 58px);
+      font-weight: 900;
       letter-spacing: 0;
-      line-height: 0.96;
-      text-transform: uppercase;
+      line-height: 0.88;
+      white-space: nowrap;
     }
 
-    .subtitle {
-      max-width: 780px;
-      margin-top: 6px;
-      color: var(--ink-soft);
-      font-family: var(--mono);
-      font-size: 11px;
-      text-transform: uppercase;
-    }
-
-    .artifact-desk {
-      border: 1px solid var(--frame-line);
-      font-family: var(--mono);
-      padding: 8px;
+    .terminal-subtitle {
+      color: var(--phosphor);
+      font-size: clamp(12px, 1.15vw, 20px);
+      font-weight: 700;
+      margin-top: 5px;
     }
 
     .artifact-title {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 10px;
-      border-bottom: 1px solid var(--line);
-      color: var(--ink-soft);
-      font-size: 10px;
-      padding-bottom: 6px;
+      gap: 12px;
+      border-bottom: 1px solid var(--grid-soft);
+      color: var(--phosphor-hot);
+      font-size: 11px;
+      font-weight: 700;
+      padding-bottom: 7px;
       text-transform: uppercase;
     }
 
     .artifact-actions {
       display: grid;
       grid-template-columns: minmax(0, 1fr) auto;
-      gap: 6px;
-      margin-top: 8px;
-    }
-
-    .file-button,
-    .desk-button {
-      min-height: 30px;
-      border: 1px solid var(--frame-line-strong);
-      background: var(--button-bg);
-      color: var(--ink);
-      cursor: pointer;
-      display: inline-grid;
-      place-items: center;
-      font-family: var(--mono);
-      font-size: 10px;
-      font-weight: 700;
-      padding: 6px 8px;
-      text-align: center;
-      text-transform: uppercase;
-    }
-
-    .desk-button {
-      background: var(--button-alt-bg);
-    }
-
-    .theme-control {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 0;
-      border: 1px solid var(--frame-line-strong);
-      margin-top: 8px;
-    }
-
-    .theme-button {
-      min-height: 28px;
-      border: 0;
-      border-right: 1px solid var(--line-strong);
-      background: var(--button-alt-bg);
-      color: var(--ink-soft);
-      cursor: pointer;
-      font-family: var(--mono);
-      font-size: 9px;
-      font-weight: 700;
-      text-transform: uppercase;
-    }
-
-    .theme-button:last-child {
-      border-right: 0;
-    }
-
-    .theme-button[aria-pressed="true"] {
-      background: var(--button-bg);
-      box-shadow: inset 0 -2px 0 var(--ink);
-      color: var(--ink);
+      gap: 8px;
+      margin-top: 9px;
     }
 
     .file-input {
@@ -481,89 +283,55 @@
       block-size: 1px;
       overflow: hidden;
       clip: rect(0 0 0 0);
-      white-space: nowrap;
       clip-path: inset(50%);
+      white-space: nowrap;
     }
 
     .artifact-status {
-      margin-top: 7px;
-      color: var(--ink-soft);
+      color: var(--ink-muted);
       font-size: 10px;
-      text-transform: uppercase;
-    }
-
-    .identity {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 6px;
       margin-top: 8px;
-      font-family: var(--mono);
-    }
-
-    .identity-card {
-      border: 1px solid var(--frame-line);
-      min-width: 0;
-      padding: 5px 6px;
-    }
-
-    .identity-label {
-      display: block;
-      color: var(--ink-soft);
-      font-size: 9px;
+      min-height: 14px;
       text-transform: uppercase;
     }
 
-    .identity-value {
-      display: block;
+    .error-box {
+      display: none;
+      border: 1px solid var(--red);
+      background: var(--red-soft);
+      color: var(--amber-hot);
       font-size: 12px;
-      margin-top: 2px;
-      min-width: 0;
+      font-weight: 700;
+      padding: 8px 10px;
+      text-transform: uppercase;
     }
 
-    .dashboard-layout {
+    .error-box.visible {
+      display: block;
+    }
+
+    .dashboard-grid {
       display: grid;
-      grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
-      grid-template-rows: minmax(250px, 0.95fr) minmax(280px, 1.05fr);
-      gap: 12px;
-      min-height: 0;
-    }
-
-    .stack {
-      display: grid;
-      gap: 12px;
+      grid-template-columns: minmax(0, 0.95fr) minmax(0, 1fr) minmax(0, 1.2fr);
+      grid-template-rows: minmax(210px, 0.85fr) minmax(240px, 1fr) minmax(170px, 0.65fr);
+      grid-template-areas:
+        "instruction loss evidence"
+        "rail rail evidence"
+        "report report report";
+      gap: 8px;
       min-width: 0;
-    }
-
-    .at-a-glance {
-      grid-column: 1;
-      grid-row: 1;
-    }
-
-    .driver-detail-section {
-      grid-column: 2;
-      grid-row: 1;
       min-height: 0;
-      min-width: 0;
-    }
-
-    .dense-detail {
-      grid-column: 1 / -1;
-      grid-row: 2;
-      display: grid;
-      grid-template-columns: minmax(0, 1.05fr) minmax(0, 1.3fr) minmax(0, 1.2fr);
-      gap: 12px;
-      min-height: 0;
-      min-width: 0;
     }
 
     .panel {
-      background: var(--white);
-      border: 1px solid var(--frame-line);
-      box-shadow: 3px 3px 0 var(--panel-shadow);
-      display: flex;
-      flex-direction: column;
       min-width: 0;
       min-height: 0;
+      border: 1px solid var(--grid);
+      background:
+        linear-gradient(180deg, rgba(98, 255, 53, 0.05), transparent 34%),
+        var(--panel);
+      display: flex;
+      flex-direction: column;
       overflow: hidden;
     }
 
@@ -571,18 +339,20 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 14px;
-      border-bottom: 1px solid var(--frame-line);
-      background: var(--paper-deep);
-      font-family: var(--mono);
-      font-size: 11px;
+      gap: 12px;
+      border-bottom: 1px solid var(--grid);
+      background: rgba(0, 34, 9, 0.58);
+      color: var(--phosphor-hot);
+      font-size: 14px;
       font-weight: 700;
+      line-height: 1;
       padding: 7px 10px;
       text-transform: uppercase;
     }
 
     .panel-code {
-      color: var(--ink-soft);
+      color: var(--ink-muted);
+      font-size: 10px;
       font-weight: 400;
       text-align: right;
     }
@@ -594,152 +364,186 @@
       padding: 10px;
     }
 
-    .pit-board {
-      background: var(--blackboard);
-      border-color: var(--frame-line-strong);
-      color: var(--chalk);
-      box-shadow: 3px 3px 0 var(--pit-shadow);
+    .primary-panel {
+      grid-area: instruction;
     }
 
-    .pit-board .panel-header {
-      border-bottom-color: var(--pit-header-line);
-      background: var(--pit-header-bg);
-      color: var(--chalk);
+    .loss-panel {
+      grid-area: loss;
     }
 
-    .pit-board .panel-code {
-      color: var(--pit-muted);
+    .rail-panel {
+      grid-area: rail;
     }
 
-    .board-grid {
+    .evidence-panel {
+      grid-area: evidence;
+    }
+
+    .report-panel {
+      grid-area: report;
+    }
+
+    .instruction-body {
       display: grid;
-      grid-template-columns: minmax(0, 1fr) minmax(150px, 0.42fr);
-      grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
-      gap: 10px;
-      height: 100%;
-      min-height: 0;
-    }
-
-    .board-cell {
-      border: 1px solid var(--pit-cell-line);
-      min-height: 0;
-      padding: 10px;
-    }
-
-    .board-cell.main-call {
-      display: flex;
-      flex-direction: column;
-      grid-column: 1;
-      grid-row: 1 / -1;
-      min-height: 0;
-    }
-
-    .board-label {
-      color: var(--pit-muted);
-      font-family: var(--mono);
-      font-size: 10px;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-    }
-
-    .board-value {
-      display: block;
-      font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
-      font-size: clamp(38px, 4.6vw, 78px);
-      font-weight: 900;
-      letter-spacing: 0.03em;
-      line-height: 0.92;
-      margin-top: 8px;
-      text-transform: uppercase;
-    }
-
-    .board-value.small {
-      font-size: clamp(24px, 2.55vw, 42px);
-    }
-
-    .board-note {
-      border-top: 1px solid var(--pit-cell-line);
-      color: var(--pit-note);
-      font-family: var(--mono);
-      font-size: clamp(11px, 1vw, 15px);
-      margin-top: auto;
-      padding-top: 9px;
-      text-transform: uppercase;
-    }
-
-    .driver-card {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) 160px;
-      gap: 10px;
-      align-items: stretch;
+      grid-template-columns: minmax(112px, 0.32fr) minmax(0, 1fr);
+      grid-template-rows: auto minmax(0, 1fr) auto;
+      gap: 8px;
       height: 100%;
     }
 
-    .instruction {
-      border-left: 5px solid var(--accent-line);
-      padding-left: 10px;
-      min-width: 0;
-    }
-
-    .instruction h2 {
-      font-family: var(--mono);
-      font-size: clamp(21px, 2.2vw, 34px);
-      line-height: 1;
-      text-transform: uppercase;
-    }
-
-    .engineer-note {
-      margin-top: 10px;
-      border: 1px solid var(--line);
-      background: var(--engineer-bg);
-      font-family: var(--mono);
-      font-size: 12px;
-      line-height: 1.28;
-      padding: 9px;
-    }
-
-    .loss-ticket {
+    .selected-readout {
+      border: 1px solid rgba(255, 157, 0, 0.72);
+      background: rgba(255, 157, 0, 0.08);
       display: grid;
       align-content: center;
-      justify-items: center;
-      border: 1px dashed var(--accent-line);
-      background: var(--ticket-bg);
-      font-family: var(--mono);
+      grid-row: 1 / 3;
       min-height: 0;
-      padding: 10px;
+      padding: 8px;
       text-align: center;
       text-transform: uppercase;
     }
 
-    .loss-ticket strong {
-      color: var(--red);
-      font-size: clamp(28px, 3vw, 38px);
-      line-height: 1;
-      white-space: nowrap;
-      word-break: normal;
+    .readout-label {
+      color: var(--amber-hot);
+      display: block;
+      font-size: 10px;
+      font-weight: 700;
+      margin-bottom: 3px;
     }
 
-    .loss-ticket span {
-      color: var(--ink-soft);
+    .readout-value {
+      animation: glyphDrift 2.1s infinite;
+      color: var(--amber);
+      display: block;
+      font-family: var(--mono);
+      font-size: clamp(46px, 5vw, 82px);
+      font-weight: 900;
+      letter-spacing: 0;
+      line-height: 0.9;
+    }
+
+    .driver-instruction {
+      color: var(--phosphor-hot);
+      font-size: clamp(22px, 1.95vw, 34px);
+      font-weight: 900;
+      line-height: 1.05;
+      text-transform: uppercase;
+    }
+
+    .engineer-note,
+    .board-note,
+    .track-callout {
+      border: 1px solid var(--grid-soft);
+      background: rgba(0, 9, 3, 0.74);
+      color: var(--phosphor);
+      font-size: 12px;
+      min-height: 0;
+      overflow: auto;
+      padding: 8px;
+    }
+
+    .board-note {
+      color: var(--amber-hot);
+      font-weight: 700;
+      grid-column: 1 / -1;
+      text-transform: uppercase;
+    }
+
+    .loss-body {
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+      gap: 6px;
+      height: 100%;
+    }
+
+    .loss-major {
+      border: 1px solid rgba(255, 157, 0, 0.65);
+      background: rgba(255, 157, 0, 0.07);
+      padding: 8px;
+      text-align: center;
+      text-transform: uppercase;
+    }
+
+    .loss-major span {
+      color: var(--amber-hot);
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 3px;
+    }
+
+    .loss-major strong {
+      animation: glyphDrift 2.4s infinite;
+      color: var(--amber);
+      display: block;
+      font-family: var(--mono);
+      font-size: clamp(38px, 4.1vw, 70px);
+      font-weight: 900;
+      line-height: 0.92;
+    }
+
+    .loss-major em {
+      color: var(--ink-muted);
+      display: block;
       font-size: 10px;
+      font-style: normal;
       margin-top: 5px;
     }
 
-    .track-board {
-      background: var(--blueprint);
-      color: var(--track-ink);
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 6px;
     }
 
-    .track-board .panel-header {
-      background: var(--track-header-bg);
-      border-bottom-color: var(--track-header-line);
-      color: var(--track-ink);
+    .metric {
+      border: 1px solid var(--grid-soft);
+      background: rgba(0, 10, 4, 0.68);
+      min-width: 0;
+      padding: 6px;
+    }
+
+    .metric span {
+      color: var(--ink-muted);
+      display: block;
+      font-size: 9px;
+      text-transform: uppercase;
+    }
+
+    .metric strong {
+      color: var(--phosphor-hot);
+      display: block;
+      font-size: clamp(13px, 1.15vw, 19px);
+      line-height: 1.1;
+      margin-top: 4px;
+      overflow-wrap: anywhere;
+      text-transform: uppercase;
+    }
+
+    .metric.hot strong,
+    .metric.hot span {
+      color: var(--amber);
+    }
+
+    .loss-panel .metric:nth-child(1),
+    .loss-panel .metric:nth-child(5),
+    .loss-panel .metric:nth-child(6),
+    .loss-panel .metric:nth-child(7) {
+      display: none;
+    }
+
+    .loss-panel .metric-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
     }
 
     .track-wrap {
-      position: relative;
+      display: grid;
+      grid-template-rows: minmax(0, 1fr) auto;
+      gap: 10px;
+      height: 100%;
       min-height: 0;
-      overflow: hidden;
+      position: relative;
     }
 
     .track-wrap::before {
@@ -747,71 +551,80 @@
       position: absolute;
       inset: 0;
       background:
-        linear-gradient(var(--track-grid) 1px, transparent 1px),
-        linear-gradient(90deg, var(--track-grid) 1px, transparent 1px);
-      background-size: 22px 22px;
+        linear-gradient(var(--grid-soft) 1px, transparent 1px),
+        linear-gradient(90deg, var(--grid-soft) 1px, transparent 1px);
+      background-size: 24px 24px;
+      opacity: 0.5;
       pointer-events: none;
     }
 
     .lap-tape {
+      align-self: center;
+      min-height: 152px;
+      padding: 44px 18px 42px;
       position: relative;
       z-index: 1;
-      min-height: 0;
-      padding: 42px 14px 58px;
     }
 
     .tape-rail {
       position: relative;
-      height: 54px;
-      border: 1px solid var(--track-muted);
+      height: 62px;
+      border: 1px solid var(--grid);
       background:
         repeating-linear-gradient(
           90deg,
-          color-mix(in srgb, var(--track-ink) 16%, transparent) 0,
-          color-mix(in srgb, var(--track-ink) 16%, transparent) 1px,
+          rgba(98, 255, 53, 0.18) 0,
+          rgba(98, 255, 53, 0.18) 1px,
           transparent 1px,
           transparent 10%
         ),
-        var(--track-rail-bg);
+        rgba(0, 0, 0, 0.42);
+      box-shadow: inset 0 0 20px rgba(98, 255, 53, 0.08);
     }
 
     .tape-segment {
       position: absolute;
-      top: 10px;
-      height: 32px;
-      min-width: 8px;
-      border: 1px solid color-mix(in srgb, var(--track-ink) 55%, transparent);
-      background: color-mix(in srgb, var(--track-ink) 12%, transparent);
+      top: 13px;
+      height: 36px;
+      min-width: 9px;
+      border: 1px solid rgba(98, 255, 53, 0.5);
+      background: rgba(98, 255, 53, 0.11);
     }
 
     .tape-segment.selected {
-      border-color: var(--track-highlight);
-      background: color-mix(in srgb, var(--track-highlight) 42%, transparent);
-      box-shadow: 0 0 0 3px var(--track-accent-shadow);
+      border-color: var(--amber);
+      background: rgba(255, 157, 0, 0.3);
+      box-shadow:
+        0 0 0 3px rgba(255, 157, 0, 0.22),
+        0 0 18px rgba(255, 157, 0, 0.28);
     }
 
     .tape-label {
       position: absolute;
-      top: -27px;
+      top: -32px;
       left: 50%;
       transform: translateX(-50%);
-      color: var(--track-highlight);
-      font-family: var(--mono);
-      font-size: 12px;
+      color: var(--phosphor-hot);
+      font-size: 14px;
       font-weight: 700;
       white-space: nowrap;
+    }
+
+    .tape-segment.selected .tape-label {
+      color: var(--amber);
+      font-size: 20px;
     }
 
     .tape-distance {
       position: absolute;
       bottom: -36px;
       left: 50%;
+      width: 170px;
       transform: translateX(-50%);
-      color: var(--track-ink);
-      font-family: var(--mono);
-      font-size: 9px;
+      color: var(--amber-hot);
+      font-size: 10px;
       text-align: center;
-      white-space: nowrap;
+      text-transform: uppercase;
     }
 
     .tape-segment:not(.selected) .tape-distance {
@@ -821,10 +634,9 @@
     .tape-start,
     .tape-end {
       position: absolute;
-      bottom: -25px;
-      color: var(--track-muted);
-      font-family: var(--mono);
-      font-size: 10px;
+      bottom: -28px;
+      color: var(--ink-muted);
+      font-size: 11px;
       text-transform: uppercase;
     }
 
@@ -837,80 +649,72 @@
       text-align: right;
     }
 
-    .callout {
+    .track-callout {
       position: relative;
-      z-index: 2;
-      width: min(100%, 560px);
-      border: 1px solid var(--track-muted);
-      background: var(--track-callout-bg);
-      font-family: var(--mono);
-      font-size: 11px;
-      margin: 0 14px 10px;
-      padding: 8px;
+      z-index: 1;
+      min-height: 54px;
       text-transform: uppercase;
     }
 
-    .callout strong {
-      color: var(--track-highlight);
+    .track-callout strong {
+      color: var(--amber);
       display: block;
-      font-size: 15px;
-      margin-bottom: 3px;
+      font-size: 24px;
+      line-height: 1;
+      margin-bottom: 4px;
     }
 
-    .metrics {
+    .evidence-body {
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 8px;
+      grid-template-rows: minmax(0, 0.95fr) minmax(0, 1.05fr);
+      gap: 10px;
+      height: 100%;
+      min-height: 0;
     }
 
-    .metric {
-      border: 1px solid var(--line);
-      background: var(--metric-bg);
-      font-family: var(--mono);
-      min-width: 0;
-      padding: 8px;
+    .dense-subsection {
+      min-height: 0;
+      overflow: auto;
     }
 
-    .metric span {
-      display: block;
-      color: var(--ink-soft);
-      font-size: 9px;
+    .dense-subtitle {
+      border-bottom: 1px solid var(--grid-soft);
+      color: var(--phosphor-hot);
+      font-size: 11px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      padding-bottom: 5px;
       text-transform: uppercase;
-    }
-
-    .metric strong {
-      display: block;
-      font-size: 18px;
-      line-height: 1.1;
-      margin-top: 5px;
-      overflow-wrap: anywhere;
     }
 
     .timing-sheet {
       width: 100%;
       border-collapse: collapse;
-      font-family: var(--mono);
-      font-size: 9.5px;
+      font-size: 12px;
       table-layout: fixed;
     }
 
     .timing-sheet th,
     .timing-sheet td {
-      border-bottom: 1px solid var(--line);
-      padding: 3px 4px;
+      border-bottom: 1px solid var(--grid-soft);
+      padding: 5px 4px;
       text-align: left;
       vertical-align: top;
     }
 
     .timing-sheet th:first-child,
     .timing-sheet td:first-child {
-      width: 32px;
+      width: 44px;
+    }
+
+    .timing-sheet th:nth-child(3),
+    .timing-sheet td:nth-child(3) {
+      width: 58px;
     }
 
     .timing-sheet th {
-      border-bottom: 1px solid var(--frame-line);
-      color: var(--ink-soft);
-      font-size: 9px;
+      color: var(--ink-muted);
+      font-size: 10px;
       text-transform: uppercase;
     }
 
@@ -919,16 +723,17 @@
     }
 
     .tag {
-      display: inline-block;
       border: 1px solid currentColor;
-      font-size: 9px;
+      color: var(--phosphor-hot);
+      display: inline-block;
+      font-size: 10px;
       line-height: 1;
       padding: 3px 4px;
       text-transform: uppercase;
     }
 
     .tag-good {
-      color: var(--green);
+      color: var(--phosphor);
     }
 
     .tag-warn {
@@ -943,16 +748,16 @@
     .checks {
       display: grid;
       gap: 0;
-      font-family: var(--mono);
-      font-size: 10px;
+      font-size: 12px;
     }
 
     .check-row {
       display: grid;
-      grid-template-columns: 32px minmax(0, 1fr) 62px;
-      gap: 7px;
+      grid-template-columns: 42px minmax(0, 1fr) 74px;
+      gap: 8px;
       align-items: center;
-      border-bottom: 1px solid var(--line);
+      border-bottom: 1px solid var(--grid-soft);
+      min-height: 32px;
       padding: 5px 0;
     }
 
@@ -961,111 +766,83 @@
     }
 
     .check-id {
+      color: var(--phosphor-hot);
       font-weight: 700;
     }
 
     .check-loss {
-      text-align: right;
+      color: var(--amber);
       font-variant-numeric: tabular-nums;
+      text-align: right;
     }
 
-    .clipboard-footer {
+    .report-body {
       display: grid;
-      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-      gap: 8px;
-      margin-top: 8px;
-    }
-
-    .tearoff {
-      border: 1px solid var(--line);
-      background: var(--tearoff-bg);
-      font-family: var(--mono);
-      padding: 8px;
-    }
-
-    .tearoff-title {
-      color: var(--ink-soft);
-      font-size: 9px;
-      margin-bottom: 5px;
-      text-transform: uppercase;
-    }
-
-    .tearoff strong {
-      display: block;
-      font-size: 13px;
-      overflow-wrap: anywhere;
-      text-transform: uppercase;
-    }
-
-    .receipt-panel .panel-body {
-      display: grid;
-      grid-template-rows: auto auto minmax(0, 1fr);
-      gap: 8px;
-    }
-
-    .receipt-summary {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-      gap: 8px;
-      min-width: 0;
-    }
-
-    .report-lines {
-      border: 1px solid var(--line);
-      background: var(--report-bg);
-      font-family: var(--mono);
-      font-size: 8.8px;
-      line-height: 1.16;
-      margin: 0;
-      min-height: 0;
-      max-height: none;
-      overflow: auto;
-      padding: 8px;
-      white-space: pre-wrap;
-    }
-
-    .run-detail-grid {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      grid-template-rows: auto minmax(0, 1fr);
       gap: 8px;
       height: 100%;
       min-height: 0;
     }
 
-    .dense-subsection {
+    .artifact-ledger {
+      display: grid;
+      grid-template-columns: minmax(0, 1.45fr) minmax(0, 0.75fr);
+      gap: 8px;
+    }
+
+    .ledger-cell {
+      border: 1px solid var(--grid-soft);
+      background: rgba(0, 10, 4, 0.68);
+      min-width: 0;
+      padding: 8px;
+    }
+
+    .ledger-cell span {
+      color: var(--ink-muted);
+      display: block;
+      font-size: 10px;
+      text-transform: uppercase;
+    }
+
+    .ledger-cell strong {
+      color: var(--phosphor-hot);
+      display: block;
+      font-size: 12px;
+      line-height: 1.2;
+      margin-top: 4px;
+      text-transform: uppercase;
+    }
+
+    .report-lines {
+      border: 1px solid var(--grid-soft);
+      background: rgba(0, 4, 2, 0.82);
+      color: #baff9a;
+      font-family: var(--mono);
+      font-size: 12px;
+      line-height: 1.28;
+      margin: 0;
       min-height: 0;
       overflow: auto;
+      overflow-wrap: anywhere;
+      padding: 10px;
+      white-space: pre-wrap;
+      word-break: normal;
     }
 
-    .dense-subtitle {
-      border-bottom: 1px solid var(--line);
-      color: var(--ink-soft);
-      font-family: var(--mono);
-      font-size: 9px;
+    .summary-strip {
+      border: 1px solid var(--grid);
+      background: rgba(0, 17, 6, 0.72);
+      color: var(--phosphor-hot);
+      font-size: clamp(13px, 1.25vw, 18px);
       font-weight: 700;
-      margin-bottom: 5px;
-      padding-bottom: 4px;
+      overflow: hidden;
+      padding: 7px 10px;
       text-transform: uppercase;
+      white-space: nowrap;
     }
 
-    .error-box {
-      display: none;
-      border: 1px solid var(--accent-line);
-      background: var(--red-soft);
-      color: var(--red);
-      font-family: var(--mono);
-      margin-top: 8px;
-      padding: 8px;
-      font-size: 11px;
-      text-transform: uppercase;
-    }
-
-    .error-box.visible {
-      display: block;
-    }
-
-    .dense-detail .panel-body {
-      overflow: auto;
+    .summary-strip span {
+      color: var(--amber-hot);
     }
 
     @media (min-width: 1101px) {
@@ -1078,190 +855,147 @@
         overflow: hidden;
       }
 
-      .page {
+      .page,
+      .crt-shell,
+      .crt-screen,
+      .screen-content {
         height: calc(100vh - 28px);
-        min-height: 0;
       }
     }
 
-    @media (min-width: 1101px) and (max-height: 820px) {
-      body {
-        padding: 10px;
+    @media (max-width: 1240px) {
+      .status-strip {
+        grid-template-columns: minmax(0, 0.82fr) minmax(280px, 1fr) minmax(0, 0.86fr);
       }
 
-      .page {
-        gap: 8px;
-        height: calc(100vh - 20px);
-      }
-
-      :root[data-theme="crt"] .page {
-        border-width: 6px;
-        padding: 10px;
-      }
-
-      .masthead {
-        gap: 10px;
-        padding: 7px 10px;
-      }
-
-      .stamp {
-        font-size: 9px;
-        margin-bottom: 4px;
-        padding: 4px 6px;
-      }
-
-      h1 {
-        font-size: clamp(22px, 2vw, 28px);
-      }
-
-      .subtitle {
-        font-size: 10px;
-        margin-top: 4px;
-      }
-
-      .identity {
-        gap: 5px;
-        margin-top: 6px;
-      }
-
-      .identity-card {
-        padding: 4px 5px;
-      }
-
-      .artifact-desk {
-        padding: 6px;
-      }
-
-      .artifact-actions,
-      .theme-control {
-        margin-top: 6px;
-      }
-
-      .file-button,
-      .desk-button {
-        min-height: 28px;
-        padding: 5px 7px;
-      }
-
-      .theme-button {
-        min-height: 26px;
-      }
-
-      .artifact-status {
-        margin-top: 5px;
-      }
-
-      .dashboard-layout {
-        gap: 10px;
-      }
-
-      .instruction h2 {
-        font-size: clamp(18px, 2vw, 28px);
-      }
-
-      .engineer-note {
-        font-size: 10.5px;
-        line-height: 1.2;
-        margin-top: 7px;
-        padding: 7px;
-      }
-
-      .loss-ticket {
-        padding: 7px;
-      }
-
-      .loss-ticket strong {
-        font-size: clamp(24px, 2.4vw, 32px);
+      .dashboard-grid {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        grid-template-rows: auto auto minmax(230px, auto) minmax(320px, auto);
+        grid-template-areas:
+          "instruction loss"
+          "rail rail"
+          "evidence evidence"
+          "report report";
       }
     }
 
-    @media (max-width: 1100px) {
+    @media (max-width: 820px) {
       body {
-        padding: 14px;
+        padding: 8px;
         overflow: auto;
       }
 
-      .page {
+      .page,
+      .crt-shell,
+      .crt-screen,
+      .screen-content {
         min-height: 0;
+        height: auto;
       }
 
-      :root[data-theme="crt"] .page {
+      .crt-shell {
+        padding: 6px;
+      }
+
+      .screen-content {
+        gap: 7px;
         padding: 10px;
       }
 
-      .masthead,
-      .dashboard-layout,
-      .driver-card,
-      .clipboard-footer,
-      .driver-detail-section,
-      .dense-detail {
+      .status-strip,
+      .dashboard-grid,
+      .metric-grid,
+      .artifact-ledger {
         grid-template-columns: 1fr;
+      }
+
+      .loss-panel .metric-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .dashboard-grid {
+        grid-template-areas:
+          "instruction"
+          "loss"
+          "rail"
+          "evidence"
+          "report";
         grid-template-rows: none;
       }
 
-      .identity,
-      .board-grid,
-      .metrics,
-      .receipt-summary {
+      .instruction-body {
         grid-template-columns: 1fr;
       }
 
-      .at-a-glance,
-      .driver-detail-section,
-      .dense-detail {
-        grid-column: auto;
+      .selected-readout {
         grid-row: auto;
       }
 
-      .board-value {
-        font-size: clamp(34px, 13vw, 70px);
+      .terminal-title {
+        font-size: clamp(34px, 13vw, 64px);
       }
 
-      .timing-sheet {
-        font-size: 12px;
+      .meta-row {
+        grid-template-columns: 74px minmax(0, 1fr);
       }
 
-      .timing-sheet th,
-      .timing-sheet td {
-        padding: 7px 5px;
+      .readout-value {
+        font-size: clamp(44px, 18vw, 78px);
       }
 
-      .track-wrap {
-        min-height: 300px;
+      .loss-major strong {
+        font-size: clamp(42px, 16vw, 72px);
       }
 
-      .tape-label,
+      .lap-tape {
+        min-height: 160px;
+        padding: 52px 8px 48px;
+      }
+
       .tape-distance {
+        width: 130px;
+      }
+
+      .timing-sheet,
+      .checks,
+      .report-lines {
+        font-size: 11px;
+      }
+
+      .summary-strip {
         white-space: normal;
       }
     }
 
+    @media (prefers-reduced-motion: reduce) {
+      .crt-screen::after,
+      .terminal-title,
+      .readout-value,
+      .loss-major strong {
+        animation: none;
+      }
+    }
+
     @media print {
-      html,
       body {
         background: #fff;
-      }
-
-      body {
+        color: #000;
         padding: 0;
       }
 
-      .page {
-        max-width: none;
-      }
-
-      .artifact-desk {
-        display: none;
-      }
-
+      .crt-shell,
+      .crt-screen,
       .panel,
-      .masthead {
+      .session-meta,
+      .artifact-console,
+      .summary-strip {
+        border-color: #000;
         box-shadow: none;
-        break-inside: avoid;
       }
 
-      :root[data-theme="crt"] body::before,
-      :root[data-theme="crt"] body::after {
+      .crt-screen::before,
+      .crt-screen::after,
+      .artifact-console {
         display: none;
       }
     }
@@ -1269,183 +1003,167 @@
 </head>
 <body>
   <main class="page">
-    <header class="masthead">
-      <div>
-        <span class="stamp" id="runStamp">Garage Copy</span>
-        <h1>Open Race Coach Timing Stand Debrief</h1>
-        <p class="subtitle" id="subtitle">Driver-facing output rendered from Analysis Run artifacts.</p>
-        <div class="identity" aria-label="Session identity">
-          <div class="identity-card">
-            <span class="identity-label">Track</span>
-            <strong class="identity-value" id="trackValue"></strong>
-          </div>
-          <div class="identity-card">
-            <span class="identity-label">Car</span>
-            <strong class="identity-value" id="carValue"></strong>
-          </div>
-          <div class="identity-card">
-            <span class="identity-label">Run</span>
-            <strong class="identity-value" id="runValue"></strong>
-          </div>
-          <div class="identity-card">
-            <span class="identity-label">Ref</span>
-            <strong class="identity-value" id="refValue"></strong>
-          </div>
+    <div class="crt-shell">
+      <div class="crt-screen">
+        <div class="screen-content">
+          <header class="status-strip" aria-label="Dashboard status">
+            <section class="session-meta" aria-label="Session metadata">
+              <div class="meta-row"><span>Session</span><strong id="runValue"></strong></div>
+              <div class="meta-row"><span>Track</span><strong id="trackValue"></strong></div>
+              <div class="meta-row"><span>Car</span><strong id="carValue"></strong></div>
+              <div class="meta-row"><span>Ref</span><strong id="refValue"></strong></div>
+            </section>
+
+            <section class="title-cell" aria-label="Product title">
+              <h1 class="terminal-title">Open Race Coach</h1>
+              <p class="terminal-subtitle" id="subtitle">-- Lap Time Improvement Terminal --</p>
+            </section>
+
+            <aside class="artifact-console" aria-label="Artifact loader">
+              <div class="artifact-title">
+                <span id="runStamp">Actionable</span>
+                <span id="schemaValue"></span>
+              </div>
+              <div class="artifact-actions">
+                <label class="file-button" for="artifactInput">Load Artifacts</label>
+                <button id="resetButton" type="button">Reset</button>
+                <input class="file-input" id="artifactInput" type="file" multiple
+                  accept=".json,.jsonl,.yaml,.yml,.md,application/json,text/plain">
+              </div>
+              <p class="artifact-status" id="artifactStatus"></p>
+            </aside>
+          </header>
+
+          <div class="error-box" id="errorBox" role="alert"></div>
+
+          <section class="dashboard-grid" aria-label="Analysis run dashboard">
+            <section class="panel primary-panel" aria-label="Primary coaching instruction">
+              <div class="panel-header">
+                <span>1. Focus Now</span>
+                <span class="panel-code" id="pitBoardCode"></span>
+              </div>
+              <div class="panel-body instruction-body">
+                <div class="selected-readout" aria-label="Selected corner segment and cause">
+                  <span class="readout-label">Selected Segment</span>
+                  <strong class="readout-value" id="pitCall"></strong>
+                </div>
+                <h2 class="driver-instruction" id="driverInstruction"></h2>
+                <p class="engineer-note" id="engineerNote"></p>
+                <p class="board-note" id="pitNote"></p>
+              </div>
+            </section>
+
+            <section class="panel loss-panel" aria-label="Time loss metrics">
+              <div class="panel-header">
+                <span>2. Time Loss</span>
+                <span class="panel-code" id="driverCardCode"></span>
+              </div>
+              <div class="panel-body loss-body">
+                <div class="loss-major">
+                  <span>Median Loss</span>
+                  <strong id="ticketLoss"></strong>
+                  <em id="ticketBasis"></em>
+                </div>
+                <div class="metric-grid">
+                  <div class="metric hot">
+                    <span>Selected Loss</span>
+                    <strong id="pitLoss"></strong>
+                  </div>
+                  <div class="metric hot">
+                    <span>Measured Deficit</span>
+                    <strong id="pitGap"></strong>
+                  </div>
+                  <div class="metric">
+                    <span id="referenceLabel">Reference</span>
+                    <strong id="referenceMetric"></strong>
+                  </div>
+                  <div class="metric">
+                    <span id="comparisonLabel">Comparison</span>
+                    <strong id="comparisonMetric"></strong>
+                  </div>
+                  <div class="metric hot">
+                    <span>Deficit</span>
+                    <strong id="deficitMetric"></strong>
+                  </div>
+                  <div class="metric">
+                    <span>Repeatability</span>
+                    <strong id="repeatabilityValue"></strong>
+                  </div>
+                  <div class="metric">
+                    <span>Confidence Basis</span>
+                    <strong id="confidenceValue"></strong>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section class="panel rail-panel" aria-label="Lap distance visualization">
+              <div class="panel-header">
+                <span>3. Lap Distance - Loss Hotspot</span>
+                <span class="panel-code" id="trackBoardCode"></span>
+              </div>
+              <div class="panel-body track-wrap">
+                <div class="lap-tape" id="lapTape">
+                  <div class="tape-rail" id="tapeRail" aria-label="Detected corner segments"></div>
+                </div>
+                <div class="track-callout" id="trackCallout"></div>
+              </div>
+            </section>
+
+            <section class="panel evidence-panel" aria-label="Evidence table">
+              <div class="panel-header">
+                <span>4. Evidence</span>
+                <span class="panel-code">Comparison Laps</span>
+              </div>
+              <div class="panel-body evidence-body">
+                <div class="dense-subsection">
+                  <div class="dense-subtitle">Lap Validity And Reference</div>
+                  <table class="timing-sheet">
+                    <thead>
+                      <tr>
+                        <th>Lap</th>
+                        <th>Time</th>
+                        <th>Valid</th>
+                        <th>Note</th>
+                      </tr>
+                    </thead>
+                    <tbody id="lapRows"></tbody>
+                  </table>
+                </div>
+                <div class="dense-subsection">
+                  <div class="dense-subtitle">Checked Corner Segments</div>
+                  <div class="checks" id="checkedAreas"></div>
+                </div>
+              </div>
+            </section>
+
+            <section class="panel report-panel" aria-label="Report and artifacts">
+              <div class="panel-header">
+                <span>5. Report And Artifacts</span>
+                <span class="panel-code" id="receiptCode"></span>
+              </div>
+              <div class="panel-body report-body">
+                <div class="artifact-ledger">
+                  <div class="ledger-cell">
+                    <span>Canonical Inputs</span>
+                    <strong id="canonicalInputs"></strong>
+                  </div>
+                  <div class="ledger-cell">
+                    <span>Rendered Report</span>
+                    <strong id="renderedReportStatus"></strong>
+                  </div>
+                </div>
+                <pre class="report-lines" id="reportPreview"></pre>
+              </div>
+            </section>
+          </section>
+
+          <footer class="summary-strip" aria-label="Run summary">
+            Summary: <span id="summaryLine">Loading Analysis Run...</span>
+          </footer>
         </div>
       </div>
-      <aside class="artifact-desk" aria-label="Artifact loader">
-        <div class="artifact-title">
-          <span>Artifact Desk</span>
-          <span id="schemaValue"></span>
-        </div>
-        <div class="artifact-actions">
-          <label class="file-button" for="artifactInput">Load Artifacts</label>
-          <button class="desk-button" id="resetButton" type="button">Reset</button>
-          <input class="file-input" id="artifactInput" type="file" multiple
-            accept=".json,.jsonl,.yaml,.yml,.md,application/json,text/plain">
-        </div>
-        <div class="theme-control" aria-label="Theme mode">
-          <button class="theme-button" type="button" data-theme-choice="system">System</button>
-          <button class="theme-button" type="button" data-theme-choice="light">Light</button>
-          <button class="theme-button" type="button" data-theme-choice="dark">Dark</button>
-          <button class="theme-button" type="button" data-theme-choice="crt">CRT</button>
-        </div>
-        <p class="artifact-status" id="artifactStatus"></p>
-        <div class="error-box" id="errorBox" role="alert"></div>
-      </aside>
-    </header>
-
-    <section class="dashboard-layout" aria-label="Driver dashboard layout">
-      <section class="panel pit-board at-a-glance" aria-label="Driver glance">
-        <div class="panel-header">
-          <span>Driver Glance</span>
-          <span class="panel-code" id="pitBoardCode"></span>
-        </div>
-        <div class="panel-body">
-          <div class="board-grid">
-            <div class="board-cell main-call">
-              <span class="board-label">Next run</span>
-              <strong class="board-value" id="pitCall"></strong>
-              <p class="board-note" id="pitNote"></p>
-            </div>
-            <div class="board-cell">
-              <span class="board-label">Loss</span>
-              <strong class="board-value small" id="pitLoss"></strong>
-            </div>
-            <div class="board-cell">
-              <span class="board-label">Gap</span>
-              <strong class="board-value small" id="pitGap"></strong>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="panel driver-detail-section" aria-label="Driver debrief card">
-        <div class="panel-header">
-          <span>Driver Detail</span>
-          <span class="panel-code" id="driverCardCode"></span>
-        </div>
-        <div class="panel-body driver-card">
-          <div class="instruction">
-            <h2 id="driverInstruction"></h2>
-            <p class="engineer-note" id="engineerNote"></p>
-          </div>
-          <aside class="loss-ticket" aria-label="Median loss ticket">
-            <span>Median loss</span>
-            <strong id="ticketLoss"></strong>
-            <span id="ticketBasis"></span>
-          </aside>
-        </div>
-      </section>
-
-      <section class="dense-detail" aria-label="Dense detail">
-        <section class="panel track-board dense-track" aria-label="Lap distance tape">
-          <div class="panel-header">
-            <span>Lap Distance Tape</span>
-            <span class="panel-code" id="trackBoardCode"></span>
-          </div>
-          <div class="panel-body track-wrap">
-            <div class="lap-tape" id="lapTape">
-              <div class="tape-rail" id="tapeRail" aria-label="Detected corner segments"></div>
-            </div>
-            <div class="callout" id="trackCallout"></div>
-          </div>
-        </section>
-
-        <section class="panel dense-run-detail" aria-label="Run detail">
-          <div class="panel-header">
-            <span>Run Detail</span>
-            <span class="panel-code">Dense data</span>
-          </div>
-          <div class="panel-body">
-            <div class="run-detail-grid">
-              <div class="dense-subsection">
-                <div class="dense-subtitle">Timing Sheet</div>
-                <table class="timing-sheet">
-                  <thead>
-                    <tr>
-                      <th>Lap</th>
-                      <th>Time</th>
-                      <th>Valid</th>
-                      <th>Note</th>
-                    </tr>
-                  </thead>
-                  <tbody id="lapRows"></tbody>
-                </table>
-              </div>
-              <div class="dense-subsection">
-                <div class="dense-subtitle">Checked Areas</div>
-                <div class="checks" id="checkedAreas"></div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section class="panel receipt-panel dense-receipt" aria-label="Artifact receipt">
-          <div class="panel-header">
-            <span>Proof & Receipt</span>
-            <span class="panel-code" id="receiptCode"></span>
-          </div>
-          <div class="panel-body">
-            <div class="metrics">
-              <div class="metric">
-                <span id="referenceLabel">Reference</span>
-                <strong id="referenceMetric"></strong>
-              </div>
-              <div class="metric">
-                <span id="comparisonLabel">Comparison</span>
-                <strong id="comparisonMetric"></strong>
-              </div>
-              <div class="metric">
-                <span>Deficit</span>
-                <strong id="deficitMetric"></strong>
-              </div>
-            </div>
-            <div class="clipboard-footer">
-              <div class="tearoff">
-                <div class="tearoff-title">Repeatability</div>
-                <strong id="repeatabilityValue"></strong>
-              </div>
-              <div class="tearoff">
-                <div class="tearoff-title">Confidence basis</div>
-                <strong id="confidenceValue"></strong>
-              </div>
-            </div>
-            <div class="receipt-summary">
-              <div class="tearoff">
-                <div class="tearoff-title">Canonical inputs</div>
-                <strong id="canonicalInputs"></strong>
-              </div>
-              <div class="tearoff">
-                <div class="tearoff-title">Rendered report</div>
-                <strong id="renderedReportStatus"></strong>
-              </div>
-            </div>
-            <pre class="report-lines" id="reportPreview"></pre>
-          </div>
-        </section>
-      </section>
-    </section>
+    </div>
   </main>
 
   <script>
@@ -1566,7 +1284,6 @@
       schemaValue: document.getElementById("schemaValue"),
       artifactInput: document.getElementById("artifactInput"),
       resetButton: document.getElementById("resetButton"),
-      themeButtons: Array.from(document.querySelectorAll("[data-theme-choice]")),
       artifactStatus: document.getElementById("artifactStatus"),
       errorBox: document.getElementById("errorBox"),
       pitBoardCode: document.getElementById("pitBoardCode"),
@@ -1594,7 +1311,8 @@
       receiptCode: document.getElementById("receiptCode"),
       canonicalInputs: document.getElementById("canonicalInputs"),
       renderedReportStatus: document.getElementById("renderedReportStatus"),
-      reportPreview: document.getElementById("reportPreview")
+      reportPreview: document.getElementById("reportPreview"),
+      summaryLine: document.getElementById("summaryLine")
     };
 
     els.artifactInput.addEventListener("change", async (event) => {
@@ -1617,44 +1335,8 @@
       setError("");
     });
 
-    for (const button of els.themeButtons) {
-      button.addEventListener("click", () => {
-        setTheme(button.dataset.themeChoice || "system", true);
-      });
-    }
-
-    setTheme(readStoredTheme(), false);
-
     function clone(value) {
       return JSON.parse(JSON.stringify(value));
-    }
-
-    function readStoredTheme() {
-      try {
-        return localStorage.getItem("openracecoach-driver-debrief-theme") || "system";
-      } catch (_error) {
-        return "system";
-      }
-    }
-
-    function setTheme(choice, persist) {
-      const theme = ["system", "light", "dark", "crt"].includes(choice) ? choice : "system";
-      if (theme === "system") {
-        document.documentElement.removeAttribute("data-theme");
-      } else {
-        document.documentElement.dataset.theme = theme;
-      }
-      for (const button of els.themeButtons) {
-        const pressed = button.dataset.themeChoice === theme;
-        button.setAttribute("aria-pressed", String(pressed));
-      }
-      if (persist) {
-        try {
-          localStorage.setItem("openracecoach-driver-debrief-theme", theme);
-        } catch (_error) {
-          /* File URLs may block storage in hardened browsers. */
-        }
-      }
     }
 
     async function readArtifacts(files) {
@@ -1734,8 +1416,8 @@
       const bestLap = bestValidLap(laps);
       const date = formatDate(session.started_at || analysis.created_at);
 
-      els.runStamp.textContent = status === "reportable" ? "Actionable" : "No instruction";
-      els.subtitle.textContent = `${session.track_raw || "Unknown track"} / ${session.car_raw || "Unknown car"} / ${date}`;
+      els.runStamp.textContent = status === "reportable" ? "Reportable" : "No instruction";
+      els.subtitle.textContent = `-- ${session.session_type || "session"} / ${date} / ${analysis.reference_mode || "best"} reference --`;
       els.trackValue.textContent = session.track_raw || "Unknown";
       els.carValue.textContent = session.car_raw || "Unknown";
       els.runValue.textContent = laps.length ? `${laps.length} laps / ${validLaps.length} valid` : `${selected.comparison_lap_count || 0} comparison laps`;
@@ -1765,27 +1447,28 @@
       const cause = metricLabel(delta.dominant_cause || metric.metric);
       const instruction = extractNextStint(coachReport) || buildInstruction(delta, session);
       const headline = headlineForDelta(delta);
-      const shortCall = `${segment} ${cause}`.toUpperCase();
       const gap = formatMetricDelta(metric);
       const repeatability = percent(delta.dominant_cause_lap_fraction);
+      const loss = formatSeconds(delta.median_corner_loss_s, 3);
 
-      els.pitCall.textContent = shortCall;
-      els.pitNote.textContent = `${location}. ${gap} deficit, +${formatSeconds(delta.median_corner_loss_s, 3)}s median loss.`;
-      els.pitLoss.textContent = `+${formatSeconds(delta.median_corner_loss_s, 3)}`;
+      els.pitCall.textContent = segment;
+      els.pitNote.textContent = `${location}. ${gap} deficit, +${loss}s median loss.`;
+      els.pitLoss.textContent = `+${loss}s`;
       els.pitGap.textContent = gap;
       els.driverInstruction.textContent = headline;
-      els.engineerNote.textContent = `${instruction} Selected ${segment} at ${location}. The deterministic analyzer selected ${cause.toLowerCase()} from ${delta.comparison_lap_count} comparison laps; model prose may refine wording only.`;
-      els.ticketLoss.textContent = `${formatSeconds(delta.median_corner_loss_s, 3)}s`;
+      els.engineerNote.textContent = `Evidence: ${cause} ${formatMetricValue(metric.reference_value, metric.unit)} reference vs ${formatMetricValue(metric.comparison_median, metric.unit)} comparison; ${repeatability || "repeatable"} of laps; gates cleared.`;
+      els.ticketLoss.textContent = `+${loss}s`;
       els.ticketBasis.textContent = `Over ${delta.comparison_lap_count} comparison laps`;
       els.referenceLabel.textContent = "Reference";
       els.comparisonLabel.textContent = "Comparison";
       els.referenceMetric.textContent = formatMetricValue(metric.reference_value, metric.unit);
       els.comparisonMetric.textContent = formatMetricValue(metric.comparison_median, metric.unit);
       els.deficitMetric.textContent = formatMetricValue(metric.bad_direction_delta, metric.unit);
-      els.repeatabilityValue.textContent = repeatability ? `${repeatability} of comparison laps` : "Not recorded";
-      els.confidenceValue.textContent = "Cleared loss and cause gates";
+      els.repeatabilityValue.textContent = repeatability ? `${repeatability} of laps` : "Not recorded";
+      els.confidenceValue.textContent = "Loss + cause gates cleared";
       els.trackBoardCode.textContent = `${segment} selected`;
       els.trackCallout.innerHTML = `<strong>${escapeHtml(segment)}</strong>${escapeHtml(location)}. ${escapeHtml(cause)} deficit: ${escapeHtml(formatMetricValue(metric.bad_direction_delta, metric.unit))}.`;
+      els.summaryLine.textContent = `Attack ${segment}: ${headline} Loss +${loss}s. ${gap} measured deficit.`;
     }
 
     function renderNonReportable(selected, summaries, laps, bestLap, coachReport) {
@@ -1798,6 +1481,8 @@
       els.engineerNote.textContent = reason;
       els.ticketLoss.textContent = "0.000s";
       els.ticketBasis.textContent = `${selected.comparison_lap_count || 0} comparison laps`;
+      els.referenceLabel.textContent = "Reference";
+      els.comparisonLabel.textContent = "Comparison";
       els.referenceMetric.textContent = "N/A";
       els.comparisonMetric.textContent = "N/A";
       els.deficitMetric.textContent = "N/A";
@@ -1805,6 +1490,7 @@
       els.confidenceValue.textContent = selected.analysis_status || "non-reportable";
       els.trackBoardCode.textContent = "No selected segment";
       els.trackCallout.innerHTML = `<strong>No selected issue</strong>${escapeHtml(reason)}`;
+      els.summaryLine.textContent = `No Coaching Instruction: ${reason}.`;
     }
 
     function buildInstruction(delta, session) {
