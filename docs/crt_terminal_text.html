@@ -430,8 +430,12 @@
       width: var(--editor-width);
       height: 100%;
       display: grid;
-      grid-template-rows: auto auto auto auto auto minmax(0, 1fr);
+      grid-template-rows: auto auto auto auto auto minmax(220px, 1fr);
+      align-content: start;
       gap: 10px;
+      overflow-x: hidden;
+      overflow-y: auto;
+      overscroll-behavior: contain;
       padding: 12px;
       border-left: 1px solid rgba(var(--phosphor-rgb), 0.36);
       background:
@@ -445,6 +449,29 @@
       color: var(--phosphor);
       transform: translateX(100%);
       transition: transform 180ms ease;
+    }
+
+    .editor-panel::-webkit-scrollbar,
+    .tile-list::-webkit-scrollbar,
+    .text-editor::-webkit-scrollbar,
+    .source-editor::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    .editor-panel::-webkit-scrollbar-track,
+    .tile-list::-webkit-scrollbar-track,
+    .text-editor::-webkit-scrollbar-track,
+    .source-editor::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.38);
+    }
+
+    .editor-panel::-webkit-scrollbar-thumb,
+    .tile-list::-webkit-scrollbar-thumb,
+    .text-editor::-webkit-scrollbar-thumb,
+    .source-editor::-webkit-scrollbar-thumb {
+      background: rgba(var(--phosphor-rgb), 0.42);
+      box-shadow: 0 0 calc(var(--glow) * 8px) rgba(var(--phosphor-rgb), 0.24);
     }
 
     body.editor-open .editor-panel {
@@ -603,7 +630,7 @@
       background: rgba(0, 0, 0, 0.48);
       color: var(--phosphor-hot);
       font: 12px/1.28 var(--mono);
-      overflow: hidden;
+      overflow: auto;
       padding: 8px;
       resize: none;
       tab-size: 4;
@@ -612,10 +639,12 @@
 
     .text-editor {
       height: 100%;
+      min-height: 220px;
     }
 
     .source-editor {
       height: 88px;
+      min-height: 88px;
     }
 
     .editor-stack {
