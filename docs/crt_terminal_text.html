@@ -27,8 +27,6 @@
       --frame-padding: 10px;
       --screen-radius: 2px;
       --tile-gap: 0px;
-      --separator: rgba(var(--phosphor-rgb), 0.36);
-      --separator-dim: rgba(var(--phosphor-rgb), 0.12);
       --editor-width: min(390px, 92vw);
       --mono: "Courier New", Courier, monospace;
     }
@@ -294,17 +292,11 @@
       text-transform: none;
     }
 
-    .tile::before,
     .tile::after {
       content: "";
       position: absolute;
       inset: 0;
       pointer-events: none;
-    }
-
-    .tile::before {
-      z-index: 1;
-      opacity: 0.9;
     }
 
     .tile.active,
@@ -336,43 +328,6 @@
       color: var(--phosphor-hot);
     }
 
-    .layout-split .tile:nth-child(2)::before,
-    .layout-instruction .tile:nth-child(n+2)::before,
-    .layout-rail .tile:nth-child(n+2)::before {
-      background:
-        linear-gradient(90deg, var(--separator), transparent 1px),
-        linear-gradient(90deg, var(--separator-dim), transparent 2px);
-    }
-
-    .layout-quarters .tile:nth-child(even)::before {
-      background:
-        linear-gradient(90deg, var(--separator), transparent 1px),
-        linear-gradient(90deg, var(--separator-dim), transparent 2px);
-    }
-
-    .layout-quarters .tile:nth-child(n+3)::before {
-      background:
-        linear-gradient(var(--separator), transparent 1px),
-        linear-gradient(var(--separator-dim), transparent 2px);
-    }
-
-    .layout-quarters .tile:nth-child(4)::before {
-      background:
-        linear-gradient(90deg, var(--separator), transparent 1px),
-        linear-gradient(90deg, var(--separator-dim), transparent 2px),
-        linear-gradient(var(--separator), transparent 1px),
-        linear-gradient(var(--separator-dim), transparent 2px);
-    }
-
-    .layout-instruction .tile:nth-child(3)::before,
-    .layout-rail .tile:nth-child(n+3)::before {
-      background:
-        linear-gradient(90deg, var(--separator), transparent 1px),
-        linear-gradient(90deg, var(--separator-dim), transparent 2px),
-        linear-gradient(var(--separator), transparent 1px),
-        linear-gradient(var(--separator-dim), transparent 2px);
-    }
-
     .tile-meta {
       position: absolute;
       z-index: 4;
@@ -402,6 +357,53 @@
       overflow-wrap: anywhere;
       text-rendering: optimizeSpeed;
       animation: text-shadow-drift 1.6s infinite;
+    }
+
+    .ascii-segments {
+      position: absolute;
+      inset: 0;
+      z-index: 3;
+      overflow: hidden;
+      pointer-events: none;
+      color: rgba(var(--phosphor-rgb), 0.46);
+      font-size: clamp(9px, calc(0.8vw * var(--font-scale)), 14px);
+      line-height: 1;
+      text-shadow:
+        0 0 calc(var(--glow) * 5px) rgba(var(--phosphor-rgb), 0.36),
+        calc(var(--rgb-split) * 0.25px) 0 1px var(--shadow-blue),
+        calc(var(--rgb-split) * -0.25px) 0 1px var(--shadow-red);
+    }
+
+    .ascii-segment {
+      position: absolute;
+      margin: 0;
+      overflow: hidden;
+      white-space: pre;
+      user-select: none;
+    }
+
+    .ascii-segment.vertical {
+      top: 0;
+      bottom: 0;
+      width: 1ch;
+      text-align: center;
+      transform: translateX(-50%);
+    }
+
+    .ascii-segment.horizontal {
+      height: 1em;
+      transform: translateY(-50%);
+    }
+
+    .ascii-segment.cross {
+      width: 1ch;
+      height: 1em;
+      color: rgba(var(--phosphor-rgb), 0.68);
+      transform: translate(-50%, -50%);
+    }
+
+    .ascii-segment.mobile {
+      display: none;
     }
 
     .tile[data-type="instruction"] .tile-text {
@@ -699,13 +701,12 @@
         grid-row: auto;
       }
 
-      .layout-split .tile:nth-child(n+2)::before,
-      .layout-quarters .tile:nth-child(n+2)::before,
-      .layout-instruction .tile:nth-child(n+2)::before,
-      .layout-rail .tile:nth-child(n+2)::before {
-        background:
-          linear-gradient(var(--separator), transparent 1px),
-          linear-gradient(var(--separator-dim), transparent 2px);
+      .ascii-segment.desktop {
+        display: none;
+      }
+
+      .ascii-segment.mobile {
+        display: block;
       }
 
       .tile-text,
@@ -1193,6 +1194,7 @@
         element.append(meta, pre);
         board.append(element);
       });
+      board.append(renderAsciiSegments(state.layout, visibleTiles.length));
 
       document.querySelectorAll("[data-layout]").forEach((button) => {
         button.setAttribute("aria-pressed", button.dataset.layout === state.layout ? "true" : "false");
@@ -1345,6 +1347,94 @@
 
     function layoutTileCount(layout) {
       return layout === "focus" ? 1 : layout === "split" ? 2 : 4;
+    }
+
+    function renderAsciiSegments(layout, visibleCount) {
+      const overlay = document.createElement("div");
+      overlay.className = "ascii-segments";
+      overlay.setAttribute("aria-hidden", "true");
+      desktopAsciiSegments(layout, visibleCount).forEach((segment) => {
+        overlay.append(makeAsciiSegment(segment));
+      });
+      mobileAsciiSegments(visibleCount).forEach((segment) => {
+        overlay.append(makeAsciiSegment({ ...segment, className: `${segment.className} mobile` }));
+      });
+      return overlay;
+    }
+
+    function desktopAsciiSegments(layout, visibleCount) {
+      if (visibleCount <= 1) return [];
+      if (layout === "split") {
+        return [verticalAscii("50%", "desktop")];
+      }
+      if (layout === "quarters") {
+        return [
+          verticalAscii("50%", "desktop"),
+          horizontalAscii("50%", "0", "0", "desktop"),
+          crossAscii("50%", "50%", "desktop")
+        ];
+      }
+      if (layout === "instruction") {
+        const split = `${(1.45 / (1.45 + 0.9)) * 100}%`;
+        return [
+          verticalAscii(split, "desktop"),
+          horizontalAscii("50%", split, "0", "desktop"),
+          crossAscii(split, "50%", "desktop")
+        ];
+      }
+      if (layout === "rail") {
+        const split = `${(1 / (1 + 0.36)) * 100}%`;
+        return [
+          verticalAscii(split, "desktop"),
+          horizontalAscii("33.333%", split, "0", "desktop"),
+          horizontalAscii("66.667%", split, "0", "desktop"),
+          crossAscii(split, "33.333%", "desktop"),
+          crossAscii(split, "66.667%", "desktop")
+        ];
+      }
+      return [];
+    }
+
+    function mobileAsciiSegments(visibleCount) {
+      const segments = [];
+      for (let index = 1; index < Math.min(visibleCount, 4); index += 1) {
+        segments.push(horizontalAscii(`${index * 25}%`, "0", "0", "mobile"));
+      }
+      return segments;
+    }
+
+    function verticalAscii(left, className) {
+      return {
+        className: `ascii-segment vertical ${className}`,
+        style: { left },
+        text: `${"|\n".repeat(160)}|`
+      };
+    }
+
+    function horizontalAscii(top, left, right, className) {
+      return {
+        className: `ascii-segment horizontal ${className}`,
+        style: { top, left, right },
+        text: `+${"-".repeat(220)}+`
+      };
+    }
+
+    function crossAscii(left, top, className) {
+      return {
+        className: `ascii-segment cross ${className}`,
+        style: { left, top },
+        text: "+"
+      };
+    }
+
+    function makeAsciiSegment(segment) {
+      const element = document.createElement("pre");
+      element.className = segment.className;
+      Object.entries(segment.style).forEach(([property, value]) => {
+        element.style[property] = value;
+      });
+      element.textContent = segment.text;
+      return element;
     }
 
     function capacityStatusText(capacity, activeIndex) {
