@@ -26,7 +26,9 @@
       --vignette-strength: 0.72;
       --frame-padding: 10px;
       --screen-radius: 2px;
-      --tile-gap: 10px;
+      --tile-gap: 0px;
+      --separator: rgba(var(--phosphor-rgb), 0.36);
+      --separator-dim: rgba(var(--phosphor-rgb), 0.12);
       --editor-width: min(390px, 92vw);
       --mono: "Courier New", Courier, monospace;
     }
@@ -158,8 +160,11 @@
       border: 1px solid #1c1a17;
       border-radius: var(--screen-radius);
       background:
+        linear-gradient(rgba(var(--phosphor-rgb), 0.018) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(var(--phosphor-rgb), 0.012) 1px, transparent 1px),
         radial-gradient(ellipse at center, rgba(var(--phosphor-rgb), 0.075), rgba(20, 19, 17, 0.98) 64%, #080808 100%),
         linear-gradient(180deg, var(--glass-hot), var(--glass));
+      background-size: 8px 8px, 8px 8px, auto, auto;
       box-shadow:
         inset 0 0 64px rgba(0, 0, 0, 0.86),
         inset 0 0 22px rgba(var(--phosphor-rgb), 0.08);
@@ -280,26 +285,97 @@
       min-height: 0;
       overflow: hidden;
       padding: 0;
-      border: 1px solid rgba(var(--phosphor-rgb), 0.26);
-      background:
-        linear-gradient(180deg, rgba(var(--phosphor-rgb), 0.06), transparent 48%),
-        rgba(0, 0, 0, 0.24);
+      border: 0;
+      border-radius: 0;
+      background: transparent;
       color: var(--phosphor);
       cursor: pointer;
       text-align: left;
       text-transform: none;
     }
 
-    .tile.active {
-      border-color: rgba(var(--phosphor-rgb), 0.72);
+    .tile::before,
+    .tile::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    .tile::before {
+      z-index: 1;
+      opacity: 0.9;
+    }
+
+    .tile.active,
+    .tile:focus-visible {
+      box-shadow: none;
+      outline: 0;
+    }
+
+    .tile.active::after,
+    .tile:focus-visible::after {
+      z-index: 3;
+      top: clamp(9px, 1.1vw, 17px);
+      right: auto;
+      bottom: auto;
+      left: clamp(8px, 1vw, 14px);
+      width: 0.7ch;
+      height: 1.1em;
+      background: var(--phosphor-hot);
       box-shadow:
-        inset 0 0 24px rgba(var(--phosphor-rgb), 0.08),
-        0 0 18px rgba(var(--phosphor-rgb), 0.12);
+        0 0 calc(var(--glow) * 5px) rgba(var(--phosphor-rgb), 0.6),
+        1ch 0 0 rgba(var(--phosphor-rgb), 0.24);
+      opacity: 0.74;
+    }
+
+    .tile.active .tile-text,
+    .tile.active .tile-meta,
+    .tile:focus-visible .tile-text,
+    .tile:focus-visible .tile-meta {
+      color: var(--phosphor-hot);
+    }
+
+    .layout-split .tile:nth-child(2)::before,
+    .layout-instruction .tile:nth-child(n+2)::before,
+    .layout-rail .tile:nth-child(n+2)::before {
+      background:
+        linear-gradient(90deg, var(--separator), transparent 1px),
+        linear-gradient(90deg, var(--separator-dim), transparent 2px);
+    }
+
+    .layout-quarters .tile:nth-child(even)::before {
+      background:
+        linear-gradient(90deg, var(--separator), transparent 1px),
+        linear-gradient(90deg, var(--separator-dim), transparent 2px);
+    }
+
+    .layout-quarters .tile:nth-child(n+3)::before {
+      background:
+        linear-gradient(var(--separator), transparent 1px),
+        linear-gradient(var(--separator-dim), transparent 2px);
+    }
+
+    .layout-quarters .tile:nth-child(4)::before {
+      background:
+        linear-gradient(90deg, var(--separator), transparent 1px),
+        linear-gradient(90deg, var(--separator-dim), transparent 2px),
+        linear-gradient(var(--separator), transparent 1px),
+        linear-gradient(var(--separator-dim), transparent 2px);
+    }
+
+    .layout-instruction .tile:nth-child(3)::before,
+    .layout-rail .tile:nth-child(n+3)::before {
+      background:
+        linear-gradient(90deg, var(--separator), transparent 1px),
+        linear-gradient(90deg, var(--separator-dim), transparent 2px),
+        linear-gradient(var(--separator), transparent 1px),
+        linear-gradient(var(--separator-dim), transparent 2px);
     }
 
     .tile-meta {
       position: absolute;
-      z-index: 2;
+      z-index: 4;
       top: 5px;
       right: 7px;
       display: flex;
@@ -313,6 +389,7 @@
     .tile-text {
       position: absolute;
       inset: 0;
+      z-index: 2;
       margin: 0;
       overflow: hidden;
       padding: clamp(12px, 1.5vw, 22px);
@@ -561,7 +638,7 @@
 
     @media (max-width: 760px) {
       :root {
-        --tile-gap: 7px;
+        --tile-gap: 0px;
       }
 
       .app {
@@ -591,6 +668,15 @@
       .layout-instruction .tile:first-child,
       .layout-rail .tile:first-child {
         grid-row: auto;
+      }
+
+      .layout-split .tile:nth-child(n+2)::before,
+      .layout-quarters .tile:nth-child(n+2)::before,
+      .layout-instruction .tile:nth-child(n+2)::before,
+      .layout-rail .tile:nth-child(n+2)::before {
+        background:
+          linear-gradient(var(--separator), transparent 1px),
+          linear-gradient(var(--separator-dim), transparent 2px);
       }
 
       .tile-text,
