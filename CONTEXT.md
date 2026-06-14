@@ -100,6 +100,34 @@ _Avoid_: Mistake, error, problem.
 The human-readable output of an Analysis Run. A Coach Report gives at most one Coaching Instruction and must identify the Reference Lap selection it used.
 _Avoid_: Session report when the reference selection matters.
 
+**Debrief Board**:
+A driver-facing composition of Coaching Tiles arranged for immediate post-session reading. A Debrief Board is a presentation of coaching outputs and notes, not a new source of analysis truth.
+_Avoid_: Dashboard, terminal editor, report builder.
+
+**Debrief Layout Preset**:
+A named arrangement of Coaching Tiles selected for a specific post-session reading pattern. Debrief Layout Presets constrain composition so the board stays driver-facing instead of becoming a generic canvas.
+_Avoid_: Freeform layout, window manager.
+
+**Coaching Tile**:
+A typed block on a Debrief Board with a specific coaching purpose, such as instruction, evidence, reference context, checked areas, session status, or raw note. A Coaching Tile may be edited as text, but its type defines what role it plays in the debrief.
+_Avoid_: Widget, panel, generic text box.
+
+**ASCII Tile Format**:
+The driver-facing text presentation pattern applied by a Coaching Tile type. The format provides the tile's frame, label, and density while leaving the tile's coaching content editable.
+_Avoid_: Theme when referring to the structure of an individual tile.
+
+**Tile Source Snapshot**:
+The coaching-system content a Coaching Tile was derived from at the time it was created or refreshed. It preserves the tile's evidence basis separately from the editable display text shown on the Debrief Board.
+_Avoid_: Live source when the tile is not automatically updated.
+
+**Tile Display Text**:
+The editable ASCII text shown inside a Coaching Tile on a Debrief Board. Tile Display Text may diverge from its Tile Source Snapshot when a user rewrites the debrief presentation.
+_Avoid_: Source data, analysis output.
+
+**Edited Coaching Tile**:
+A source-derived Coaching Tile whose Tile Display Text no longer matches its Tile Source Snapshot. An Edited Coaching Tile remains usable in a Debrief Board, but should be distinguishable from an unmodified derived tile.
+_Avoid_: Invalid tile, dirty widget.
+
 **Coach Refinement**:
 An optional LLM-assisted rewrite of Coach Report prose after deterministic analysis has selected the status, Reference Lap, Corner Segment, and Reportable Delta evidence.
 _Avoid_: Analysis when the model is only rewriting prose.

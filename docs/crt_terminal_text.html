@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Open Race Coach CRT Terminal Text</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Open Race Coach CRT Debrief Board</title>
   <style>
     :root {
       color-scheme: dark;
@@ -16,41 +16,32 @@
       --case: #050505;
       --shadow-blue: rgba(35, 80, 255, 0.22);
       --shadow-red: rgba(255, 24, 56, 0.22);
-      --font-scale: 0.9;
+      --font-scale: 1;
       --glow: 1;
       --rgb-split: 1;
       --scanline-opacity: 0.34;
       --scanline-size: 3px;
-      --flicker-opacity: 0.31;
+      --flicker-opacity: 0.28;
       --flicker-speed: 0.16s;
-      --vignette-strength: 0.74;
-      --frame-padding: 12px;
+      --vignette-strength: 0.72;
+      --frame-padding: 10px;
       --screen-radius: 2px;
+      --tile-gap: 10px;
+      --editor-width: min(390px, 92vw);
       --mono: "Courier New", Courier, monospace;
     }
 
     @keyframes crt-flicker {
       0% { opacity: var(--flicker-opacity); }
-      5% { opacity: calc(var(--flicker-opacity) * 0.68); }
-      10% { opacity: calc(var(--flicker-opacity) * 1.1); }
-      15% { opacity: calc(var(--flicker-opacity) * 0.58); }
-      20% { opacity: calc(var(--flicker-opacity) * 1.26); }
-      25% { opacity: calc(var(--flicker-opacity) * 0.77); }
-      30% { opacity: calc(var(--flicker-opacity) * 1.06); }
-      35% { opacity: calc(var(--flicker-opacity) * 0.61); }
-      40% { opacity: calc(var(--flicker-opacity) * 0.94); }
-      45% { opacity: calc(var(--flicker-opacity) * 1.16); }
-      50% { opacity: calc(var(--flicker-opacity) * 0.52); }
-      55% { opacity: calc(var(--flicker-opacity) * 1.06); }
-      60% { opacity: calc(var(--flicker-opacity) * 0.74); }
-      65% { opacity: calc(var(--flicker-opacity) * 1.19); }
-      70% { opacity: calc(var(--flicker-opacity) * 0.65); }
-      75% { opacity: calc(var(--flicker-opacity) * 1.03); }
-      80% { opacity: calc(var(--flicker-opacity) * 0.84); }
-      85% { opacity: calc(var(--flicker-opacity) * 1.13); }
-      90% { opacity: calc(var(--flicker-opacity) * 0.61); }
-      95% { opacity: var(--flicker-opacity); }
-      100% { opacity: calc(var(--flicker-opacity) * 0.77); }
+      5% { opacity: calc(var(--flicker-opacity) * 0.64); }
+      10% { opacity: calc(var(--flicker-opacity) * 1.12); }
+      18% { opacity: calc(var(--flicker-opacity) * 0.58); }
+      27% { opacity: calc(var(--flicker-opacity) * 1.18); }
+      41% { opacity: calc(var(--flicker-opacity) * 0.82); }
+      52% { opacity: calc(var(--flicker-opacity) * 1.04); }
+      66% { opacity: calc(var(--flicker-opacity) * 0.62); }
+      82% { opacity: calc(var(--flicker-opacity) * 1.16); }
+      100% { opacity: calc(var(--flicker-opacity) * 0.78); }
     }
 
     @keyframes text-shadow-drift {
@@ -62,7 +53,7 @@
           0 0 calc(var(--glow) * 10px) rgba(var(--phosphor-rgb), 0.42);
       }
 
-      35% {
+      36% {
         text-shadow:
           calc(var(--rgb-split) * 1.15px) 0 1px var(--shadow-blue),
           calc(var(--rgb-split) * -1.15px) 0 1px var(--shadow-red),
@@ -70,7 +61,7 @@
           0 0 calc(var(--glow) * 14px) rgba(var(--phosphor-rgb), 0.5);
       }
 
-      68% {
+      70% {
         text-shadow:
           calc(var(--rgb-split) * 0.1px) 0 1px var(--shadow-blue),
           calc(var(--rgb-split) * -0.1px) 0 1px var(--shadow-red),
@@ -83,76 +74,72 @@
       box-sizing: border-box;
     }
 
-    html {
-      width: 100%;
-      max-width: 100%;
-      min-height: 100%;
-      background:
-        radial-gradient(circle at 50% 45%, rgba(var(--phosphor-rgb), 0.07), transparent 56%),
-        #030303;
-    }
-
+    html,
     body {
-      min-height: 100vh;
+      width: 100%;
+      height: 100%;
       margin: 0;
-      overflow-x: hidden;
-      padding: clamp(10px, 3vw, 32px);
+      overflow: hidden;
       background:
-        radial-gradient(ellipse at center, rgba(var(--phosphor-rgb), 0.05), transparent 55%),
+        radial-gradient(circle at 50% 44%, rgba(var(--phosphor-rgb), 0.06), transparent 56%),
         linear-gradient(145deg, #080807, #000 74%);
       font-family: var(--mono);
     }
 
     button,
     input,
+    select,
+    textarea,
     output {
       font: inherit;
       min-width: 0;
     }
 
-    button {
+    button,
+    select {
       border: 1px solid rgba(var(--phosphor-rgb), 0.42);
       background: rgba(var(--phosphor-rgb), 0.08);
       color: var(--phosphor-hot);
       cursor: pointer;
       min-height: 32px;
-      overflow: hidden;
-      padding: 7px 9px;
-      text-overflow: ellipsis;
+      padding: 6px 8px;
       text-transform: uppercase;
     }
 
     button:hover,
-    button[aria-pressed="true"] {
-      border-color: var(--phosphor);
-      background: rgba(var(--phosphor-rgb), 0.18);
-      color: #fff2c8;
-    }
-
+    button[aria-pressed="true"],
+    select:focus-visible,
     button:focus-visible,
-    input:focus-visible {
-      outline: 2px solid var(--phosphor-hot);
-      outline-offset: 2px;
+    input:focus-visible,
+    textarea:focus-visible {
+      border-color: var(--phosphor);
+      outline: 1px solid var(--phosphor-hot);
+      outline-offset: 1px;
     }
 
-    .workbench {
-      min-height: calc(100vh - clamp(20px, 6vw, 64px));
-      width: 100%;
-      max-width: 100%;
+    label {
+      min-width: 0;
+    }
+
+    .app {
+      position: fixed;
+      inset: 0;
       display: grid;
-      grid-template-columns: minmax(420px, 920px) minmax(286px, 340px);
-      gap: clamp(12px, 2vw, 22px);
-      align-items: center;
-      justify-content: center;
+      padding: clamp(8px, 1.5vw, 16px);
+      background:
+        linear-gradient(rgba(var(--phosphor-rgb), 0.018) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(var(--phosphor-rgb), 0.014) 1px, transparent 1px),
+        #030303;
+      background-size: 18px 18px;
     }
 
     .terminal-frame {
+      position: relative;
       min-width: 0;
-      width: 100%;
-      aspect-ratio: 1.05;
+      min-height: 0;
+      padding: var(--frame-padding);
       border: 1px solid #24211c;
       border-radius: 4px;
-      padding: var(--frame-padding);
       background:
         linear-gradient(180deg, #171511, #050505 58%, #010101),
         var(--case);
@@ -166,9 +153,7 @@
       position: relative;
       isolation: isolate;
       width: 100%;
-      min-width: 0;
       height: 100%;
-      margin: 0;
       overflow: hidden;
       border: 1px solid #1c1a17;
       border-radius: var(--screen-radius);
@@ -186,7 +171,7 @@
       position: absolute;
       inset: 0;
       pointer-events: none;
-      z-index: 2;
+      z-index: 3;
     }
 
     .crt-screen::before {
@@ -195,7 +180,7 @@
         linear-gradient(90deg, rgba(255, 0, 0, 0.055), rgba(var(--phosphor-rgb), 0.035), rgba(0, 65, 255, 0.055));
       background-size: 100% var(--scanline-size), 3px 100%;
       mix-blend-mode: screen;
-      opacity: 0.85;
+      opacity: 0.86;
     }
 
     .crt-screen::after {
@@ -205,44 +190,192 @@
         rgba(18, 16, 16, 0.13);
     }
 
-    .terminal-text {
-      display: block;
-      position: relative;
+    .top-bar {
+      position: absolute;
+      z-index: 5;
+      top: 12px;
+      right: 12px;
+      left: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      pointer-events: none;
+    }
+
+    .brand,
+    .board-state {
+      color: var(--phosphor-dim);
+      font-size: 11px;
+      letter-spacing: 0;
+      text-transform: uppercase;
+    }
+
+    .board-state {
+      flex: 1;
+      overflow: hidden;
+      text-align: right;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .editor-toggle {
+      pointer-events: auto;
+      min-width: 40px;
+      min-height: 30px;
+      padding: 4px 9px;
+    }
+
+    .debrief-board {
+      position: absolute;
+      inset: 44px 16px 16px;
       z-index: 1;
-      height: 100%;
-      margin: 0;
-      padding: clamp(18px, 3vw, 32px);
+      display: grid;
+      gap: var(--tile-gap);
+      min-width: 0;
+      min-height: 0;
+      transition: right 180ms ease;
+    }
+
+    body.editor-open .debrief-board {
+      right: calc(var(--editor-width) + 16px);
+    }
+
+    .layout-focus {
+      grid-template-columns: 1fr;
+      grid-template-rows: 1fr;
+    }
+
+    .layout-split {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-rows: 1fr;
+    }
+
+    .layout-quarters {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-rows: repeat(2, minmax(0, 1fr));
+    }
+
+    .layout-instruction {
+      grid-template-columns: minmax(0, 1.45fr) minmax(240px, 0.9fr);
+      grid-template-rows: repeat(2, minmax(0, 1fr));
+    }
+
+    .layout-instruction .tile:first-child {
+      grid-row: 1 / span 2;
+    }
+
+    .layout-rail {
+      grid-template-columns: minmax(0, 1fr) minmax(210px, 0.36fr);
+      grid-template-rows: repeat(3, minmax(0, 1fr));
+    }
+
+    .layout-rail .tile:first-child {
+      grid-row: 1 / span 3;
+    }
+
+    .tile {
+      position: relative;
+      min-width: 0;
+      min-height: 0;
+      overflow: hidden;
+      padding: 0;
+      border: 1px solid rgba(var(--phosphor-rgb), 0.26);
+      background:
+        linear-gradient(180deg, rgba(var(--phosphor-rgb), 0.06), transparent 48%),
+        rgba(0, 0, 0, 0.24);
       color: var(--phosphor);
-      font-size: clamp(calc(12px * var(--font-scale)), calc(2.05vw * var(--font-scale)), calc(22px * var(--font-scale)));
+      cursor: pointer;
+      text-align: left;
+      text-transform: none;
+    }
+
+    .tile.active {
+      border-color: rgba(var(--phosphor-rgb), 0.72);
+      box-shadow:
+        inset 0 0 24px rgba(var(--phosphor-rgb), 0.08),
+        0 0 18px rgba(var(--phosphor-rgb), 0.12);
+    }
+
+    .tile-meta {
+      position: absolute;
+      z-index: 2;
+      top: 5px;
+      right: 7px;
+      display: flex;
+      gap: 5px;
+      color: var(--phosphor-dim);
+      font-size: 10px;
+      text-transform: uppercase;
+      opacity: 0.88;
+    }
+
+    .tile-text {
+      position: absolute;
+      inset: 0;
+      margin: 0;
+      overflow: hidden;
+      padding: clamp(12px, 1.5vw, 22px);
+      color: var(--phosphor);
+      font-size: clamp(10px, calc(1.18vw * var(--font-scale)), 20px);
       line-height: 1.08;
       letter-spacing: 0;
-      overflow: auto;
+      white-space: pre-wrap;
+      word-break: normal;
+      overflow-wrap: anywhere;
       text-rendering: optimizeSpeed;
-      white-space: pre;
       animation: text-shadow-drift 1.6s infinite;
     }
 
-    .terminal-text::selection {
-      background: rgba(var(--phosphor-rgb), 0.24);
-      color: var(--phosphor-hot);
+    .tile[data-type="instruction"] .tile-text {
+      font-size: clamp(12px, calc(1.55vw * var(--font-scale)), 28px);
+      line-height: 1.05;
     }
 
-    .control-panel {
-      align-self: stretch;
-      min-width: 0;
-      max-height: min(760px, calc(100vh - 64px));
-      overflow: auto;
-      border: 1px solid rgba(var(--phosphor-rgb), 0.34);
+    .tile[data-type="session_status"] .tile-text,
+    .tile[data-type="checked_areas"] .tile-text {
+      font-size: clamp(9px, calc(0.98vw * var(--font-scale)), 16px);
+    }
+
+    body.editor-open .tile-text {
+      font-size: clamp(8px, calc(0.82vw * var(--font-scale)), 14px);
+    }
+
+    body.editor-open .tile[data-type="instruction"] .tile-text {
+      font-size: clamp(9px, calc(1vw * var(--font-scale)), 18px);
+    }
+
+    .editor-panel {
+      position: fixed;
+      z-index: 10;
+      top: 0;
+      right: 0;
+      width: var(--editor-width);
+      height: 100%;
+      display: grid;
+      grid-template-rows: auto auto auto auto auto minmax(0, 1fr);
+      gap: 10px;
+      padding: 12px;
+      border-left: 1px solid rgba(var(--phosphor-rgb), 0.36);
       background:
         linear-gradient(rgba(var(--phosphor-rgb), 0.035) 1px, transparent 1px),
         linear-gradient(90deg, rgba(var(--phosphor-rgb), 0.025) 1px, transparent 1px),
-        rgba(7, 7, 6, 0.92);
+        rgba(7, 7, 6, 0.96);
       background-size: 16px 16px;
       box-shadow:
         inset 0 0 38px rgba(0, 0, 0, 0.72),
-        0 20px 70px rgba(0, 0, 0, 0.48);
+        -18px 0 70px rgba(0, 0, 0, 0.58);
       color: var(--phosphor);
-      padding: 12px;
+      transform: translateX(100%);
+      transition: transform 180ms ease;
+    }
+
+    body.editor-open .editor-panel {
+      transform: translateX(0);
+    }
+
+    body.editor-open .terminal-frame {
+      pointer-events: none;
     }
 
     .panel-title {
@@ -254,79 +387,93 @@
       color: var(--phosphor-hot);
       font-size: 13px;
       font-weight: 700;
-      margin-bottom: 12px;
       padding-bottom: 8px;
       text-transform: uppercase;
     }
 
+    .panel-heading {
+      display: grid;
+      gap: 3px;
+      min-width: 0;
+    }
+
+    .panel-close {
+      flex: 0 0 auto;
+    }
+
     .control-group {
-      border-bottom: 1px solid rgba(var(--phosphor-rgb), 0.2);
       display: grid;
-      gap: 10px;
-      padding: 0 0 12px;
-      margin-bottom: 12px;
+      gap: 8px;
+      min-width: 0;
+      padding-bottom: 10px;
+      border-bottom: 1px solid rgba(var(--phosphor-rgb), 0.18);
     }
 
-    .control-group:last-child {
-      border-bottom: 0;
-      margin-bottom: 0;
-      padding-bottom: 0;
+    .control-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 7px;
     }
 
-    .preset-row,
-    .swatch-row,
-    .action-row {
-      display: grid;
+    .control-grid.three {
       grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 8px;
     }
 
-    .action-row {
-      grid-template-columns: 1fr 1fr;
-    }
-
-    .swatch {
+    .tile-list {
       display: grid;
-      place-items: center;
-      min-height: 34px;
-      padding: 0;
+      gap: 6px;
+      max-height: 96px;
+      min-height: 0;
+      overflow: auto;
+      padding-right: 2px;
     }
 
-    .swatch::before {
-      content: "";
-      width: 18px;
-      height: 18px;
-      border: 1px solid rgba(255, 255, 255, 0.5);
-      background: var(--swatch-color);
-      box-shadow: 0 0 14px var(--swatch-color);
-    }
-
-    .color-line {
+    .tile-list-row {
       display: grid;
-      grid-template-columns: 1fr 46px;
-      gap: 8px;
+      grid-template-columns: 26px minmax(0, 1fr) auto;
       align-items: center;
+      gap: 6px;
+      min-height: 30px;
+      padding: 4px 6px;
+      text-align: left;
+      text-transform: none;
     }
 
-    .color-line span,
+    .tile-list-row[aria-current="true"] {
+      border-color: rgba(var(--phosphor-rgb), 0.72);
+      background: rgba(var(--phosphor-rgb), 0.16);
+    }
+
+    .tile-list-index,
+    .tile-list-meta {
+      color: var(--phosphor-dim);
+      font-size: 10px;
+      text-transform: uppercase;
+    }
+
+    .tile-list-label {
+      overflow: hidden;
+      color: var(--phosphor-hot);
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .tile-list-meta {
+      justify-self: end;
+      white-space: nowrap;
+    }
+
+    .control-row {
+      display: grid;
+      gap: 5px;
+    }
+
+    .control-label,
     .slider-label {
       color: var(--phosphor-hot);
       font-size: 11px;
       font-weight: 700;
       text-transform: uppercase;
-    }
-
-    input[type="color"] {
-      width: 46px;
-      height: 34px;
-      border: 1px solid rgba(var(--phosphor-rgb), 0.42);
-      background: transparent;
-      padding: 2px;
-    }
-
-    .control-row {
-      display: grid;
-      gap: 6px;
     }
 
     .slider-label {
@@ -335,7 +482,8 @@
       gap: 10px;
     }
 
-    output {
+    output,
+    .status-line {
       color: var(--phosphor-dim);
       font-variant-numeric: tabular-nums;
       text-align: right;
@@ -346,17 +494,58 @@
       accent-color: var(--phosphor);
     }
 
-    .css-output {
+    input[type="color"] {
       width: 100%;
-      min-height: 116px;
+      height: 32px;
+      border: 1px solid rgba(var(--phosphor-rgb), 0.42);
+      background: transparent;
+      padding: 2px;
+    }
+
+    .swatch {
+      min-height: 32px;
+      padding: 0;
+    }
+
+    .swatch::before {
+      content: "";
+      display: block;
+      width: 18px;
+      height: 18px;
+      margin: auto;
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      background: var(--swatch-color);
+      box-shadow: 0 0 14px var(--swatch-color);
+    }
+
+    .text-editor,
+    .source-editor {
+      width: 100%;
+      min-height: 0;
       border: 1px solid rgba(var(--phosphor-rgb), 0.3);
-      background: rgba(0, 0, 0, 0.46);
+      background: rgba(0, 0, 0, 0.48);
       color: var(--phosphor-hot);
-      font: 11px/1.35 var(--mono);
-      margin: 0;
-      overflow: auto;
+      font: 12px/1.28 var(--mono);
+      overflow: hidden;
       padding: 8px;
+      resize: none;
+      tab-size: 4;
       white-space: pre-wrap;
+    }
+
+    .text-editor {
+      height: 100%;
+    }
+
+    .source-editor {
+      height: 88px;
+    }
+
+    .editor-stack {
+      display: grid;
+      grid-template-rows: auto auto 1fr;
+      gap: 8px;
+      min-height: 0;
     }
 
     .copy-status {
@@ -366,188 +555,223 @@
       text-transform: uppercase;
     }
 
-    @media (max-width: 720px) {
-      body {
-        padding: 8px;
+    .mobile-warning {
+      display: none;
+    }
+
+    @media (max-width: 760px) {
+      :root {
+        --tile-gap: 7px;
       }
 
-      .workbench {
-        min-height: 0;
-        width: min(100%, 374px);
-        max-width: calc(100vw - 16px);
-        margin: 0;
-        overflow: hidden;
-        display: block;
+      .app {
+        padding: 7px;
       }
 
-      .terminal-frame,
-      .control-panel {
-        width: 100%;
-        max-width: 100%;
+      .debrief-board {
+        inset: 42px 10px 10px;
       }
 
-      .terminal-frame {
-        aspect-ratio: 0.76;
+      body.editor-open .debrief-board {
+        right: 10px;
       }
 
-      .control-panel {
-        max-height: none;
-        margin-top: 12px;
-        overflow-x: hidden;
+      body.editor-open .terminal-frame {
+        opacity: 0.32;
       }
 
-      .preset-row,
-      .swatch-row {
-        gap: 6px;
+      .layout-split,
+      .layout-quarters,
+      .layout-instruction,
+      .layout-rail {
+        grid-template-columns: 1fr;
+        grid-template-rows: repeat(4, minmax(0, 1fr));
       }
 
-      .terminal-text {
-        font-size: clamp(8px, 2.55vw, 11px);
+      .layout-instruction .tile:first-child,
+      .layout-rail .tile:first-child {
+        grid-row: auto;
+      }
+
+      .tile-text,
+      .tile[data-type="instruction"] .tile-text,
+      .tile[data-type="session_status"] .tile-text,
+      .tile[data-type="checked_areas"] .tile-text {
+        font-size: clamp(8px, calc(2.35vw * var(--font-scale)), 13px);
+        padding: 10px;
       }
     }
 
     @media (prefers-reduced-motion: reduce) {
       .crt-screen::after,
-      .terminal-text {
+      .tile-text {
         animation: none;
+      }
+
+      .debrief-board,
+      .editor-panel {
+        transition: none;
       }
     }
   </style>
 </head>
 <body>
-  <div class="workbench">
-    <main class="terminal-frame" aria-label="CRT terminal text sample">
-      <pre class="crt-screen"><code class="terminal-text">Sphinx of black quartz, judge my vow.
-
-OPEN RACE COACH / LOCAL TERMINAL
-
-       ___   ____   ______   _   __
-      / _ \ / __ \ / ____/  / | / /
-     / , _// /_/ // /      /  |/ /
-    /_/|_| \____//_/      /_/|__/
-
-    telemetry loaded: 6 laps / 6 valid
-    reference mode:   session best
-    selected delta:   C2 minimum speed
-    repeatability:    100 percent
-
-    next stint:
-    keep the car rolling through C2.
-    minimum speed is down 3.0 m/s.
-    median loss is +0.066s.
-
-    evidence:
-    lap 1  ref  1:29.625
-    lap 2  cmp  1:29.984
-    lap 3  cmp  1:29.984
-    lap 4  cmp  1:29.984
-    lap 5  cmp  1:29.984
-    lap 6  cmp  1:29.984
-
-    status: reportable
-    prompt: attack one thing.</code></pre>
+  <div class="app">
+    <main class="terminal-frame" aria-label="CRT debrief board">
+      <section class="crt-screen">
+        <div class="top-bar">
+          <div class="brand">Open Race Coach / Debrief Board</div>
+          <div class="board-state" id="boardState">Showing 4 of 4 tiles</div>
+          <button class="editor-toggle" id="editorToggle" type="button" aria-controls="editorPanel" aria-expanded="false">Edit</button>
+        </div>
+        <div class="debrief-board layout-instruction" id="board" aria-label="Typed coaching tile board"></div>
+      </section>
     </main>
-
-    <aside class="control-panel" aria-label="CRT calibration controls">
-      <div class="panel-title">
-        <span>Calibration</span>
-        <span id="activePreset">Amber</span>
-      </div>
-
-      <section class="control-group" aria-label="Presets">
-        <div class="preset-row">
-          <button type="button" data-preset="amber" aria-pressed="true">Amber</button>
-          <button type="button" data-preset="green" aria-pressed="false">Green</button>
-          <button type="button" data-preset="sharp" aria-pressed="false">Sharp</button>
-        </div>
-      </section>
-
-      <section class="control-group" aria-label="Phosphor color">
-        <div class="swatch-row">
-          <button class="swatch" type="button" data-color="#ff9d00" style="--swatch-color: #ff9d00" aria-label="Amber"></button>
-          <button class="swatch" type="button" data-color="#66ff33" style="--swatch-color: #66ff33" aria-label="Green"></button>
-          <button class="swatch" type="button" data-color="#d7ffe1" style="--swatch-color: #d7ffe1" aria-label="White green"></button>
-        </div>
-        <label class="color-line">
-          <span>Phosphor</span>
-          <input id="phosphorColor" type="color" value="#ff9d00" data-setting="phosphor">
-        </label>
-      </section>
-
-      <section class="control-group" aria-label="Image controls">
-        <label class="control-row">
-          <span class="slider-label">Glow <output for="glow">1.00</output></span>
-          <input id="glow" type="range" min="0" max="1.8" step="0.01" value="1" data-setting="glow">
-        </label>
-
-        <label class="control-row">
-          <span class="slider-label">RGB Split <output for="rgbSplit">1.00</output></span>
-          <input id="rgbSplit" type="range" min="0" max="3" step="0.01" value="1" data-setting="rgbSplit">
-        </label>
-
-        <label class="control-row">
-          <span class="slider-label">Scanlines <output for="scanlineOpacity">0.34</output></span>
-          <input id="scanlineOpacity" type="range" min="0" max="0.7" step="0.01" value="0.34" data-setting="scanlineOpacity">
-        </label>
-
-        <label class="control-row">
-          <span class="slider-label">Line Pitch <output for="scanlineSize">3 px</output></span>
-          <input id="scanlineSize" type="range" min="2" max="7" step="1" value="3" data-setting="scanlineSize">
-        </label>
-      </section>
-
-      <section class="control-group" aria-label="Screen controls">
-        <label class="control-row">
-          <span class="slider-label">Flicker <output for="flickerOpacity">0.31</output></span>
-          <input id="flickerOpacity" type="range" min="0" max="0.55" step="0.01" value="0.31" data-setting="flickerOpacity">
-        </label>
-
-        <label class="control-row">
-          <span class="slider-label">Flicker Rate <output for="flickerSpeed">0.16 s</output></span>
-          <input id="flickerSpeed" type="range" min="0.08" max="0.7" step="0.01" value="0.16" data-setting="flickerSpeed">
-        </label>
-
-        <label class="control-row">
-          <span class="slider-label">Vignette <output for="vignetteStrength">0.74</output></span>
-          <input id="vignetteStrength" type="range" min="0.15" max="0.95" step="0.01" value="0.74" data-setting="vignetteStrength">
-        </label>
-
-        <label class="control-row">
-          <span class="slider-label">Font Size <output for="fontScale">0.90</output></span>
-          <input id="fontScale" type="range" min="0.7" max="1.35" step="0.01" value="0.9" data-setting="fontScale">
-        </label>
-
-        <label class="control-row">
-          <span class="slider-label">Bezel <output for="framePadding">12 px</output></span>
-          <input id="framePadding" type="range" min="4" max="26" step="1" value="12" data-setting="framePadding">
-        </label>
-
-        <label class="control-row">
-          <span class="slider-label">Corners <output for="screenRadius">2 px</output></span>
-          <input id="screenRadius" type="range" min="0" max="18" step="1" value="2" data-setting="screenRadius">
-        </label>
-      </section>
-
-      <section class="control-group" aria-label="Actions">
-        <div class="action-row">
-          <button id="copyButton" type="button">Copy CSS</button>
-          <button id="resetButton" type="button">Reset</button>
-        </div>
-        <pre class="css-output" id="cssOutput" aria-label="Current CSS variables"></pre>
-        <div class="copy-status" id="copyStatus" aria-live="polite"></div>
-      </section>
-    </aside>
   </div>
+
+  <aside class="editor-panel" id="editorPanel" aria-label="Debrief board editor">
+    <div class="panel-title">
+      <span class="panel-heading">
+        <span>Board Editor</span>
+        <span id="activeTileLabel">Tile 1</span>
+      </span>
+      <button class="panel-close" id="editorCloseButton" type="button">Close</button>
+    </div>
+
+    <section class="control-group" aria-label="Layout presets">
+      <span class="control-label">Layout</span>
+      <div class="control-grid">
+        <button type="button" data-layout="focus">Single</button>
+        <button type="button" data-layout="split">Split</button>
+        <button type="button" data-layout="quarters">Quarters</button>
+        <button type="button" data-layout="instruction">Instruction</button>
+        <button type="button" data-layout="rail">Status Rail</button>
+        <button type="button" id="resetBoardButton">Reset</button>
+      </div>
+      <div class="status-line" id="layoutCapacityStatus">Showing 4 of 4 tiles</div>
+    </section>
+
+    <section class="control-group" aria-label="Debrief board files">
+      <span class="control-label">Board File</span>
+      <div class="control-grid">
+        <button type="button" id="exportBoardButton">Export Board</button>
+        <button type="button" id="importBoardButton">Import Board</button>
+      </div>
+      <input type="file" id="importBoardInput" accept="application/json,.json" hidden />
+    </section>
+
+    <section class="control-group" aria-label="Tile controls">
+      <span class="control-label">Coaching Tiles</span>
+      <div class="tile-list" id="tileList" role="listbox" aria-label="Coaching Tiles"></div>
+      <div class="control-grid three">
+        <button type="button" id="addTileButton">Add Tile</button>
+        <button type="button" id="duplicateTileButton">Duplicate</button>
+        <button type="button" id="deleteTileButton">Delete</button>
+        <button type="button" id="moveTileUpButton">Move Up</button>
+        <button type="button" id="moveTileDownButton">Move Down</button>
+      </div>
+      <div class="control-grid">
+        <label class="control-row">
+          <span class="control-label">Tile Type</span>
+          <select id="tileType">
+            <option value="instruction">Instruction</option>
+            <option value="evidence">Evidence</option>
+            <option value="reference">Reference</option>
+            <option value="checked_areas">Checked Areas</option>
+            <option value="session_status">Session Status</option>
+            <option value="raw_note">Raw Note</option>
+          </select>
+        </label>
+        <label class="control-row">
+          <span class="control-label">Source</span>
+          <select id="sourceType">
+            <option value="manual">Manual</option>
+            <option value="coach_report">Coach Report</option>
+            <option value="selected_delta">Selected Delta</option>
+            <option value="analysis_summary">Analysis Summary</option>
+          </select>
+        </label>
+      </div>
+      <div class="control-grid">
+        <button type="button" id="refreshSourceButton">Refresh From Source</button>
+        <button type="button" id="revertDisplayButton">Revert Display Edits</button>
+      </div>
+      <textarea class="source-editor" id="sourceEditor" spellcheck="false" aria-label="Tile source snapshot"></textarea>
+    </section>
+
+    <section class="control-group" aria-label="CRT theme controls">
+      <span class="control-label">CRT Theme</span>
+      <div class="control-grid three">
+        <button class="swatch" type="button" data-color="#ff9d00" style="--swatch-color: #ff9d00" aria-label="Amber"></button>
+        <button class="swatch" type="button" data-color="#66ff33" style="--swatch-color: #66ff33" aria-label="Green"></button>
+        <button class="swatch" type="button" data-color="#d7ffe1" style="--swatch-color: #d7ffe1" aria-label="White green"></button>
+      </div>
+      <label class="control-row">
+        <span class="control-label">Phosphor</span>
+        <input id="phosphorColor" type="color" value="#ff9d00" data-setting="phosphor" />
+      </label>
+      <label class="control-row">
+        <span class="slider-label">Font <output for="fontScale">1.00</output></span>
+        <input id="fontScale" type="range" min="0.72" max="1.28" step="0.01" value="1" data-setting="fontScale" />
+      </label>
+      <label class="control-row">
+        <span class="slider-label">Glow <output for="glow">1.00</output></span>
+        <input id="glow" type="range" min="0" max="1.8" step="0.01" value="1" data-setting="glow" />
+      </label>
+      <label class="control-row">
+        <span class="slider-label">Scanlines <output for="scanlineOpacity">0.34</output></span>
+        <input id="scanlineOpacity" type="range" min="0" max="0.7" step="0.01" value="0.34" data-setting="scanlineOpacity" />
+      </label>
+      <label class="control-row">
+        <span class="slider-label">Vignette <output for="vignetteStrength">0.72</output></span>
+        <input id="vignetteStrength" type="range" min="0.15" max="0.95" step="0.01" value="0.72" data-setting="vignetteStrength" />
+      </label>
+    </section>
+
+    <section class="editor-stack" aria-label="Tile display text">
+      <div class="control-grid">
+        <button type="button" id="sampleReportButton">Sample Report</button>
+        <button type="button" id="sampleDeltaButton">Sample Delta</button>
+      </div>
+      <div class="copy-status" id="copyStatus" aria-live="polite"></div>
+      <textarea class="text-editor" id="displayTextEditor" spellcheck="false" aria-label="Tile display text"></textarea>
+    </section>
+  </aside>
 
   <script>
     const root = document.documentElement;
-    const storageKey = "open-race-coach-crt-terminal-settings";
+    const board = document.getElementById("board");
+    const boardState = document.getElementById("boardState");
+    const editorToggle = document.getElementById("editorToggle");
+    const editorPanel = document.getElementById("editorPanel");
+    const editorCloseButton = document.getElementById("editorCloseButton");
+    const activeTileLabel = document.getElementById("activeTileLabel");
+    const tileList = document.getElementById("tileList");
+    const layoutCapacityStatus = document.getElementById("layoutCapacityStatus");
+    const tileType = document.getElementById("tileType");
+    const sourceType = document.getElementById("sourceType");
+    const sourceEditor = document.getElementById("sourceEditor");
+    const displayTextEditor = document.getElementById("displayTextEditor");
+    const copyStatus = document.getElementById("copyStatus");
+    const importBoardInput = document.getElementById("importBoardInput");
+    const refreshSourceButton = document.getElementById("refreshSourceButton");
+    const revertDisplayButton = document.getElementById("revertDisplayButton");
     const controls = Array.from(document.querySelectorAll("[data-setting]"));
     const outputs = new Map(Array.from(document.querySelectorAll("output")).map((output) => [output.htmlFor, output]));
-    const presetButtons = Array.from(document.querySelectorAll("[data-preset]"));
-    const activePreset = document.getElementById("activePreset");
-    const cssOutput = document.getElementById("cssOutput");
-    const copyStatus = document.getElementById("copyStatus");
+    const focusableEditorSelector = [
+      "button",
+      "input",
+      "select",
+      "textarea",
+      "a[href]",
+      "[tabindex]"
+    ].join(",");
+    const supportsInert = "inert" in HTMLElement.prototype;
+    const originalEditorTabIndexes = new WeakMap();
+
+    const storageKey = "open-race-coach-crt-debrief-board-v1";
+    const boardArtifactType = "open_race_coach_debrief_board";
+    const boardArtifactVersion = 1;
 
     const defaults = {
       phosphor: "#ff9d00",
@@ -555,88 +779,772 @@ OPEN RACE COACH / LOCAL TERMINAL
       rgbSplit: 1,
       scanlineOpacity: 0.34,
       scanlineSize: 3,
-      flickerOpacity: 0.31,
+      flickerOpacity: 0.28,
       flickerSpeed: 0.16,
-      vignetteStrength: 0.74,
-      fontScale: 0.9,
-      framePadding: 12,
+      vignetteStrength: 0.72,
+      fontScale: 1,
+      framePadding: 10,
       screenRadius: 2
     };
 
-    const presets = {
-      amber: defaults,
-      green: {
-        ...defaults,
-        phosphor: "#66ff33",
-        glow: 0.95,
-        scanlineOpacity: 0.3,
-        flickerOpacity: 0.26
-      },
-      sharp: {
-        ...defaults,
-        phosphor: "#ffb000",
-        glow: 0.35,
-        rgbSplit: 0.25,
-        scanlineOpacity: 0.22,
-        scanlineSize: 2,
-        flickerOpacity: 0.08,
-        vignetteStrength: 0.58,
-        fontScale: 0.92,
-        framePadding: 10,
-        screenRadius: 0
+    const sampleCoachReport = [
+      "# Coach Report - Interlagos GP / Formula Inter / 2026-06-12",
+      "",
+      "## The one thing",
+      "In C2, try to keep the car rolling about 3.0 m/s faster at minimum speed. The data identifies the speed loss, not the exact input change.",
+      "",
+      "## Why",
+      "Minimum speed was 42.0 m/s versus the reference lap, a 10.8 km/h gap. The minimum speed gap showed up on 100% of comparison laps.",
+      "",
+      "## Checked areas",
+      "C1 consistent, C2 reportable, C3 consistent."
+    ].join("\n");
+
+    const sampleSelectedDelta = JSON.stringify({
+      analysis_status: "reportable",
+      comparison_lap_count: 5,
+      reference_lap_id: "01k2demo:lap:1",
+      selected_delta: {
+        corner_segment_id: "C2",
+        dominant_cause: "min_speed",
+        dominant_cause_lap_fraction: 1,
+        median_corner_loss_s: 0.066,
+        segment_range: {
+          start_lap_dist_m: 1185,
+          end_lap_dist_m: 1405,
+          lap_dist_m_source: "sim"
+        },
+        cause_metric: {
+          metric: "min_speed",
+          unit: "m/s",
+          reference_value: 45,
+          comparison_median: 42,
+          bad_direction_delta: 3
+        }
       }
-    };
+    }, null, 2);
+
+    const initialTiles = [
+      makeTile("instruction", "selected_delta", sampleSelectedDelta),
+      makeTile("evidence", "selected_delta", sampleSelectedDelta),
+      makeTile("checked_areas", "analysis_summary", "C1 consistent\nC2 reportable\nC3 consistent"),
+      makeTile("session_status", "analysis_summary", "Recorded Session: complete\nValid laps: 6\nReference: session best\nOutcome: reportable")
+    ];
 
     let state = loadState();
+    let activeTileId = state.tiles[0]?.id || null;
+    let editorIsOpen = false;
 
-    controls.forEach((control) => {
-      control.addEventListener("input", () => {
-        state[control.dataset.setting] = control.type === "color" ? control.value : Number(control.value);
-        applyState(state, "Custom");
-        saveState(state);
+    render();
+    applyTheme(state.theme);
+    syncEditor();
+    setEditorOpen(false, { restoreFocus: false });
+
+    editorToggle.addEventListener("click", () => {
+      setEditorOpen(!editorIsOpen);
+    });
+
+    editorCloseButton.addEventListener("click", () => {
+      closeEditor();
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key !== "Escape" || !editorIsOpen) return;
+      event.preventDefault();
+      closeEditor();
+    });
+
+    document.querySelectorAll("[data-layout]").forEach((button) => {
+      button.addEventListener("click", () => {
+        state.layout = button.dataset.layout;
+        saveState();
+        render();
+        syncEditor();
       });
     });
 
     document.querySelectorAll("[data-color]").forEach((button) => {
       button.addEventListener("click", () => {
-        state.phosphor = button.dataset.color;
-        applyState(state, "Custom");
-        saveState(state);
+        state.theme.phosphor = button.dataset.color;
+        applyTheme(state.theme);
+        saveState();
       });
     });
 
-    presetButtons.forEach((button) => {
-      button.addEventListener("click", () => {
-        state = { ...presets[button.dataset.preset] };
-        applyState(state, button.textContent.trim());
-        saveState(state, button.dataset.preset);
+    controls.forEach((control) => {
+      control.addEventListener("input", () => {
+        state.theme[control.dataset.setting] = control.type === "color" ? control.value : Number(control.value);
+        applyTheme(state.theme);
+        saveState();
       });
     });
 
-    document.getElementById("resetButton").addEventListener("click", () => {
-      state = { ...defaults };
-      try {
-        localStorage.removeItem(storageKey);
-        localStorage.removeItem(`${storageKey}:preset`);
-      } catch {
-        copyStatus.textContent = "Storage blocked";
-      }
-      applyState(state, "Amber");
+    tileType.addEventListener("change", () => {
+      const tile = activeTile();
+      if (!tile) return;
+      tile.tile_type = tileType.value;
+      saveState();
+      render();
+      syncEditor({ statusText: isTileEdited(tile) ? "Format changed; refresh when ready" : undefined });
     });
 
-    document.getElementById("copyButton").addEventListener("click", async () => {
-      const text = cssOutput.textContent;
-      try {
-        await navigator.clipboard.writeText(text);
-        copyStatus.textContent = "Copied";
-      } catch {
-        copyStatus.textContent = "Clipboard blocked";
-      }
+    sourceType.addEventListener("change", () => {
+      const tile = activeTile();
+      if (!tile) return;
+      tile.source_type = sourceType.value;
+      saveState();
+      render();
+      syncEditor({ statusText: isTileEdited(tile) ? "Format changed; refresh when ready" : undefined });
     });
 
-    applyState(state, loadPresetLabel());
+    sourceEditor.addEventListener("input", () => {
+      const tile = activeTile();
+      if (!tile) return;
+      tile.source_snapshot = sourceEditor.value;
+      saveState();
+      render();
+      syncEditor({ keepTextFocus: true });
+    });
 
-    function applyState(next, label) {
+    displayTextEditor.addEventListener("input", () => {
+      const tile = activeTile();
+      if (!tile) return;
+      tile.display_text = displayTextEditor.value;
+      saveState();
+      render();
+    });
+
+    function refreshActiveTileFromSource() {
+      const tile = activeTile();
+      if (!tile) return;
+      tile.display_text = formatTile(tile.tile_type, tile.source_type, tile.source_snapshot);
+      saveState();
+      render();
+      syncEditor({ statusText: "Display text refreshed from source" });
+    }
+
+    refreshSourceButton.addEventListener("click", refreshActiveTileFromSource);
+
+    revertDisplayButton.addEventListener("click", refreshActiveTileFromSource);
+
+    document.getElementById("addTileButton").addEventListener("click", () => {
+      const tile = makeTile("raw_note", "manual", "Driver note");
+      state.tiles.push(tile);
+      activeTileId = tile.id;
+      saveState();
+      render();
+      syncEditor();
+    });
+
+    document.getElementById("duplicateTileButton").addEventListener("click", () => {
+      const index = activeTileIndex();
+      if (index < 0) return;
+      const source = state.tiles[index];
+      const clone = {
+        ...source,
+        id: `tile-${Math.random().toString(16).slice(2)}`
+      };
+      state.tiles.splice(index + 1, 0, clone);
+      activeTileId = clone.id;
+      saveState();
+      render();
+      syncEditor();
+    });
+
+    document.getElementById("deleteTileButton").addEventListener("click", () => {
+      if (state.tiles.length <= 1) {
+        copyStatus.textContent = "At least one tile required";
+        return;
+      }
+      const index = activeTileIndex();
+      if (index < 0) return;
+      state.tiles.splice(index, 1);
+      activeTileId = state.tiles[Math.min(index, state.tiles.length - 1)].id;
+      saveState();
+      render();
+      syncEditor();
+    });
+
+    document.getElementById("moveTileUpButton").addEventListener("click", () => {
+      moveActiveTile(-1);
+    });
+
+    document.getElementById("moveTileDownButton").addEventListener("click", () => {
+      moveActiveTile(1);
+    });
+
+    document.getElementById("resetBoardButton").addEventListener("click", () => {
+      state = defaultState();
+      activeTileId = state.tiles[0].id;
+      saveState();
+      applyTheme(state.theme);
+      render();
+      syncEditor();
+    });
+
+    document.getElementById("exportBoardButton").addEventListener("click", () => {
+      const artifact = serializeBoardArtifact();
+      const blob = new Blob([JSON.stringify(artifact, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `open-race-coach-debrief-board-${filenameTimestamp(new Date())}.json`;
+      document.body.append(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 0);
+      copyStatus.textContent = "Board exported";
+    });
+
+    document.getElementById("importBoardButton").addEventListener("click", () => {
+      importBoardInput.value = "";
+      importBoardInput.click();
+    });
+
+    importBoardInput.addEventListener("change", () => {
+      const file = importBoardInput.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.addEventListener("load", () => {
+        try {
+          const imported = parseBoardArtifact(String(reader.result || ""));
+          state = imported;
+          activeTileId = state.tiles[0].id;
+          saveState();
+          applyTheme(state.theme);
+          render();
+          syncEditor();
+          copyStatus.textContent = "Board imported";
+        } catch {
+          copyStatus.textContent = "Import failed";
+        }
+      });
+      reader.addEventListener("error", () => {
+        copyStatus.textContent = "Import failed";
+      });
+      reader.readAsText(file);
+    });
+
+    document.getElementById("sampleReportButton").addEventListener("click", () => {
+      const tile = activeTile();
+      if (!tile) return;
+      tile.source_type = "coach_report";
+      tile.source_snapshot = sampleCoachReport;
+      tile.display_text = formatTile(tile.tile_type, tile.source_type, tile.source_snapshot);
+      saveState();
+      render();
+      syncEditor();
+    });
+
+    document.getElementById("sampleDeltaButton").addEventListener("click", () => {
+      const tile = activeTile();
+      if (!tile) return;
+      tile.source_type = "selected_delta";
+      tile.source_snapshot = sampleSelectedDelta;
+      tile.display_text = formatTile(tile.tile_type, tile.source_type, tile.source_snapshot);
+      saveState();
+      render();
+      syncEditor();
+    });
+
+    function render() {
+      ensureActiveTileId();
+      const capacity = layoutTileCount(state.layout);
+      const activeIndex = activeTileIndex();
+      const visibleTiles = state.tiles.slice(0, capacity);
+      const capacityText = capacityStatusText(capacity, activeIndex);
+      board.className = `debrief-board layout-${state.layout}`;
+      board.innerHTML = "";
+      visibleTiles.forEach((tile, index) => {
+        const element = document.createElement("button");
+        element.type = "button";
+        element.className = `tile${tile.id === activeTileId ? " active" : ""}`;
+        element.dataset.type = tile.tile_type;
+        element.setAttribute("aria-label", `${tileLabel(tile.tile_type)} tile ${index + 1}`);
+        element.addEventListener("click", () => {
+          activeTileId = tile.id;
+          render();
+          syncEditor();
+        });
+
+        const meta = document.createElement("div");
+        meta.className = "tile-meta";
+        meta.textContent = tileMeta(tile);
+
+        const pre = document.createElement("pre");
+        pre.className = "tile-text";
+        pre.textContent = tile.display_text;
+
+        element.append(meta, pre);
+        board.append(element);
+      });
+
+      document.querySelectorAll("[data-layout]").forEach((button) => {
+        button.setAttribute("aria-pressed", button.dataset.layout === state.layout ? "true" : "false");
+      });
+      boardState.textContent = capacityText;
+      layoutCapacityStatus.textContent = capacityText;
+      renderTileList();
+    }
+
+    function syncEditor(options = {}) {
+      ensureActiveTileId();
+      const tile = activeTile();
+      if (!tile) return;
+      const index = activeTileIndex();
+      activeTileLabel.textContent = `Tile ${index + 1} / ${tileLabel(tile.tile_type)}`;
+      tileType.value = tile.tile_type;
+      sourceType.value = tile.source_type;
+      sourceEditor.value = tile.source_snapshot;
+      displayTextEditor.value = tile.display_text;
+      revertDisplayButton.disabled = !isTileEdited(tile);
+      copyStatus.textContent = options.statusText || activeTileStatus(tile, index);
+      if (!options.keepTextFocus && document.activeElement !== displayTextEditor) {
+        displayTextEditor.selectionStart = displayTextEditor.selectionEnd = 0;
+      }
+    }
+
+    function renderTileList() {
+      tileList.innerHTML = "";
+      state.tiles.forEach((tile, index) => {
+        const row = document.createElement("button");
+        row.type = "button";
+        row.className = "tile-list-row";
+        row.setAttribute("role", "option");
+        row.setAttribute("aria-selected", tile.id === activeTileId ? "true" : "false");
+        if (tile.id === activeTileId) {
+          row.setAttribute("aria-current", "true");
+        }
+        row.addEventListener("click", () => {
+          activeTileId = tile.id;
+          render();
+          syncEditor();
+        });
+
+        const ordinal = document.createElement("span");
+        ordinal.className = "tile-list-index";
+        ordinal.textContent = String(index + 1);
+
+        const label = document.createElement("span");
+        label.className = "tile-list-label";
+        label.textContent = tileLabel(tile.tile_type);
+
+        const meta = document.createElement("span");
+        meta.className = "tile-list-meta";
+        meta.textContent = tileListMeta(tile, index);
+
+        row.append(ordinal, label, meta);
+        tileList.append(row);
+      });
+      updateEditorPanelFocusability();
+    }
+
+    function setEditorOpen(open, options = {}) {
+      editorIsOpen = Boolean(open);
+      document.body.classList.toggle("editor-open", editorIsOpen);
+      editorToggle.setAttribute("aria-expanded", String(editorIsOpen));
+      editorPanel.setAttribute("aria-hidden", String(!editorIsOpen));
+      if (supportsInert) {
+        editorPanel.inert = !editorIsOpen;
+      }
+      updateEditorPanelFocusability();
+
+      if (editorIsOpen) {
+        if (options.focusEditor !== false) {
+          focusEditorPanel();
+        }
+      } else if (options.restoreFocus !== false) {
+        editorToggle.focus({ preventScroll: true });
+      }
+    }
+
+    function openEditor() {
+      setEditorOpen(true);
+    }
+
+    function closeEditor() {
+      setEditorOpen(false);
+    }
+
+    function updateEditorPanelFocusability() {
+      if (supportsInert) return;
+      getEditorFocusableElements().forEach((element) => {
+        if (editorIsOpen) {
+          if (!originalEditorTabIndexes.has(element)) return;
+          const originalTabIndex = originalEditorTabIndexes.get(element);
+          if (originalTabIndex === null) {
+            element.removeAttribute("tabindex");
+          } else {
+            element.setAttribute("tabindex", originalTabIndex);
+          }
+          originalEditorTabIndexes.delete(element);
+          return;
+        }
+
+        if (!originalEditorTabIndexes.has(element)) {
+          originalEditorTabIndexes.set(
+            element,
+            element.hasAttribute("tabindex") ? element.getAttribute("tabindex") : null
+          );
+        }
+        element.setAttribute("tabindex", "-1");
+      });
+    }
+
+    function focusEditorPanel() {
+      const preferred = displayTextEditor || tileList.querySelector("button");
+      const target = preferred || getEditorFocusableElements()[0];
+      if (target) target.focus({ preventScroll: true });
+    }
+
+    function getEditorFocusableElements() {
+      return Array.from(editorPanel.querySelectorAll(focusableEditorSelector))
+        .filter((element) => !element.disabled && element.getAttribute("aria-hidden") !== "true");
+    }
+
+    function activeTile() {
+      return state.tiles.find((tile) => tile.id === activeTileId) || state.tiles[0];
+    }
+
+    function activeTileIndex() {
+      return state.tiles.findIndex((tile) => tile.id === activeTileId);
+    }
+
+    function ensureActiveTileId() {
+      if (!state.tiles.some((tile) => tile.id === activeTileId)) {
+        activeTileId = state.tiles[0]?.id || null;
+      }
+    }
+
+    function moveActiveTile(direction) {
+      const index = activeTileIndex();
+      const nextIndex = index + direction;
+      if (index < 0 || nextIndex < 0 || nextIndex >= state.tiles.length) return;
+      const [tile] = state.tiles.splice(index, 1);
+      state.tiles.splice(nextIndex, 0, tile);
+      activeTileId = tile.id;
+      saveState();
+      render();
+      syncEditor();
+    }
+
+    function layoutTileCount(layout) {
+      return layout === "focus" ? 1 : layout === "split" ? 2 : 4;
+    }
+
+    function capacityStatusText(capacity, activeIndex) {
+      const shown = Math.min(capacity, state.tiles.length);
+      const hidden = activeIndex >= capacity ? " / active tile hidden by current layout" : "";
+      return `Showing ${shown} of ${state.tiles.length} tiles${hidden}`;
+    }
+
+    function activeTileStatus(tile, index) {
+      const hidden = index >= layoutTileCount(state.layout) ? "Tile hidden by current layout / " : "";
+      return `${hidden}${tileMeta(tile)}`;
+    }
+
+    function tileListMeta(tile, index) {
+      const edited = isTileEdited(tile);
+      const hidden = index >= layoutTileCount(state.layout);
+      return [edited ? "Edited" : sourceLabel(tile.source_type), hidden ? "Hidden" : ""].filter(Boolean).join(" / ");
+    }
+
+    function makeTile(tileTypeName, sourceTypeName, sourceSnapshot) {
+      const source = sourceSnapshot || "";
+      return {
+        id: `tile-${Math.random().toString(16).slice(2)}`,
+        tile_type: tileTypeName,
+        source_type: sourceTypeName,
+        source_snapshot: source,
+        display_text: formatTile(tileTypeName, sourceTypeName, source)
+      };
+    }
+
+    function formatTile(tileTypeName, sourceTypeName, sourceSnapshot) {
+      const derived = deriveContent(sourceTypeName, sourceSnapshot);
+      if (tileTypeName === "instruction") {
+        return frame("THE ONE THING", [
+          upperLine(derived.instruction || "No data-supported Coaching Instruction."),
+          "",
+          derived.location || "Location: not selected",
+          derived.confidence || "Evidence: unavailable"
+        ], 44);
+      }
+      if (tileTypeName === "evidence") {
+        return frame("WHY THE DATA SAYS IT", [
+          derived.evidence || "No selected delta evidence loaded.",
+          derived.magnitude || "",
+          derived.repeatability || ""
+        ], 38);
+      }
+      if (tileTypeName === "reference") {
+        return frame("REFERENCE", [
+          derived.reference || "Reference Lap unavailable.",
+          derived.mode || "Reference mode not loaded."
+        ], 38);
+      }
+      if (tileTypeName === "checked_areas") {
+        return frame("CHECKED AREAS", [
+          derived.checked || "No checked areas loaded."
+        ], 30);
+      }
+      if (tileTypeName === "session_status") {
+        return frame("SESSION STATUS", [
+          derived.status || "No session status loaded."
+        ], 30);
+      }
+      return frame("RAW NOTE", [
+        sourceSnapshot || "Write a post-session note."
+      ], 38);
+    }
+
+    function deriveContent(sourceTypeName, sourceSnapshot) {
+      if (sourceTypeName === "selected_delta") {
+        return deriveFromSelectedDelta(sourceSnapshot);
+      }
+      if (sourceTypeName === "coach_report") {
+        return deriveFromCoachReport(sourceSnapshot);
+      }
+      if (sourceTypeName === "analysis_summary") {
+        return {
+          status: sourceSnapshot,
+          checked: sourceSnapshot,
+          evidence: sourceSnapshot,
+          reference: sourceSnapshot
+        };
+      }
+      return {
+        instruction: sourceSnapshot,
+        evidence: sourceSnapshot,
+        status: sourceSnapshot,
+        checked: sourceSnapshot
+      };
+    }
+
+    function deriveFromCoachReport(text) {
+      const lines = text.split(/\r?\n/);
+      const thing = sectionText(lines, "## The one thing") || firstNonEmpty(lines);
+      const why = sectionText(lines, "## Why") || "";
+      const checked = sectionText(lines, "## Checked areas") || "";
+      return {
+        instruction: thing,
+        evidence: why,
+        checked,
+        status: "Coach Report loaded",
+        reference: titleFromReport(lines),
+        confidence: why ? "Evidence: deterministic Coach Report" : "Evidence: report text loaded"
+      };
+    }
+
+    function deriveFromSelectedDelta(text) {
+      try {
+        const parsed = JSON.parse(text);
+        if (parsed.analysis_status !== "reportable" || !isObject(parsed.selected_delta)) {
+          const reason = parsed.reason ? String(parsed.reason).replace(/_/g, " ") : "no Reportable Delta selected";
+          return {
+            instruction: "No data-supported Coaching Instruction.",
+            location: "Location: not selected",
+            confidence: "Evidence did not meet reportable thresholds",
+            evidence: `No selected delta: ${reason}`,
+            magnitude: "",
+            repeatability: "",
+            reference: parsed.reference_lap_id ? `Reference Lap: ${parsed.reference_lap_id}` : "Reference Lap unavailable",
+            mode: `Comparison laps: ${parsed.comparison_lap_count ?? "?"}`,
+            status: `Outcome: ${parsed.analysis_status || "unknown"}\nComparison laps: ${parsed.comparison_lap_count ?? "?"}`,
+            checked: "No Reportable Delta selected"
+          };
+        }
+
+        const delta = parsed.selected_delta;
+        const range = delta.segment_range || {};
+        const metric = delta.cause_metric || {};
+        const corner = delta.corner_segment_id || "unknown corner";
+        const cause = causeLabel(delta.dominant_cause);
+        const loss = numberText(delta.median_corner_loss_s, "s");
+        const repeat = percentText(delta.dominant_cause_lap_fraction);
+        return {
+          instruction: parsed.analysis_status === "reportable"
+            ? formatCauseInstruction(delta, metric, corner)
+            : "No data-supported Coaching Instruction.",
+          location: formatSegmentLocation(range, corner),
+          confidence: `Seen on ${repeat} of comparison laps`,
+          evidence: `${cause} loss in ${corner}`,
+          magnitude: `Median corner loss: ${loss}`,
+          repeatability: `Repeatability: ${repeat}`,
+          reference: parsed.reference_lap_id ? `Reference Lap: ${parsed.reference_lap_id}` : "Reference Lap unavailable",
+          mode: `Comparison laps: ${parsed.comparison_lap_count ?? "?"}`,
+          status: `Outcome: ${parsed.analysis_status || "unknown"}\nComparison laps: ${parsed.comparison_lap_count ?? "?"}`,
+          checked: `Selected: ${corner}\nCause: ${cause}\nMedian loss: ${loss}`
+        };
+      } catch {
+        return {
+          evidence: "selected_delta.json parse failed",
+          status: "Source parse failed",
+          checked: "Source parse failed",
+          instruction: "No data-supported Coaching Instruction."
+        };
+      }
+    }
+
+    function frame(title, lines, requestedWidth) {
+      const width = Math.max(28, requestedWidth, title.length + 2);
+      const innerWidth = width - 2;
+      const cleanLines = lines
+        .flatMap((line) => String(line || "").split(/\r?\n/))
+        .flatMap((line) => wrapLine(line, innerWidth))
+        .filter((line, index, all) => line || index < all.length - 1);
+      const border = `+${"-".repeat(width)}+`;
+      const titleLine = `| ${title.padEnd(innerWidth)} |`;
+      const body = cleanLines.map((line) => `| ${line.padEnd(innerWidth)} |`);
+      return [border, titleLine, border, ...body, border].join("\n");
+    }
+
+    function wrapLine(line, width) {
+      if (!line) return [""];
+      const words = String(line).split(/\s+/);
+      const wrapped = [];
+      let current = "";
+      words.forEach((word) => {
+        if (!current) {
+          current = word;
+        } else if (`${current} ${word}`.length <= width) {
+          current = `${current} ${word}`;
+        } else {
+          wrapped.push(current);
+          current = word;
+        }
+        while (current.length > width) {
+          wrapped.push(current.slice(0, width));
+          current = current.slice(width);
+        }
+      });
+      if (current) wrapped.push(current);
+      return wrapped;
+    }
+
+    function upperLine(text) {
+      return String(text || "").replace(/\s+/g, " ").trim();
+    }
+
+    function sectionText(lines, header) {
+      const start = lines.findIndex((line) => line.trim().toLowerCase() === header.toLowerCase());
+      if (start < 0) return "";
+      const body = [];
+      for (let index = start + 1; index < lines.length; index += 1) {
+        if (lines[index].startsWith("## ")) break;
+        if (lines[index].trim()) body.push(lines[index].trim());
+      }
+      return body.join(" ");
+    }
+
+    function firstNonEmpty(lines) {
+      return lines.find((line) => line.trim()) || "";
+    }
+
+    function titleFromReport(lines) {
+      const title = lines.find((line) => line.startsWith("# "));
+      return title ? title.replace(/^# /, "") : "Coach Report loaded";
+    }
+
+    function tileMeta(tile) {
+      const edited = isTileEdited(tile);
+      return `${tileLabel(tile.tile_type)} / ${sourceLabel(tile.source_type)}${edited ? " / EDITED" : ""}`;
+    }
+
+    function isTileEdited(tile) {
+      return tile.display_text !== formatTile(tile.tile_type, tile.source_type, tile.source_snapshot);
+    }
+
+    function tileLabel(value) {
+      return value.replace(/_/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
+    }
+
+    function sourceLabel(value) {
+      return value.replace(/_/g, " ").toUpperCase();
+    }
+
+    function causeLabel(value) {
+      const labels = {
+        brake_point: "brake point",
+        min_speed: "minimum speed",
+        throttle_reapplication: "throttle reapplication",
+        coast_duration: "coast duration",
+        // Backward-compatible aliases for boards saved before selected_delta schema v1 labels landed.
+        brake_earlier: "brake point",
+        throttle_later: "throttle reapplication",
+        coast_longer: "coast duration"
+      };
+      return labels[value] || String(value || "selected cause").replace(/_/g, " ");
+    }
+
+    function numberText(value, unit) {
+      return Number.isFinite(value) ? `${Number(value).toFixed(unit === "s" ? 3 : 1)} ${unit}` : `? ${unit}`;
+    }
+
+    function percentText(value) {
+      return Number.isFinite(value) ? `${Math.round(value * 100)}%` : "?%";
+    }
+
+    function formatCauseInstruction(delta, metric, corner) {
+      const cause = metric.metric || delta.dominant_cause;
+      const value = formatCauseValue(metric);
+      if (cause === "min_speed") {
+        return `Carry ${value} more minimum speed through ${corner}.`;
+      }
+      if (cause === "brake_point") {
+        return `Brake ${value} later through ${corner}.`;
+      }
+      if (cause === "throttle_reapplication") {
+        return `Pick up throttle ${value} earlier through ${corner}.`;
+      }
+      if (cause === "coast_duration") {
+        return `Reduce coast time by ${value} through ${corner}.`;
+      }
+      return `Review ${causeLabel(cause)} through ${corner}; selected-delta cause units are not recognized.`;
+    }
+
+    function formatCauseValue(metric) {
+      const value = metric.bad_direction_delta;
+      if (metric.unit === "lap_dist_pct") {
+        return formatLapDistancePct(value);
+      }
+      if (metric.unit === "m/s") {
+        return numberText(value, "m/s");
+      }
+      if (metric.unit === "s") {
+        return numberText(value, "s");
+      }
+      return Number.isFinite(value) ? String(value) : "an unknown amount";
+    }
+
+    function formatLapDistancePct(value) {
+      return Number.isFinite(value) ? `${(value * 100).toFixed(1)} lap-distance points` : "? lap-distance points";
+    }
+
+    function formatSegmentLocation(range, corner) {
+      const startM = range.start_lap_dist_m;
+      const endM = range.end_lap_dist_m;
+      const source = range.lap_dist_m_source;
+      if (Number.isFinite(startM) && Number.isFinite(endM) && source === "sim") {
+        return `${corner} / ${Math.round(startM)}-${Math.round(endM)} m`;
+      }
+      if (Number.isFinite(startM) && Number.isFinite(endM) && source === "derived_from_track_length") {
+        return `${corner} / approx. ${Math.round(startM / 10) * 10}-${Math.round(endM / 10) * 10} m`;
+      }
+
+      const startPct = range.start_lap_dist_pct;
+      const endPct = range.end_lap_dist_pct;
+      if (Number.isFinite(startPct) && Number.isFinite(endPct)) {
+        return `${corner} / ${formatLapDistancePctRange(startPct, endPct)}`;
+      }
+      return `${corner} / meter range unavailable`;
+    }
+
+    function formatLapDistancePctRange(start, end) {
+      return `${(start * 100).toFixed(1)}-${(end * 100).toFixed(1)} lap-distance points`;
+    }
+
+    function applyTheme(next) {
       const rgb = hexToRgb(next.phosphor);
       const hot = mix(rgb, [255, 255, 255], 0.35);
       const dim = mix(rgb, [0, 0, 0], 0.34);
@@ -662,59 +1570,6 @@ OPEN RACE COACH / LOCAL TERMINAL
         const output = outputs.get(control.id);
         if (output) output.textContent = formatOutput(control.dataset.setting, value);
       });
-
-      activePreset.textContent = label;
-      presetButtons.forEach((button) => {
-        button.setAttribute("aria-pressed", button.textContent.trim() === label ? "true" : "false");
-      });
-      updateCssOutput(next, rgb, hot, dim);
-    }
-
-    function updateCssOutput(next, rgb, hot, dim) {
-      cssOutput.textContent = [
-        ":root {",
-        `  --phosphor: ${next.phosphor};`,
-        `  --phosphor-rgb: ${rgb.join(", ")};`,
-        `  --phosphor-hot: ${rgbToHex(hot)};`,
-        `  --phosphor-dim: ${rgbToHex(dim)};`,
-        `  --font-scale: ${next.fontScale};`,
-        `  --glow: ${next.glow};`,
-        `  --rgb-split: ${next.rgbSplit};`,
-        `  --scanline-opacity: ${next.scanlineOpacity};`,
-        `  --scanline-size: ${next.scanlineSize}px;`,
-        `  --flicker-opacity: ${next.flickerOpacity};`,
-        `  --flicker-speed: ${next.flickerSpeed}s;`,
-        `  --vignette-strength: ${next.vignetteStrength};`,
-        `  --frame-padding: ${next.framePadding}px;`,
-        `  --screen-radius: ${next.screenRadius}px;`,
-        "}"
-      ].join("\n");
-    }
-
-    function loadState() {
-      try {
-        const saved = JSON.parse(localStorage.getItem(storageKey));
-        return saved ? { ...defaults, ...saved } : { ...defaults };
-      } catch {
-        return { ...defaults };
-      }
-    }
-
-    function loadPresetLabel() {
-      try {
-        return localStorage.getItem(`${storageKey}:preset`) || "Amber";
-      } catch {
-        return "Amber";
-      }
-    }
-
-    function saveState(next, preset) {
-      try {
-        localStorage.setItem(storageKey, JSON.stringify(next));
-        localStorage.setItem(`${storageKey}:preset`, preset || "Custom");
-      } catch {
-        copyStatus.textContent = "Storage blocked";
-      }
     }
 
     function formatOutput(setting, value) {
@@ -738,6 +1593,227 @@ OPEN RACE COACH / LOCAL TERMINAL
 
     function rgbToHex(rgb) {
       return `#${rgb.map((channel) => channel.toString(16).padStart(2, "0")).join("")}`;
+    }
+
+    function loadState() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(storageKey));
+        if (saved?.tiles?.length) {
+          return {
+            ...defaultState(),
+            ...saved,
+            theme: { ...defaults, ...(saved.theme || {}) }
+          };
+        }
+      } catch {
+        return defaultState();
+      }
+      return defaultState();
+    }
+
+    function serializeBoardArtifact() {
+      return {
+        artifact_type: boardArtifactType,
+        artifact_version: boardArtifactVersion,
+        created_at: new Date().toISOString(),
+        layout: state.layout,
+        theme: { ...state.theme },
+        tiles: state.tiles.map((tile) => ({
+          id: tile.id,
+          tile_type: tile.tile_type,
+          source_type: tile.source_type,
+          source_snapshot: tile.source_snapshot,
+          display_text: tile.display_text
+        }))
+      };
+    }
+
+    function parseBoardArtifact(text) {
+      const artifact = JSON.parse(text);
+      if (artifact?.artifact_type !== boardArtifactType) {
+        throw new Error("Unsupported Debrief Board artifact type");
+      }
+      if (artifact.artifact_version !== boardArtifactVersion) {
+        throw new Error("Unsupported Debrief Board artifact version");
+      }
+      if (!Array.isArray(artifact.tiles) || artifact.tiles.length === 0) {
+        throw new Error("Debrief Board artifact requires at least one Coaching Tile");
+      }
+
+      const tiles = artifact.tiles.map((tile) => validateBoardTile(tile));
+      const layout = typeof artifact.layout === "string" ? artifact.layout : "instruction";
+      return {
+        layout: isKnownLayout(layout) ? layout : "instruction",
+        theme: { ...defaults, ...(isObject(artifact.theme) ? artifact.theme : {}) },
+        tiles
+      };
+    }
+
+    function validateBoardTile(tile) {
+      if (!isObject(tile)) {
+        throw new Error("Coaching Tile must be an object");
+      }
+      const fields = ["tile_type", "source_type", "source_snapshot", "display_text"];
+      fields.forEach((field) => {
+        if (typeof tile[field] !== "string") {
+          throw new Error(`Coaching Tile ${field} must be a string`);
+        }
+      });
+      return {
+        id: typeof tile.id === "string" && tile.id ? tile.id : `tile-${Math.random().toString(16).slice(2)}`,
+        tile_type: tile.tile_type,
+        source_type: tile.source_type,
+        source_snapshot: tile.source_snapshot,
+        display_text: tile.display_text
+      };
+    }
+
+    function isKnownLayout(layout) {
+      return ["focus", "split", "quarters", "instruction", "rail"].includes(layout);
+    }
+
+    function isObject(value) {
+      return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+    }
+
+    function filenameTimestamp(date) {
+      const pad = (value) => String(value).padStart(2, "0");
+      return [
+        date.getFullYear(),
+        pad(date.getMonth() + 1),
+        pad(date.getDate()),
+        "-",
+        pad(date.getHours()),
+        pad(date.getMinutes()),
+        pad(date.getSeconds())
+      ].join("");
+    }
+
+    function defaultState() {
+      return {
+        layout: "instruction",
+        theme: { ...defaults },
+        tiles: initialTiles.map((tile) => ({ ...tile, id: `tile-${Math.random().toString(16).slice(2)}` }))
+      };
+    }
+
+    function saveState() {
+      try {
+        localStorage.setItem(storageKey, JSON.stringify(state));
+      } catch {
+        copyStatus.textContent = "Browser autosave blocked";
+      }
+    }
+
+    function runSelfTest() {
+      try {
+        const artifact = serializeBoardArtifact();
+        const parsed = parseBoardArtifact(JSON.stringify(artifact));
+        if (parsed.layout !== state.layout) {
+          throw new Error("Layout did not round-trip");
+        }
+        if (parsed.tiles.length !== state.tiles.length) {
+          throw new Error("Tile count did not round-trip");
+        }
+        if (parsed.tiles.some((tile, index) => tile.id !== state.tiles[index].id)) {
+          throw new Error("Tile IDs did not round-trip");
+        }
+
+        const formatterCases = [
+          {
+            name: "min_speed",
+            source: selectedDeltaFixture("min_speed", "m/s", 3),
+            expected: "Carry 3.0 m/s more minimum speed through C2.",
+            instructionForbidden: ["lap-distance points", "coast time"]
+          },
+          {
+            name: "brake_point",
+            source: selectedDeltaFixture("brake_point", "lap_dist_pct", 0.006),
+            expected: "Brake 0.6 lap-distance points later through C2.",
+            instructionForbidden: ["m/s more", "earlier through C2"]
+          },
+          {
+            name: "throttle_reapplication",
+            source: selectedDeltaFixture("throttle_reapplication", "lap_dist_pct", 0.008),
+            expected: "Pick up throttle 0.8 lap-distance points earlier through C2.",
+            instructionForbidden: ["m/s more", "later through C2"]
+          },
+          {
+            name: "coast_duration",
+            source: selectedDeltaFixture("coast_duration", "s", 0.12),
+            expected: "Reduce coast time by 0.120 s through C2.",
+            instructionForbidden: ["m/s more", "lap-distance points"]
+          },
+          {
+            name: "non_reportable",
+            source: JSON.stringify({
+              analysis_status: "consistent",
+              comparison_lap_count: 3,
+              reference_lap_id: "01k2demo:lap:1",
+              selected_delta: null,
+              corner_summaries: []
+            }),
+            expected: "No data-supported Coaching Instruction.",
+            derivedForbidden: ["unknown corner", "selected cause", "Median corner loss: ?"]
+          }
+        ];
+
+        const results = formatterCases.map((testCase) => {
+          const derived = deriveFromSelectedDelta(testCase.source);
+          const haystack = Object.values(derived).join("\n");
+          const instruction = derived.instruction;
+          const instructionClean = (testCase.instructionForbidden || []).every((text) => !instruction.includes(text));
+          const derivedClean = (testCase.derivedForbidden || []).every((text) => !haystack.includes(text));
+          const ok = instruction === testCase.expected && instructionClean && derivedClean;
+          if (!ok) {
+            throw new Error(`Formatter case failed: ${testCase.name}: ${haystack}`);
+          }
+          return { name: testCase.name, instruction };
+        });
+
+        window.__orcSelfTest = { ok: true, formatterCases: results };
+      } catch (error) {
+        window.__orcSelfTest = { ok: false, error: error instanceof Error ? error.message : String(error) };
+      }
+      document.documentElement.dataset.orcSelfTestOk = String(window.__orcSelfTest.ok);
+    }
+
+    function selectedDeltaFixture(cause, unit, badDirectionDelta) {
+      return JSON.stringify({
+        analysis_status: "reportable",
+        comparison_lap_count: 4,
+        reference_lap_id: "01k2demo:lap:1",
+        selected_delta: {
+          corner_segment_id: "C2",
+          dominant_cause: cause,
+          dominant_cause_lap_fraction: 0.75,
+          comparison_lap_count: 4,
+          segment_range: {
+            start_lap_dist_pct: 0.18,
+            end_lap_dist_pct: 0.24,
+            start_lap_dist_m: null,
+            end_lap_dist_m: null,
+            lap_dist_m_source: "unavailable"
+          },
+          median_corner_loss_s: 0.18,
+          robust_noise_s: 0.02,
+          cause_metric: {
+            metric: cause,
+            unit,
+            reference_value: 1,
+            comparison_median: 2,
+            signed_delta: badDirectionDelta,
+            bad_direction_delta: badDirectionDelta
+          },
+          lap_dist_m_source: "unavailable",
+          runner_up_margin_s: null
+        },
+        corner_summaries: []
+      });
+    }
+
+    if (new URLSearchParams(window.location.search).has("selftest")) {
+      runSelfTest();
     }
   </script>
 </body>
