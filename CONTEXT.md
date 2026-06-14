@@ -16,6 +16,14 @@ _Avoid_: Session path when identity is required.
 A Recorded Session whose capture or finalization failed before all required artifacts were safely written. It is retained for audit or debugging but is not eligible for analysis.
 _Avoid_: Partial session when eligibility for analysis matters.
 
+**Live Simulator Validation**:
+The first evidence-gathering activity that proves Open Race Coach can observe, preserve, validate, and analyze a real simulator session from a configured rig. Live Simulator Validation establishes telemetry trust before evaluating coaching quality.
+_Avoid_: Rig test, playtest, coaching evaluation.
+
+**Minimal Clean-Lap Live Simulator Validation**:
+A Live Simulator Validation scenario using one stable simulator, track, car, and practice context to produce a short Recorded Session with clean timed laps and no intentional pauses, pits, replay, restarts, or setup/context changes. It exists to prove telemetry artifact trust before realistic stint behavior is tested.
+_Avoid_: Stint test, race simulation, coaching-quality test.
+
 **Recorded Session Boundary**:
 The point where Open Race Coach must finalize one Recorded Session and start another because the recorded context changes.
 _Avoid_: Split when the domain event is a change in recording context.
