@@ -4,12 +4,8 @@ Open Race Coach records simulator telemetry into local files and later turns the
 
 Public home: https://openracecoach.com
 
-Logo:
-
-```text
 ┌─┐┌─┐┌─┐
 └─┘┴└─└─
-```
 
 ## Status
 
