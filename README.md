@@ -1,11 +1,13 @@
 # Open Race Coach
 
+```
+┌─┐┌─┐┌─┐
+└─┘┴└─└─
+```
+
 Open Race Coach records simulator telemetry into local files and later turns the data into at most one data-supported coaching instruction.
 
 Public home: https://openracecoach.com
-
-┌─┐┌─┐┌─┐
-└─┘┴└─└─
 
 ## Status
 
