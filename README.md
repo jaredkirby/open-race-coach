@@ -4,6 +4,13 @@ Open Race Coach records simulator telemetry into local files and later turns the
 
 Public home: https://openracecoach.com
 
+Logo:
+
+```text
+┌─┐┌─┐┌─┐
+└─┘┴└─└─
+```
+
 ## Status
 
 Phase 0, the Phase 1 AMS2 ingest foundation, Phase 2 deterministic analysis, Phase 3 coach refinement plumbing, and the ACC adapter scaffold are implemented. Live AMS2/ACC validation still has to be run on Windows with the simulators configured for shared memory.

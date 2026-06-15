@@ -214,6 +214,30 @@
       text-transform: uppercase;
     }
 
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .logo-mark {
+      margin: 0;
+      color: var(--phosphor-hot);
+      font: 700 12px/1.05 var(--mono);
+      text-shadow:
+        calc(var(--rgb-split) * 0.35px) 0 1px var(--shadow-blue),
+        calc(var(--rgb-split) * -0.35px) 0 1px var(--shadow-red),
+        0 0 calc(var(--glow) * 8px) rgba(var(--phosphor-rgb), 0.38);
+      text-transform: none;
+    }
+
+    .brand-text {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
     .board-state {
       flex: 1;
       overflow: hidden;
@@ -716,6 +740,10 @@
         font-size: clamp(8px, calc(2.35vw * var(--font-scale)), 13px);
         padding: 10px;
       }
+
+      .brand-text {
+        display: none;
+      }
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -736,7 +764,11 @@
     <main class="terminal-frame" aria-label="CRT debrief board">
       <section class="crt-screen">
         <div class="top-bar">
-          <div class="brand">Open Race Coach / Debrief Board</div>
+          <div class="brand">
+            <pre class="logo-mark" aria-label="Open Race Coach logo">┌─┐┌─┐┌─┐
+└─┘┴└─└─</pre>
+            <span class="brand-text">Open Race Coach / Debrief Board</span>
+          </div>
           <div class="board-state" id="boardState">Showing 4 of 4 tiles</div>
           <button class="editor-toggle" id="editorToggle" type="button" aria-controls="editorPanel" aria-expanded="false">Edit</button>
         </div>

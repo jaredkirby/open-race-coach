@@ -239,6 +239,18 @@
       text-transform: uppercase;
     }
 
+    .terminal-logo {
+      animation: glyphDrift 1.9s infinite;
+      color: var(--phosphor-hot);
+      font: 900 clamp(18px, 2.15vw, 34px)/1 var(--mono);
+      margin: 0 0 7px;
+      text-shadow:
+        1px 0 1px var(--shadow-blue),
+        -1px 0 1px var(--shadow-red),
+        0 0 16px rgba(150, 255, 188, 0.52);
+      text-transform: none;
+    }
+
     .terminal-title {
       animation: glyphDrift 1.9s infinite;
       color: var(--phosphor-hot);
@@ -935,6 +947,10 @@
         font-size: clamp(34px, 13vw, 64px);
       }
 
+      .terminal-logo {
+        font-size: clamp(18px, 8vw, 34px);
+      }
+
       .meta-row {
         grid-template-columns: 74px minmax(0, 1fr);
       }
@@ -1015,6 +1031,8 @@
             </section>
 
             <section class="title-cell" aria-label="Product title">
+              <pre class="terminal-logo" aria-label="Open Race Coach logo">┌─┐┌─┐┌─┐
+└─┘┴└─└─</pre>
               <h1 class="terminal-title">Open Race Coach</h1>
               <p class="terminal-subtitle" id="subtitle">-- Lap Time Improvement Terminal --</p>
             </section>
