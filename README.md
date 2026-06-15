@@ -13,7 +13,9 @@ Logo:
 
 ## Status
 
-Phase 0, the Phase 1 AMS2 ingest foundation, Phase 2 deterministic analysis, Phase 3 coach refinement plumbing, and the ACC adapter scaffold are implemented. Live AMS2/ACC validation still has to be run on Windows with the simulators configured for shared memory.
+Pre-alpha public-development seed. This repository is public for development visibility and review, not general use.
+
+Phase 0, the Phase 1 AMS2 ingest foundation, Phase 2 deterministic analysis, Phase 3 Coach Refinement plumbing, and the ACC adapter scaffold are implemented. Open Race Coach has not yet been validated on live AMS2 or ACC rigs. Live AMS2/ACC validation still has to be run on Windows with the simulators configured for shared memory; until then, public fixtures and unit tests are compatibility evidence, not proof of live simulator support.
 
 ## Setup
 

@@ -7,6 +7,7 @@ name = "open-race-coach"
 version = "0.1.0"
 description = "Local-first post-session sim-racing telemetry coach"
 readme = "README.md"
+license = "MIT"
 requires-python = ">=3.11"
 dependencies = [
   "numpy>=2.0",
