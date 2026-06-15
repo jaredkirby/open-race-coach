@@ -2,6 +2,9 @@
 __pycache__/
 .pytest_cache/
 .ruff_cache/
+.scratch/
+.DS_Store
+codex-session-*.html
 data/
 logs/
 *.pyc
