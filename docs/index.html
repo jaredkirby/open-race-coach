@@ -1,0 +1,763 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Open Race Coach</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --phosphor: #d7ffe1;
+      --phosphor-rgb: 215, 255, 225;
+      --phosphor-hot: #ffffff;
+      --phosphor-dim: #89b896;
+      --green: #66ff33;
+      --red: #ff4d22;
+      --glass: #10100f;
+      --case: #050505;
+      --shadow-blue: rgba(35, 80, 255, 0.22);
+      --shadow-red: rgba(255, 24, 56, 0.22);
+      --mono: "Courier New", Courier, monospace;
+      --glow: 0.76;
+      --rgb-split: 1;
+      --scanline-opacity: 0.08;
+      --scanline-size: 3px;
+      --flicker-opacity: 0.28;
+      --flicker-speed: 0.16s;
+      --vignette-strength: 0.51;
+      --font-scale: 0.93;
+      --frame-padding: 10px;
+      --screen-radius: 2px;
+      --font-size: calc(18.28px * var(--font-scale));
+      --line-height: 1.14;
+    }
+
+    @keyframes crt-flicker {
+      0% { opacity: var(--flicker-opacity); }
+      22% { opacity: calc(var(--flicker-opacity) * 0.64); }
+      48% { opacity: calc(var(--flicker-opacity) * 1.1); }
+      71% { opacity: calc(var(--flicker-opacity) * 0.72); }
+      100% { opacity: calc(var(--flicker-opacity) * 0.93); }
+    }
+
+    @keyframes text-shadow-drift {
+      0%, 100% {
+        text-shadow:
+          calc(var(--rgb-split) * 0.35px) 0 1px var(--shadow-blue),
+          calc(var(--rgb-split) * -0.35px) 0 1px var(--shadow-red),
+          0 0 calc(var(--glow) * 2px) var(--phosphor),
+          0 0 calc(var(--glow) * 10px) rgba(var(--phosphor-rgb), 0.42);
+      }
+
+      42% {
+        text-shadow:
+          calc(var(--rgb-split) * 1px) 0 1px var(--shadow-blue),
+          calc(var(--rgb-split) * -1px) 0 1px var(--shadow-red),
+          0 0 calc(var(--glow) * 3px) var(--phosphor-hot),
+          0 0 calc(var(--glow) * 14px) rgba(var(--phosphor-rgb), 0.5);
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+      font: inherit;
+      letter-spacing: 0;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 50% 44%, rgba(var(--phosphor-rgb), 0.06), transparent 56%),
+        linear-gradient(145deg, #080807, #000 74%);
+      color: var(--phosphor);
+      font: var(--font-size) / var(--line-height) var(--mono);
+    }
+
+    a {
+      color: var(--phosphor-hot);
+      text-decoration: none;
+    }
+
+    a:focus-visible {
+      outline: 1px solid var(--phosphor-hot);
+      outline-offset: 2px;
+    }
+
+    .app {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      padding: var(--frame-padding);
+      overflow: hidden;
+      background:
+        linear-gradient(rgba(var(--phosphor-rgb), 0.018) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(var(--phosphor-rgb), 0.014) 1px, transparent 1px),
+        #030303;
+      background-size: 18px 18px;
+    }
+
+    .terminal-frame {
+      position: fixed;
+      inset: 10px;
+      width: auto;
+      height: auto;
+      min-width: 0;
+      min-height: 0;
+      padding: 8px;
+      border: 1px solid #24211c;
+      border-radius: 4px;
+      background:
+        linear-gradient(180deg, #171511, #050505 58%, #010101),
+        var(--case);
+      box-shadow:
+        0 28px 90px rgba(0, 0, 0, 0.72),
+        inset 0 0 0 1px rgba(var(--phosphor-rgb), 0.08),
+        inset 0 0 32px rgba(var(--phosphor-rgb), 0.06);
+    }
+
+    .crt-screen {
+      position: relative;
+      isolation: isolate;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      border: 1px solid #1c1a17;
+      border-radius: var(--screen-radius);
+      background:
+        linear-gradient(rgba(var(--phosphor-rgb), 0.018) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(var(--phosphor-rgb), 0.012) 1px, transparent 1px),
+        radial-gradient(ellipse at center, rgba(var(--phosphor-rgb), 0.075), rgba(20, 19, 17, 0.98) 64%, #080808 100%),
+        var(--glass);
+      background-size: 8px 8px, 8px 8px, auto, auto;
+      box-shadow:
+        inset 0 0 64px rgba(0, 0, 0, 0.86),
+        inset 0 0 22px rgba(var(--phosphor-rgb), 0.08);
+    }
+
+    .crt-screen::before,
+    .crt-screen::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 5;
+    }
+
+    .crt-screen::before {
+      background:
+        linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, var(--scanline-opacity)) 50%),
+        linear-gradient(90deg, rgba(255, 0, 0, 0.055), rgba(var(--phosphor-rgb), 0.035), rgba(0, 65, 255, 0.055));
+      background-size: 100% var(--scanline-size), 3px 100%;
+      mix-blend-mode: screen;
+      opacity: 0.86;
+    }
+
+    .crt-screen::after {
+      animation: crt-flicker var(--flicker-speed) infinite;
+      background:
+        radial-gradient(ellipse at center, transparent 44%, rgba(0, 0, 0, 0.24) 74%, rgba(0, 0, 0, var(--vignette-strength)) 100%),
+        rgba(18, 16, 16, 0.13);
+    }
+
+    .screen {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      height: 100%;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr) auto auto;
+      gap: 8px;
+      padding: 12px;
+      overflow: hidden;
+    }
+
+    .top-bar,
+    .footer-bar {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+      color: var(--phosphor-dim);
+      text-transform: uppercase;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .logo-mark,
+    pre {
+      margin: 0;
+      white-space: pre-wrap;
+    }
+
+    .logo-mark {
+      flex: 0 0 auto;
+      color: var(--phosphor-hot);
+      font-weight: 700;
+      line-height: 1.05;
+      text-shadow:
+        0.35px 0 1px var(--shadow-blue),
+        -0.35px 0 1px var(--shadow-red),
+        0 0 8px rgba(var(--phosphor-rgb), 0.38);
+    }
+
+    .brand-text,
+    .state-text {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .report {
+      min-width: 0;
+      min-height: 0;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-rows: minmax(0, 1fr);
+      overflow: hidden;
+    }
+
+    .decisions-panel {
+      display: none;
+      min-width: 0;
+      min-height: 0;
+      overflow: auto;
+      padding: 10px;
+      color: var(--phosphor);
+      scrollbar-color: rgba(var(--phosphor-rgb), 0.42) rgba(0, 0, 0, 0.38);
+    }
+
+    .decisions-panel::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    .decisions-panel::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.38);
+    }
+
+    .decisions-panel::-webkit-scrollbar-thumb {
+      background: rgba(var(--phosphor-rgb), 0.42);
+      box-shadow: 0 0 calc(var(--glow) * 8px) rgba(var(--phosphor-rgb), 0.24);
+    }
+
+    .decisions-text {
+      margin: 8px 0 0;
+      max-width: 150ch;
+      color: var(--phosphor);
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    .screen[data-view="decisions"] .report {
+      display: none;
+    }
+
+    .screen[data-view="decisions"] .decisions-panel {
+      display: block;
+    }
+
+    .tile {
+      position: relative;
+      min-width: 0;
+      min-height: 0;
+      overflow: hidden;
+      padding: 10px;
+      color: var(--phosphor);
+      display: flex;
+      flex-direction: column;
+    }
+
+    h1,
+    h2,
+    p {
+      margin: 0;
+    }
+
+    h1,
+    h2,
+    .hot {
+      color: var(--phosphor-hot);
+      font-weight: 700;
+      text-transform: uppercase;
+      animation: text-shadow-drift 1.6s infinite;
+    }
+
+    .brand-title {
+      color: var(--phosphor);
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .dim {
+      color: var(--phosphor-dim);
+      text-transform: uppercase;
+    }
+
+    .green {
+      color: var(--green);
+    }
+
+    .red {
+      color: var(--red);
+    }
+
+    .lines {
+      display: grid;
+      gap: 4px;
+      margin-top: 8px;
+      min-width: 0;
+    }
+
+    .line {
+      display: grid;
+      grid-template-columns: 12ch minmax(0, 1fr);
+      gap: 1ch;
+      min-width: 0;
+    }
+
+    .value {
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
+
+    .report-text {
+      margin-top: auto;
+      color: var(--phosphor);
+      overflow-wrap: anywhere;
+    }
+
+    .json-block {
+      max-height: 100%;
+      overflow: hidden;
+      color: var(--phosphor);
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    .footer-links {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 0 14px;
+      min-width: 0;
+    }
+
+    .footer-links a[data-active="true"] {
+      color: var(--phosphor);
+      text-shadow:
+        0.35px 0 1px var(--shadow-blue),
+        -0.35px 0 1px var(--shadow-red),
+        0 0 calc(var(--glow) * 8px) rgba(var(--phosphor-rgb), 0.5);
+    }
+
+    .terminal-console {
+      min-width: 0;
+      color: var(--phosphor);
+      text-transform: uppercase;
+    }
+
+    .terminal-output {
+      min-height: calc(var(--font-size) * var(--line-height));
+      max-height: calc(var(--font-size) * var(--line-height) * 3);
+      overflow: hidden;
+      color: var(--phosphor-dim);
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    .terminal-command {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      gap: 1ch;
+      min-width: 0;
+    }
+
+    .terminal-input {
+      min-width: 0;
+      width: 100%;
+      padding: 0;
+      border: 0;
+      outline: 0;
+      background: transparent;
+      color: var(--phosphor-hot);
+      caret-color: var(--phosphor-hot);
+      text-transform: uppercase;
+      text-shadow:
+        0.35px 0 1px var(--shadow-blue),
+        -0.35px 0 1px var(--shadow-red),
+        0 0 calc(var(--glow) * 7px) rgba(var(--phosphor-rgb), 0.45);
+    }
+
+    .terminal-input::selection {
+      color: #050505;
+      background: var(--phosphor);
+    }
+
+    @media (max-width: 680px) {
+      .app {
+        padding: 4px;
+      }
+
+      .terminal-frame {
+        inset: 4px;
+      }
+
+      .screen {
+        padding: 10px;
+      }
+
+      .top-bar,
+      .footer-bar {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      .state-text {
+        display: none;
+      }
+
+      .report {
+        overflow: auto;
+        scrollbar-width: none;
+      }
+
+      .report::-webkit-scrollbar {
+        display: none;
+      }
+
+      .tile {
+        overflow: auto;
+      }
+
+      .line {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 0;
+      }
+
+      .footer-links {
+        justify-content: flex-start;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .crt-screen::after,
+      h1,
+      h2,
+      .hot {
+        animation: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section class="terminal-frame" aria-label="Open Race Coach landing page">
+      <div class="crt-screen">
+        <div class="screen" data-view="report">
+          <header class="top-bar">
+            <div class="brand">
+              <pre class="logo-mark" aria-label="Open Race Coach logo">┌─┐┌─┐┌─┐
+└─┘┴└─└─</pre>
+              <span class="brand-text"><span class="brand-title">OPEN RACE COACH</span> / CRT REPORT RENDER</span>
+            </div>
+            <span class="state-text">PUBLIC REPO / PRE-ALPHA</span>
+          </header>
+
+          <div class="report" aria-label="Project information displayed as one CRT report">
+            <section class="tile" aria-labelledby="coach-heading">
+              <p class="dim">Local-first post-session sim-racing coach</p>
+              <span id="coach-heading" hidden>Open Race Coach</span>
+              <div class="lines">
+                <p class="line">
+                  <span class="dim">Purpose</span>
+                  <span class="value">Recorded Session -> Analysis Run -> one data-supported Coaching Instruction.</span>
+                </p>
+                <p class="line">
+                  <span class="dim">Status</span>
+                  <span class="value red">Pre-alpha. Live AMS2/ACC simulator validation is not proven by this repo.</span>
+                </p>
+                <p class="line">
+                  <span class="dim">Contract</span>
+                  <span class="value">Deterministic analysis owns evidence, status, Reference Lap, Corner Segment, and Reportable Delta.</span>
+                </p>
+                <p class="line">
+                  <span class="dim">Workflow</span>
+                  <span class="value">Record / Validate / Analyze / optionally refine prose.</span>
+                </p>
+              </div>
+              <pre class="report-text" aria-label="Sample coaching instruction">
++------------------------------------------+
+| THE ONE THING                            |
++------------------------------------------+
+| C2: carry 3.0 m/s more minimum speed.    |
+| Reference: 45 m/s                        |
+| Comparison median: 42 m/s                |
+| Seen on 100% of 5 comparison laps.       |
++------------------------------------------+</pre>
+              <div class="lines">
+                <p class="line">
+                  <span class="dim">Reference</span>
+                  <span class="value">01k2demo:lap:1</span>
+                </p>
+                <p class="line">
+                  <span class="dim">Loss</span>
+                  <span class="value hot">0.066s median</span>
+                </p>
+                <p class="line">
+                  <span class="dim">Segment</span>
+                  <span class="value">1185m -> 1405m / sim distance</span>
+                </p>
+                <p class="line">
+                  <span class="dim">Cause</span>
+                  <span class="value">min_speed / 3 m/s bad-direction delta</span>
+                </p>
+              </div>
+
+            </section>
+          </div>
+
+          <section class="decisions-panel" aria-labelledby="decisions-heading">
+            <p class="dim">Rendered artifact</p>
+            <h2 id="decisions-heading">docs/DECISIONS.md</h2>
+            <pre class="decisions-text" id="decisionsText"></pre>
+          </section>
+
+          <section class="terminal-console" aria-live="polite">
+            <pre class="terminal-output" id="terminalOutput">OPEN RACE COACH TERMINAL READY</pre>
+            <form class="terminal-command" id="terminalForm">
+              <label for="terminalInput">ORC&gt;</label>
+              <input class="terminal-input" id="terminalInput" name="command" autocomplete="off" autocapitalize="none" spellcheck="false" />
+            </form>
+          </section>
+
+          <footer class="footer-bar">
+            <span>OPENRACECOACH.COM</span>
+            <nav class="footer-links" aria-label="Project links">
+              <a href="https://github.com/jaredkirby/open-race-coach" target="_blank" rel="noopener noreferrer" data-command-link="github">GITHUB</a>
+              <a href="#report" data-view-link="report">CRT REPORT</a>
+              <a href="#decisions" data-view-link="decisions">DECISIONS</a>
+            </nav>
+          </footer>
+        </div>
+      </div>
+    </section>
+  </main>
+  <script type="text/plain" id="decisionsSource"># Decisions
+
+2026-06-13 | Run first rig testing as gated AMS2 Live Simulator Validation | The first rig-readiness process targets AMS2 only and proceeds through explicit gates: environment readiness, live shared-memory sanity checks, raw fixture capture, minimal clean-lap Recorded Session capture, Recorded Session artifact validation, deterministic analysis, and human review of obvious telemetry falsehoods before any coaching-quality judgment. The first canonical scenario is Formula Trainer Advanced at Brands Hatch Indy or the closest installed equivalent with stable metadata and simple clean laps. Alternatives rejected: dual-sim first testing, which mixes simulator-specific failures before the AMS2 path has telemetry trust; realistic stint testing first, which introduces pits, pauses, invalid laps, replay, restarts, and context changes before the basic capture-to-analysis loop is proven; evaluating Coaching Instructions before telemetry artifact trust exists, which would turn bad telemetry into fake product feedback.
+2026-06-13 | Treat first Live Simulator Validation as artifact acceptance, not coaching acceptance | A passing first Recorded Session requires complete session artifacts, at least one Valid Lap, a clean `validate_session.py` result, and a complete deterministic Analysis Run; it does not require `analysis_status=reportable` or a useful Coaching Instruction. `analysis_status=insufficient_data` can pass first Live Simulator Validation when the reason is honest and `run_status=complete`; `run_status=failed` cannot pass. Coach Refinement is excluded from first acceptance. Alternatives rejected: requiring a Reportable Delta, which would make a clean consistent short run falsely fail; running Coach Refinement during first acceptance, which would evaluate prose before telemetry artifact trust exists; treating all insufficient-data outcomes as rig failures, which confuses honest confidence gating with broken capture.
+2026-06-13 | Review first AMS2 raw fixtures before committing them | Raw AMS2 fixture capture is part of Live Simulator Validation, but first-captured `.bin` dumps and sidecars are committed only after review confirms provenance, expected struct size, matching hashes, useful scenario labels, and no obvious private or machine-specific junk beyond intended simulator metadata. A small representative set is preferred over bulk capture dumps. Alternatives rejected: committing every first-run capture blindly, which can pollute the fixture set with unreviewed rig artifacts; keeping all raw captures local forever, which would leave CI without live mmap regression evidence after validation succeeds.
+2026-06-13 | Write a Live Simulator Validation evidence packet | Each first live simulator validation run records a short evidence packet with rig/simulator context, commands, gate results, fixture candidate paths, canonical Recorded Session path, artifact validation summary, deterministic Analysis Run status, and explicit out-of-scope items. The packet starts local under `.scratch/` and is promoted to durable docs only when it becomes reusable procedure or accepted validation evidence. Alternatives rejected: relying on terminal scrollback, which loses human actions and gate context; treating the session directory alone as sufficient evidence, which omits what was intentionally tested and not tested.
+2026-06-13 | Adopt Open Race Coach public identity | The public product name is Open Race Coach and the public home is `https://openracecoach.com`. The v0 Python package/import namespace remains `simcoach` to avoid a mechanical package rename while simulator ingest, deterministic analysis, and coach artifact contracts are still moving. Alternatives rejected: keeping the former SIM-COACH name after acquiring the domain, which wastes the clearer public identity; renaming every internal module immediately, which creates churn without improving the user-facing product.
+2026-06-12 | Use deterministic Lap Loss Cause thresholds for v0 | A Reportable Delta must identify a repeatable cause, not just a statistically significant Corner Segment loss. For each Comparison Lap and Corner Segment, assign a Lap Loss Cause only when the lap loses at least 0.05s versus the Reference Lap in that segment. Cause thresholds: brake earlier by at least 0.005 lap_dist_pct, minimum speed lower by at least 1.0 m/s, throttle reapplication later by at least 0.005 lap_dist_pct, or coast duration longer by at least 0.10s. The dominant non-unclassified cause must cover at least 60% of Comparison Laps. Alternatives rejected: reporting corner-level loss without cause, which would let the coach invent specificity; requiring unanimity, which would suppress useful findings in noisy human driving data.
+2026-06-12 | Derive final laps.jsonl from finalized ticks | During recording, lap times may be tracked provisionally for console output, but final `laps.jsonl` is derived from the finalized tick buffer or `ticks.parquet` during session finalization. This prevents permanent lap records from drifting out of sync with telemetry after interruptions, late invalidation, or bad Lap Progress checks. Alternative rejected: appending permanent lap JSONL rows during recording as the primary record, which is simpler for live output but creates synchronization risk.
+2026-06-12 | Keep v0 recording buffer-based but mark incomplete captures explicitly | Buffer-and-write-once remains acceptable for v0 because sessions are expected to be small, but graceful interruption must attempt finalization and any failed finalization must produce `complete: false` plus `failure_reason` when possible. `analyze.py` refuses incomplete Recorded Sessions. Alternatives rejected: pretending v0 is crash-safe; requiring streaming Parquet appends before the initial analysis pipeline is proven.
+2026-06-12 | Add normalized Vehicle State to tick schema | `vehicle_state` records whether a tick represents running, pit, paused, menu, replay, or unknown state so lap validity can reject non-driving telemetry without adapter-specific analysis branching. Alternatives rejected: leaving state hidden inside each adapter's validity logic, which would undermine the normalized schema; adding broader simulator session-state objects before they are needed.
+2026-06-12 | Treat unknown Vehicle State as constrained inferred validity | `vehicle_state=unknown` does not automatically invalidate a lap because early adapters may not expose reliable state, but laps containing unknown state must pass strict inferred validity checks and set `validity_method=unknown_plus_inferred` when used for analysis. Known paused, menu, or replay ticks invalidate the lap; pit ticks invalidate completed timed laps; more than 20% known non-running ticks invalidates the lap. Alternatives rejected: treating unknown as clean running state, which would hide adapter weakness; invalidating all unknown-state laps, which could make AMS2 unusable before field fidelity is proven.
+2026-06-12 | Track lap-distance meter provenance at the Recorded Session level | `lap_dist_m` remains a nullable convenience column, while `session.yaml.lap_dist_m_source` records whether meters are simulator-provided, derived from track length, or unavailable. Derived meter language must be rounded coarsely. Alternatives rejected: per-tick provenance, which adds noise without a v0 use case; hiding provenance, which would let coach reports imply false precision.
+2026-06-12 | Store raw simulator labels separately from normalized matching keys | `session.yaml` keeps `track_raw` and `car_raw` for display/audit, while `track` and `car` are deterministic Matching Keys used for exact personal-best grouping. Normalization: lowercase, trim, replace non-alphanumeric runs with `_`, strip leading/trailing `_`. Alternatives rejected: using raw simulator labels for matching, which fractures history across naming variants; adding alias tables before real naming failures are observed.
+2026-06-12 | Require JSON-only ChatGPT manual responses | ChatGPT manual mode uses the same compact JSON response contract as API mode, accepting JSON directly or inside one fenced code block and rejecting arbitrary Markdown. This preserves validation and keeps `coach.py` as the only Markdown renderer. Alternatives rejected: accepting pasted Markdown, which would let manual responses bypass corner/cause/status validation.
+2026-06-12 | Store canonical outputs per Analysis Run | Coach reports, prompts, model responses, and selected deltas are canonical under `analysis/{timestamp}_{reference_mode}/` because the same Recorded Session can produce different Analysis Runs depending on reference selection and thresholds. The session-level `coach_report.md` is only a convenience copy of the latest report. Alternatives rejected: one canonical top-level report, which would overwrite reference-mode-specific outputs and make analysis non-reproducible.
+2026-06-12 | Make completed Analysis Runs immutable | Analysis Runs use new timestamped directories and completed deterministic runs are never overwritten. ChatGPT manual mode may create `coach_refinement_status=awaiting_response` that is completed exactly once via `--analysis-run <dir> --chatgpt-response <path>`. Alternatives rejected: completing the latest pending prompt by convention, which is ambiguous; mutating completed deterministic artifacts, which breaks reproducibility.
+2026-06-12 | Split Analysis Run lifecycle, coach refinement, and coaching outcome | `analysis.yaml` uses `run_status` for deterministic artifact lifecycle, `coach_refinement_status` for LLM workflow state, and `analysis_status` for the deterministic coaching outcome; model JSON and `selected_delta.json` also use `analysis_status`. Alternatives rejected: one generic `status` field, which confuses whether a run is complete, whether LLM refinement is pending, and what the analysis concluded.
+2026-06-12 | Store effective thresholds in every Analysis Run | `analysis.yaml` records the actual threshold values used for confidence, cause assignment, dominance, and segmentation so reports remain reproducible after defaults change. `DECISIONS.md` keeps rationale only. Alternatives rejected: relying on decision-log prose or current code defaults to reconstruct old Analysis Runs.
+2026-06-12 | Derive and store Corner Segments per Analysis Run | v0 derives Corner Segments from the selected Reference Lap for each Analysis Run and stores them in `corner_segments.json`. This keeps reports reproducible when reference mode changes. Alternatives rejected: caching segments per track or Recorded Session before evidence shows segmentation instability is a real problem.
+2026-06-12 | Use stable IDs for Recorded Sessions and Laps | `recorded_session_id` is generated at capture start and stored in `session.yaml`; each lap stores a `lap_id` formed from that session ID and lap number; Analysis Runs store `reference_lap_id`. Paths are locators, not identity. Alternatives rejected: path-only identity, which breaks when session directories move; lap-number-only identity, which is meaningless across Recorded Sessions.
+2026-06-12 | Use lowercase ULIDs for Recorded Session IDs | `recorded_session_id` is a lowercase ULID generated at capture start, and `lap_id` is `{recorded_session_id}:lap:{lap}`. ULIDs give sortable, filesystem-friendly IDs without central coordination. Alternatives rejected: UUIDv4, which is easy but not time-sortable; path-based IDs, which are not stable under moves or copies.
+2026-06-12 | Version each durable artifact schema independently | Open Race Coach uses per-artifact schema versions for session metadata, ticks, lap records, Analysis Runs, Corner Segments, selected deltas, and coach responses. `session.yaml` records session-owned artifact versions, while `analysis.yaml` records Analysis Run artifact versions. Alternatives rejected: one global `schema_version`, which cannot accurately describe independently evolving artifacts.
+2026-06-12 | Make optional artifact schema versions conditional | Required artifact schema versions are always present; optional artifact versions such as `coach_response_schema_version` are `null` until the artifact exists. Alternatives rejected: assigning versions to absent artifacts, which makes metadata misleading.
+2026-06-12 | Restrict coach prompts to aggregated deterministic evidence | Coach prompts may include only selected Reportable Delta summaries and deterministic consistency labels, not per-tick data or per-lap rows except as counts or aggregate distributions. Alternatives rejected: giving the model lap-level evidence to reinterpret, which would weaken the deterministic analysis contract; giving only a bare conclusion, which would make reports thin and hard to audit.
+2026-06-12 | Always render deterministic Coach Reports | Plain `analyze.py` creates complete Analysis Run artifacts and a deterministic `coach_report.md`; LLM modes refine prose only and never change selected deltas, statuses, or data sections. Alternatives rejected: making Markdown reports depend on the LLM layer, which would contradict deterministic analysis and make failures less useful.
+2026-06-12 | Wrap coach responses with provider metadata | `coach_response.json` stores the validated model JSON inside a metadata wrapper containing schema version, provider, model, reasoning effort when known, and creation time. ChatGPT manual mode records `provider=chatgpt_manual` and `model=user_reported_or_unknown` unless supplied manually. Alternatives rejected: storing only the response payload, which loses auditability; inferring ChatGPT backend model, which would violate the manual workflow boundary.
+2026-06-12 | Treat session-level Coach Report as latest completed render | The Recorded Session-level `coach_report.md` is a convenience copy of the most recently completed Coach Report render for that Recorded Session. Plain analysis, API refinement success, ChatGPT prompt creation, and successful ChatGPT response import all update it. The human-facing report does not print the canonical Analysis Run path; `analysis.yaml` and `output_index.json` remain the audit path sources. Alternatives rejected: updating the copy only when creating a new Analysis Run, which would leave the visible session-level report stale after manual ChatGPT refinement; printing filesystem paths in the driver-facing report, which makes coaching output read like implementation metadata.
+2026-06-12 | Allow retry after invalid ChatGPT response imports | Invalid manual responses set `coach_refinement_status=invalid_response`, record `coach_refinement_error`, and leave reports plus `coach_response.json` untouched. A later `--chatgpt-response` retry is allowed from either `awaiting_response` or `invalid_response`; successful retry clears the error and completes refinement. Alternatives rejected: leaving status as `awaiting_response`, which hides the failed validation; making `invalid_response` terminal, which would force metadata hand-edits or duplicate Analysis Runs for a paste mistake.
+2026-06-12 | Allow API refinement retry on existing Analysis Runs | API failures set `coach_refinement_status=failed`, record `coach_refinement_error`, and leave deterministic artifacts, reports, and `coach_response.json` untouched. `--analysis-run <dir> --coach --coach-mode api` may refine an existing `not_requested` Analysis Run or retry a `failed` API refinement. Alternatives rejected: forcing a duplicate Analysis Run after transient API failure; allowing API retry against ChatGPT `awaiting_response` or `invalid_response` states, which would mix manual and API workflows inside one refinement attempt.
+2026-06-12 | Make schema docs a Phase 0 gate | The `schema/*.md` files are source-of-truth contracts and must exist before recorder or analyzer implementation starts. Each schema doc records version, fields, enums, units, ownership, write timing, and compatibility behavior. Alternatives rejected: leaving schemas implicit in §4 only, which makes implementation drift likely; generating schema docs after code, which weakens their role as contracts.
+2026-06-12 | Make Personal Best Reference search deterministic | `--reference personal` searches a single sessions root, defaulting to the parent directory containing the target Recorded Session and optionally overridden by `--sessions-root`. Candidates must match exact `sim`, `track`, and `car` Matching Keys, be complete, use supported schema versions, and contain a Valid Lap. Ties break by lap time, `started_at`, `recorded_session_id`, then lap number. Alternatives rejected: searching from cwd or all known data folders, which makes results environment-dependent; adding fuzzy track/car matching in v0, which risks using the wrong reference.
+2026-06-12 | Promise at most one Coaching Instruction | A Coach Report gives one Coaching Instruction only when `analysis_status=reportable`; otherwise it must explicitly say there is no data-supported instruction and explain the non-reportable status. Alternatives rejected: always forcing a tip, which contradicts confidence-gated coaching; omitting the `## The one thing` section on non-reportable runs, which makes reports structurally inconsistent.
+2026-06-12 | Include Recorded Session ID in session directory names | Recorded Session paths include the full `recorded_session_id` because timestamp, sim, track, and session type can collide within the same minute. If the computed path already exists, recording fails rather than appending an ad hoc suffix. Alternatives rejected: relying on minute timestamps, which is collision-prone; auto-suffixing paths, which creates identity outside the Recorded Session ID.
+2026-06-12 | Use timezone-aware artifact timestamps | Durable timestamps are ISO 8601 strings with offsets, while directory timestamps are local-time convenience labels. Artifact metadata wins over directory names when they disagree. Alternatives rejected: naive local timestamps, which are ambiguous after moves or daylight-saving transitions; UTC-only directory labels, which are less ergonomic for local post-session use.
+2026-06-12 | Require atomic artifact writes and terminal failure metadata | Open Race Coach writes artifacts through same-directory temp files and replacement. `session.yaml.complete: true` is written only after required session artifacts exist; failed deterministic Analysis Runs record `run_status: failed` plus `run_error` and do not update the session-level report copy. Alternatives rejected: streaming directly into final artifact paths, which can leave corrupt files looking canonical; silently deleting failed run directories, which erases debugging evidence.
+2026-06-12 | Define lap index row semantics explicitly | `tick_range` is zero-based and half-open, `lap_time_source` records whether timing came from the simulator or finalized ticks, and `sector_times_s` is nullable instead of fabricated from thirds. Alternatives rejected: inclusive tick ranges, which cause off-by-one ambiguity; pretending derived thirds are simulator sectors; storing lap time without provenance.
+2026-06-12 | Constrain invalid lap reasons to a v0 enum | Invalid laps use a short controlled `invalid_reason` set so analysis and tests can branch deterministically. Alternatives rejected: freeform invalidity prose, which is hard to test and aggregate; one generic invalid reason, which destroys debugging signal.
+2026-06-12 | Treat unsupported target schemas as hard failures and unsupported personal-best candidates as skips | `analyze.py` refuses an unsupported target Recorded Session because it cannot safely interpret the requested artifacts. Personal Best Reference search skips unsupported historical candidates with `[SKIP]` logs so stale sessions do not block current analysis. Alternatives rejected: best-effort parsing of unsupported schemas, which risks false coaching; failing the whole personal-best search because one old candidate is stale.
+2026-06-12 | Make Corner Segment windows half-open and non-wrapping | Corner Segments are ordered half-open Lap Progress windows and must be split at the start/finish boundary instead of wrapping. Alternatives rejected: wraparound segments, which complicate integration and numbering; official turn names or track databases, which are out of scope for v0.
+2026-06-12 | Make selected_delta.json explanatory for reportable and non-reportable runs | `selected_delta.json` stores the one selected Reportable Delta when reportable, and stores enough aggregate status evidence when non-reportable to explain why no Coaching Instruction exists. Alternatives rejected: storing only a final status string, which makes reports hard to audit; storing all per-lap rows, which violates the aggregate evidence boundary.
+2026-06-12 | Fix the analysis comparison grid and time-loss formula | v0 uses 1000 equal-width Lap Progress bins over `[0.0, 1.0)`, interpolates elapsed time and signals onto that grid, and computes Corner Segment loss as Comparison Lap segment elapsed time minus Reference Lap segment elapsed time. Alternatives rejected: comparing raw 60 Hz ticks, which misaligns laps; leaving grid resolution implementation-defined, which breaks reproducibility.
+2026-06-12 | Define global analysis_status aggregation rules | Global `analysis_status` is derived from per-corner classifications: insufficient data, exactly one reportable issue, no single dominant issue, inconsistent, or consistent. Alternatives rejected: letting each report renderer infer the status, which would drift; collapsing inconsistent and no-single-dominant cases, which hides different driver outcomes.
+2026-06-12 | Require null instruction fields for non-reportable coach responses | For non-reportable outcomes, model JSON must use `corner_segment_id: null` and `instruction: null`; any mismatch with deterministic artifacts is invalid. Alternatives rejected: allowing the model to phrase a soft tip anyway, which violates confidence gating; accepting mismatched model output and trying to reconcile it in code.
+2026-06-12 | Set metadata stability grace windows for recording | A Recorded Session starts only after required metadata is stable for 1.0s; if required metadata becomes unknown for more than 2.0s mid-session, finalization marks the session incomplete instead of guessing continuity. Alternatives rejected: starting immediately on flickering metadata, which creates bad paths and keys; waiting indefinitely after metadata disappears, which can blend unrelated context.
+2026-06-12 | Refuse ambiguous analyze CLI option combinations | `--coach-mode` requires `--coach`, `--sessions-root` only applies to new personal-reference runs, `--reference` and `--sessions-root` are invalid with `--analysis-run`, ChatGPT response import cannot be combined with coach generation flags, and an Analysis Run must belong to the supplied Recorded Session. Alternatives rejected: silently ignoring irrelevant options, which conceals user mistakes; allowing cross-session refinement, which can corrupt report copies.
+2026-06-12 | Define required metadata and session failure reasons | Required Recorded Session metadata is limited to identity, matching, adapter, and session-owned schema fields; unknown track length does not block capture. Incomplete sessions use a controlled `failure_reason` enum. Alternatives rejected: treating missing meter distance as fatal, which would discard otherwise analyzable sessions; using freeform failure prose, which makes recorder failures hard to test and triage.
+2026-06-12 | Refuse Analysis Run directory collisions | Analysis Run paths are immutable timestamped artifacts. If the computed `{YYYY-MM-DD_HHMMSS}_{reference_mode}` directory already exists, analysis fails with a collision error instead of overwriting or inventing suffixes. Alternatives rejected: auto-suffixing, which creates non-specified artifact identity; overwriting, which destroys reproducibility.
+2026-06-12 | Keep optional artifact schema-version fields present and nullable | `analysis.yaml.coach_response_schema_version` is always present and `null` until `coach_response.json` exists. This is stricter than prose that implies an absent field and prevents readers from distinguishing absence, old schema, and no response inconsistently. Alternatives rejected: omitting optional version fields, which complicates compatibility checks; assigning a version to an absent artifact, which is false metadata.
+2026-06-12 | Define deterministic driver-input metric extraction and cause tie-breaking | Brake and throttle points require sustained threshold crossings, missing crossings are `null`, coast duration is summed inside the Corner Segment, and multi-cause laps choose the largest threshold-normalized severity ratio with a fixed tie order. Alternatives rejected: comparing raw units across cause types, which is mathematically incoherent; using first threshold blips, which lets noise drive Coaching Instructions.
+2026-06-12 | Treat invalid API responses as refinement failures | API transport failures, provider errors, and schema-invalid API responses all set `coach_refinement_status=failed` without writing `coach_response.json` or updating Coach Reports. Alternatives rejected: adding a separate `invalid_response` API state, which duplicates the manual-paste workflow state without changing recovery behavior; accepting invalid model JSON and reconciling it in code, which violates deterministic analysis ownership.
+2026-06-12 | Bound Personal Best Reference search to immediate session directories | Personal Best Reference search enumerates immediate child directories of one effective sessions root, always includes the target Recorded Session, and skips duplicated non-target Recorded Session IDs. `--reference best` ties break by lowest lap number. Alternatives rejected: recursive filesystem search, which can accidentally include backups or nested analysis artifacts; arbitrary duplicate-ID selection, which makes copied sessions change results unpredictably.
+2026-06-12 | Allow a single Reportable Delta candidate without a runner-up margin | A single Reportable Delta candidate is reportable without needing to beat a nonexistent second candidate; `runner_up_margin_s` is nullable when there is no second candidate. Alternatives rejected: requiring a synthetic runner-up, which invents data; blocking a lone strong delta because the dominance margin cannot be computed.
+2026-06-12 | Require explicit coach mode when requesting Coach Refinement | `--coach` must be paired with `--coach-mode api` or `--coach-mode chatgpt`; there is no implicit API default. Alternatives rejected: defaulting `--coach` to API mode, which can create surprise billing; defaulting to ChatGPT mode, which blocks automation by creating a manual paste workflow.
+2026-06-12 | Require aggregate corner_summaries for non-reportable selected deltas | Non-reportable `selected_delta.json` must include aggregate `corner_summaries` when Corner Segments exist, using a controlled per-corner classification enum and no per-lap rows. Alternatives rejected: a bare final status string, which cannot justify no-instruction reports; storing per-lap evidence, which violates the aggregate evidence boundary and bloats artifacts.
+2026-06-12 | Defer ChatGPT manual model-name capture | ChatGPT manual Coach Refinement records `model=user_reported_or_unknown` in v0 and provides no CLI field for user-supplied model names. Alternatives rejected: trusting a pasted response to self-report the model, which is not reliable metadata; adding another CLI flag before model-name capture affects analysis behavior.
+2026-06-12 | Use recorder-owned Capture Time for NormalizedTick.t | The normalized `t` column is monotonic elapsed Capture Time from Open Race Coach recording start, not simulator clock time. Simulator clocks can pause, freeze, reset, or jump during menus and replays, which conflicts with strict tick monotonicity and derived lap timing. Alternatives rejected: using sim clock when available, which makes the core time axis adapter-dependent; adding a second sim-time field in v0 before analysis needs it.
+2026-06-12 | Replace sim_flag-only validity with sim_flag_plus_inferred | Valid Lap decisions always run Open Race Coach hard hygiene checks; simulator invalidation flags add evidence but never override broken Lap Progress, missing tick ranges, teleport/reset evidence, or non-running Vehicle State. The v0 `validity_method` enum is `sim_flag_plus_inferred`, `inferred`, or `unknown_plus_inferred`. Alternatives rejected: `sim_flag` as a standalone method, which would trust simulator state too broadly; a generic `unknown` method, which would hide how lap eligibility was determined.
+2026-06-12 | Make failed deterministic Analysis Runs diagnostic only | If deterministic analysis fails after creating a run directory, the only required canonical artifact is `analysis.yaml` with `run_status=failed` and a controlled `run_error`; selected delta, corner segments, coach prompt, coach response, and reports are absent and their schema-version fields are null. Alternatives rejected: writing partial canonical artifacts, which invites downstream tools to treat failed runs as usable; deleting failed run directories, which discards debugging evidence.
+2026-06-12 | Track Coach Refinement mode explicitly | `analysis.yaml.coach_refinement_mode` records `null`, `api`, or `chatgpt` so retry rules cannot confuse API failures with manual ChatGPT workflows. Once a mode is set, the Analysis Run cannot switch to the other mode. Alternatives rejected: inferring mode from `coach_refinement_status`, which makes `failed` ambiguous; allowing mode switching, which mixes prompt, response, and retry semantics in one artifact.
+2026-06-12 | Allow ChatGPT prompt generation for existing unrefined Analysis Runs | `--analysis-run <dir> --coach --coach-mode chatgpt` may start manual refinement for a complete deterministic Analysis Run only when no refinement mode has been set. This avoids duplicating deterministic Analysis Runs just to get a prompt. Alternatives rejected: requiring a new Analysis Run for every ChatGPT prompt, which creates unnecessary duplicate artifacts; allowing ChatGPT prompt generation after API failure, which would switch refinement modes mid-run.
+2026-06-12 | Store selected cause effects with fixed signs and bad-direction magnitudes | Reportable `selected_delta.json` stores a cause-metric object with reference value, comparison median, signed delta, and positive bad-direction delta. This makes brake-point, minimum-speed, throttle-reapplication, and coast-duration effects comparable without guessing sign conventions in report rendering. Alternatives rejected: a single unlabeled `median_cause_effect`, which is ambiguous across metrics; storing prose-only effects, which blocks validation and deterministic rendering.
+2026-06-12 | Write complete deterministic artifacts for insufficient-data Analysis Runs | `analysis_status=insufficient_data` is a completed deterministic outcome, not a failed run. Complete Analysis Runs always write `corner_segments.json`, `selected_delta.json`, and `coach_report.md`; when no valid Reference Lap or usable segmentation exists, `corner_segments.json` contains an empty ordered list plus the reason. Alternatives rejected: omitting deterministic artifacts for insufficient data, which makes completed runs look failed; treating no valid reference as `run_status=failed`, which confuses data insufficiency with tool failure.
+2026-06-12 | Define the comparison grid by explicit edge points | v0 uses 1000 equal-width Lap Progress bins with 1001 edge points and requires Corner Segment windows to align to those edges. Time loss is computed from elapsed time at the start and end edges. Alternatives rejected: saying only "1000 bins over [0,1)", which leaves the 1.0 boundary and segment endpoint interpolation underspecified; comparing raw tick timestamps inside arbitrary floating windows, which hurts reproducibility.
+2026-06-12 | Keep gpt-5.4-mini as the default API coach model | OpenAI's model docs list `gpt-5.4-mini` as the lower-latency, lower-cost GPT-5.4 option and `gpt-5.5` as the flagship model for complex reasoning. Open Race Coach's coach layer rewrites deterministic evidence rather than performing open-ended analysis, so the cost-controlled default remains `gpt-5.4-mini`; `gpt-5.5` stays a configurable escalation path for eval-backed quality comparisons. Alternatives rejected: defaulting to `gpt-5.5`, which increases cost before this narrow rewrite task proves it needs flagship reasoning; using a non-reasoning chat model, which would diverge from the Responses API reasoning configuration in the spec.
+2026-06-12 | Validate Analysis Run ownership by Recorded Session ID | When refining an existing Analysis Run, Open Race Coach compares `analysis.yaml.recorded_session_id` to the supplied `session.yaml.recorded_session_id`; stored paths are audit metadata and may be stale after moves or copies. Alternatives rejected: path-string ownership checks, which contradict stable Recorded Session identity; accepting mismatched IDs with a warning, which can update the wrong session-level report copy.
+2026-06-12 | Implement Phase 1 as adapter plus simulator-flag evidence and inferred lap validity | The initial AMS2 ingest writes the normalized tick schema, derives lap records from finalized ticks, and uses adapter-exposed simulator invalidation flags as lap-level evidence while still running all Open Race Coach hard hygiene checks. Because no per-tick simulator-invalidated field exists in tick schema v1, the recorder carries flag evidence into `laps.jsonl.invalid_reason=sim_invalidated` and records `validity_method=sim_flag_plus_inferred` for adapters that expose the flag. Alternatives rejected: adding an unspecced tick field during the first scaffold; treating simulator flags as sufficient without inferred Lap Progress, Vehicle State, tick-range, and teleport/reset checks; pretending simulator invalidation was unused after wiring it into the recorder.
+2026-06-12 | Map AMS2/PC2 world position to normalized ground plane as X/Z with Y elevation | The Project CARS 2 shared-memory header exposes `mWorldPosition[VEC_MAX]` as X/Y/Z but does not define Open Race Coach's ground-plane convention. The Phase 1 adapter maps normalized `pos_x=world[0]`, `pos_y=world[2]`, and `pos_z=world[1]`, matching the common X/Z ground-plane convention; `validate_ams2.py` must confirm smooth movement before this is trusted for segmentation. Alternatives rejected: using X/Y as ground plane without evidence; leaving position zeroed, which would make Phase 2 segmentation impossible to validate.
+2026-06-12 | Treat AMS2 current lap as zero-based until live validation proves otherwise | The PC2-derived header documents `mCurrentLap` with range starting at 0, while Open Race Coach's normalized tick schema requires 1-indexed `lap`. The adapter writes `lap=mCurrentLap+1`; `validate_ams2.py` explicitly checks start/finish increments so this can be corrected with evidence if AMS2 differs. Alternatives rejected: storing zero-based laps in a 1-indexed schema; guessing from UI labels without a validation step.
+2026-06-12 | Implement ACC as a self-contained three-page shared-memory adapter | The ACC adapter reads `Local\\acpmf_physics`, `Local\\acpmf_graphics`, and `Local\\acpmf_static`, maps speed/input/lap progress/session metadata into the existing normalized schema, and does not require analysis or coach changes. ACC fixed-width strings are decoded as UTF-16LE code units instead of Python `c_wchar` so parser offsets stay Windows-compatible when tests run on macOS. Track length remains unavailable because the public field inventory used here does not provide a stable track-length field in the static page. Alternatives rejected: depending on a third-party telemetry package; changing the analysis schema for ACC-specific data; using platform-native `c_wchar`, which is 4 bytes on macOS and would break fixture parsing.
+2026-06-12 | Treat stopped tick streams as graceful recorder termination when metadata remains stable | If ticks have already been collected and `read_tick()` returns `None` longer than the tick-missing grace window while required session metadata remains available, the recorder finalizes the current session instead of spinning forever or marking `metadata_unavailable`. Alternatives rejected: treating every missing-tick gap as metadata loss, which conflates simulator session end with identity loss; waiting indefinitely, which violates the CLI contract that recording ends on simulator session end.
+2026-06-13 | Capture raw simulator fixtures with sidecar metadata | Raw AMS2 and ACC shared-memory fixtures are captured as binary page dumps plus JSON sidecars containing hashes, struct sizes, important offsets, capture time, and decoded sanity fields. This gives adapter tests exact bytes while preserving enough provenance to detect stale, partial, or misidentified captures. Alternatives rejected: committing only decoded JSON, which would not verify mmap layouts or offsets; committing raw bytes without sidecars, which would make fixture review and drift diagnosis unnecessarily opaque.
+2026-06-13 | Add an explicit Recorded Session validation command | `scripts/validate_session.py` re-reads `session.yaml`, `ticks.parquet`, and `laps.jsonl` after recording and checks required complete-session metadata, supported schema versions, tick invariants, full tick-row coverage by lap ranges, lap IDs, derived lap timing, and invalidity consistency before analysis. This makes live-session acceptance auditable as a separate step rather than relying on `analyze.py` failures as an implicit validator. Alternatives rejected: treating successful analysis as the only validation proof, which hides artifact contract failures behind downstream behavior; duplicating a second validator with different rules instead of reusing existing invariant functions.
+2026-06-13 | Use public shared-memory-derived PC2 JSON only as compatibility evidence | Adapter tests include provenance-tracked public PC2/Project CARS shared-memory-derived JSON samples from `rest-cars` and CREST so real simulator field names and values exercise AMS2 normalization, including lap distance from the CREST sample. These fixtures do not satisfy live validation because decoded JSON cannot prove raw mmap byte layout, and the CREST sample uses an older PC shared-memory version than AMS2's expected version. Alternatives rejected: fabricating raw binary fixtures; treating public JSON as equivalent to a live AMS2 `$pcars2$` capture.
+</script>
+  <script>
+    const screenElement = document.querySelector(".screen");
+    const decisionsText = document.getElementById("decisionsText");
+    const decisionsSource = document.getElementById("decisionsSource");
+    const terminalForm = document.getElementById("terminalForm");
+    const terminalInput = document.getElementById("terminalInput");
+    const terminalOutput = document.getElementById("terminalOutput");
+    const viewLinks = Array.from(document.querySelectorAll("[data-view-link]"));
+    const commandHistory = [];
+    let historyIndex = 0;
+
+    decisionsText.textContent = decisionsSource.textContent.trim();
+
+    fetch("./DECISIONS.md")
+      .then((response) => (response.ok ? response.text() : Promise.reject(new Error("DECISIONS.md fetch failed"))))
+      .then((text) => {
+        decisionsText.textContent = text.trim();
+      })
+      .catch(() => {
+        decisionsText.textContent = decisionsSource.textContent.trim();
+      });
+
+    function writeTerminal(message) {
+      terminalOutput.textContent = message;
+    }
+
+    function setView(view, message) {
+      const nextView = view === "decisions" ? "decisions" : "report";
+      screenElement.dataset.view = nextView;
+      viewLinks.forEach((link) => {
+        link.dataset.active = String(link.dataset.viewLink === nextView);
+      });
+
+      if (message) {
+        writeTerminal(message);
+      }
+    }
+
+    function openExternal(url, message) {
+      writeTerminal(message);
+      window.open(url, "_blank", "noopener,noreferrer");
+    }
+
+    function runCommand(rawCommand) {
+      const command = rawCommand.trim().toLowerCase().replace(/\s+/g, " ");
+
+      if (!command) {
+        writeTerminal("");
+        return;
+      }
+
+      commandHistory.push(command);
+      historyIndex = commandHistory.length;
+
+      if (command === "report" || command === "crt" || command === "crt report" || command === "home") {
+        setView("report", "CRT REPORT READY");
+        window.location.hash = "report";
+        return;
+      }
+
+      if (command === "decisions" || command === "decision log" || command === "decision") {
+        setView("decisions", "DOCS/DECISIONS.MD READY");
+        window.location.hash = "decisions";
+        return;
+      }
+
+      if (command === "github" || command === "repo") {
+        openExternal("https://github.com/jaredkirby/open-race-coach", "OPENING GITHUB");
+        return;
+      }
+
+      if (command === "site" || command === "openracecoach.com") {
+        openExternal("https://openracecoach.com", "OPENING OPENRACECOACH.COM");
+        return;
+      }
+
+      if (command === "help" || command === "?") {
+        writeTerminal("COMMANDS: REPORT / DECISIONS / GITHUB / SITE / CLEAR");
+        return;
+      }
+
+      if (command === "clear" || command === "cls") {
+        writeTerminal("");
+        return;
+      }
+
+      writeTerminal(`UNKNOWN COMMAND: ${rawCommand.trim().toUpperCase()}`);
+    }
+
+    setView(window.location.hash.slice(1), "OPEN RACE COACH TERMINAL READY");
+
+    viewLinks.forEach((link) => {
+      link.addEventListener("click", (event) => {
+        event.preventDefault();
+        setView(link.dataset.viewLink, `${link.textContent.trim()} READY`);
+        window.location.hash = link.dataset.viewLink;
+      });
+    });
+
+    terminalForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      runCommand(terminalInput.value);
+      terminalInput.value = "";
+    });
+
+    terminalInput.addEventListener("keydown", (event) => {
+      if (event.key === "ArrowUp") {
+        event.preventDefault();
+        historyIndex = Math.max(0, historyIndex - 1);
+        terminalInput.value = commandHistory[historyIndex] || "";
+      }
+
+      if (event.key === "ArrowDown") {
+        event.preventDefault();
+        historyIndex = Math.min(commandHistory.length, historyIndex + 1);
+        terminalInput.value = commandHistory[historyIndex] || "";
+      }
+    });
+
+    document.querySelector(".crt-screen").addEventListener("pointerdown", (event) => {
+      if (event.target instanceof HTMLAnchorElement || event.target === terminalInput) {
+        return;
+      }
+
+      terminalInput.focus();
+    });
+
+    window.addEventListener("hashchange", () => {
+      setView(window.location.hash.slice(1));
+    });
+
+    terminalInput.focus();
+  </script>
+</body>
+</html>
