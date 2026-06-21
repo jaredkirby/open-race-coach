@@ -393,6 +393,7 @@
     }
 
     .terminal-scrollport {
+      display: block;
       min-width: 0;
       height: 100%;
       min-height: 0;
@@ -513,10 +514,14 @@
       filter: url("#crt-frame-warp-5");
     }
 
-    .screen [data-arch-row] {
+    .screen [data-arch-row],
+    .terminal-flow-row {
       display: block;
       max-width: 100%;
       min-height: var(--terminal-row-height);
+      line-height: inherit;
+      color: inherit;
+      text-shadow: inherit;
       transform-origin: 50% 50%;
       transform:
         translateX(var(--line-offset, 0px))
@@ -525,9 +530,7 @@
         scaleX(var(--line-scale, 1));
     }
 
-    .terminal-command[data-arch-row],
-    .top-bar[data-arch-row],
-    .footer-bar[data-arch-row] {
+    .terminal-command[data-arch-row] {
       display: grid;
     }
 
@@ -557,6 +560,7 @@
       display: block;
       align-items: center;
       min-width: 0;
+      min-height: var(--terminal-row-height);
       padding-top: 0;
       color: var(--screen-text-dim);
       text-transform: uppercase;
@@ -571,7 +575,7 @@
     .logo-mark {
       color: var(--screen-text-hot);
       font-weight: 700;
-      line-height: 1.05;
+      line-height: inherit;
       text-shadow: inherit;
       filter: none;
     }
@@ -599,7 +603,8 @@
       display: block;
     }
 
-    .terminal-buffer {
+    .terminal-buffer,
+    .terminal-console {
       line-height: inherit;
       text-shadow: inherit;
     }
@@ -735,16 +740,20 @@
     }
 
     .footer-links {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: flex-start;
-      gap: 0 12px;
+      display: block;
       width: 100%;
       min-width: 0;
     }
 
     .footer-links a {
+      display: inline-block;
+      min-height: var(--terminal-row-height);
+      margin-right: 1ch;
+      color: inherit;
+      line-height: inherit;
       white-space: nowrap;
+      text-decoration-thickness: 1px;
+      text-underline-offset: 0.16em;
     }
 
     .footer-links a[data-active="true"] {
@@ -753,25 +762,25 @@
     }
 
     .terminal-console {
-      position: sticky;
-      bottom: 0;
-      z-index: 4;
+      display: block;
       min-width: 0;
       color: var(--phosphor);
       text-transform: uppercase;
-      margin-top: calc(var(--terminal-row-height) * 0.45);
-      padding-top: calc(var(--terminal-row-height) * 0.2);
-      background: rgba(4, 5, 4, 0.985);
-      box-shadow: 0 calc(var(--terminal-row-height) * -0.55) calc(var(--terminal-row-height) * 0.8) rgba(0, 0, 0, 0.5);
+      margin-top: 0;
+      padding-top: 0;
+      background: transparent;
+      box-shadow: none;
+    }
+
+    .terminal-console > * {
+      min-height: var(--terminal-row-height);
     }
 
     .terminal-output {
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-end;
+      display: block;
       min-height: var(--terminal-row-height);
-      max-height: calc(var(--terminal-row-height) * 4);
-      overflow: hidden;
+      max-height: none;
+      overflow: visible;
       color: var(--screen-text-dim);
       white-space: pre-wrap;
       overflow-wrap: anywhere;
@@ -779,7 +788,6 @@
 
     .terminal-output-line {
       display: block;
-      flex: 0 0 auto;
       min-height: var(--terminal-row-height);
       color: var(--screen-text-dim);
       white-space: pre-wrap;
@@ -795,22 +803,25 @@
       grid-template-columns: auto minmax(0, 1fr);
       gap: 1ch;
       min-width: 0;
+      align-items: start;
+      font: inherit;
+      letter-spacing: inherit;
     }
 
     .terminal-status {
-      margin-top: 2px;
+      margin-top: 0;
       color: var(--screen-text-dim);
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
+      overflow: visible;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
     }
 
     .terminal-meta {
-      margin-top: 2px;
+      margin-top: 0;
       color: var(--screen-text-dim);
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
+      overflow: visible;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
     }
 
     .status-profile,
@@ -831,6 +842,9 @@
       background: transparent;
       color: var(--screen-text-hot);
       caret-color: var(--screen-text-hot);
+      font: inherit;
+      letter-spacing: inherit;
+      line-height: inherit;
       text-transform: uppercase;
       text-shadow: inherit;
     }
@@ -881,8 +895,6 @@
 
       .footer-links {
         max-width: calc(100vw - 32px);
-        justify-content: flex-start;
-        gap: 0 10px;
       }
 
       .site-mark {
@@ -1176,26 +1188,26 @@ ERA NOTE
   analysis surfaces, not live telemetry.</pre>
               </section>
 
-              <section class="terminal-console" aria-label="Terminal command area">
+              <section class="terminal-console terminal-buffer" aria-label="Terminal command area">
                 <div class="terminal-output" id="terminalOutput" aria-live="polite" aria-label="Terminal output"></div>
-                <form class="terminal-command" id="terminalForm" data-arch-row data-arch-processed="false">
+                <form class="terminal-command terminal-flow-row" id="terminalForm" data-arch-row data-arch-processed="false">
                   <label for="terminalInput">ORC&gt;</label>
                   <input class="terminal-input" id="terminalInput" name="command" autocomplete="off" autocapitalize="none" spellcheck="false" />
                 </form>
-                <p class="terminal-status">PROFILE AMBER / RASTER GRID / CRT CHARACTER 03 WORN / A3 B3 J3 T5 F3</p>
-                <p class="terminal-meta">OPEN REPO / PRE-ALPHA / OPENRACECOACH.COM</p>
+                <p class="terminal-status terminal-flow-row">PROFILE AMBER / RASTER GRID / CRT CHARACTER 03 WORN / A3 B3 J3 T5 F3</p>
+                <p class="terminal-meta terminal-flow-row">OPEN REPO / PRE-ALPHA / OPENRACECOACH.COM</p>
 
                 <footer class="footer-bar">
                   <nav class="footer-links" aria-label="Project links">
-                    <a href="https://github.com/jaredkirby/open-race-coach" target="_blank" rel="noopener noreferrer" data-command-link="github">GITHUB</a>
-                    <a href="#report" data-view-link="report">CRT REPORT</a>
-                    <a href="#laps" data-view-link="laps">LAPS</a>
-                    <a href="#trace" data-view-link="trace">TRACE</a>
-                    <a href="#map" data-view-link="map">MAP</a>
-                    <a href="#notes" data-view-link="notes">NOTES</a>
-                    <a href="#help" data-view-link="help">HELP</a>
-                    <a href="#decisions" data-view-link="decisions">DECISIONS</a>
-                    <a href="#source" data-view-link="source">SOURCE</a>
+                    <a class="terminal-flow-row" href="https://github.com/jaredkirby/open-race-coach" target="_blank" rel="noopener noreferrer" data-command-link="github">GITHUB</a>
+                    <a class="terminal-flow-row" href="#report" data-view-link="report">CRT REPORT</a>
+                    <a class="terminal-flow-row" href="#laps" data-view-link="laps">LAPS</a>
+                    <a class="terminal-flow-row" href="#trace" data-view-link="trace">TRACE</a>
+                    <a class="terminal-flow-row" href="#map" data-view-link="map">MAP</a>
+                    <a class="terminal-flow-row" href="#notes" data-view-link="notes">NOTES</a>
+                    <a class="terminal-flow-row" href="#help" data-view-link="help">HELP</a>
+                    <a class="terminal-flow-row" href="#decisions" data-view-link="decisions">DECISIONS</a>
+                    <a class="terminal-flow-row" href="#source" data-view-link="source">SOURCE</a>
                   </nav>
                 </footer>
               </section>
@@ -1291,6 +1303,7 @@ ERA NOTE
     const terminalForm = document.getElementById("terminalForm");
     const terminalInput = document.getElementById("terminalInput");
     const terminalOutput = document.getElementById("terminalOutput");
+    const terminalConsole = document.querySelector(".terminal-console");
     const terminalStatus = document.querySelector(".terminal-status");
     const terminalMeta = document.querySelector(".terminal-meta");
     const phosphorGhost = document.getElementById("phosphorGhost");
@@ -1582,6 +1595,8 @@ ERA NOTE
     };
     let ghostTimer;
     let archRefreshFrame = 0;
+    let commandScrollFrame = 0;
+    let followCommandOutput = false;
     const fontScaleStep = 0.04;
     const fontScaleMin = 0.74;
     const fontScaleMax = 1.14;
@@ -1914,7 +1929,7 @@ ERA NOTE
     }
 
     function applyStaticArchRows() {
-      const rows = Array.from(document.querySelectorAll(".terminal-command, .terminal-status, .terminal-meta, .footer-bar"));
+      const rows = Array.from(document.querySelectorAll(".terminal-flow-row, .terminal-command, .terminal-status, .terminal-meta, .footer-links a"));
       rows.forEach((row) => setArchRow(row));
       applyScreenPositionArchRows();
       applyArchCharacters(screenElement);
@@ -1926,11 +1941,8 @@ ERA NOTE
     }
 
     function getVisibleArchRows() {
-      const persistentRows = [
-        ...screenElement.querySelectorAll(".terminal-console [data-arch-row], .footer-bar[data-arch-row]"),
-      ];
       if (!terminalScrollport) {
-        return persistentRows;
+        return Array.from(screenElement.querySelectorAll("[data-arch-row]"));
       }
 
       const overscan = 240;
@@ -1938,6 +1950,17 @@ ERA NOTE
       const visibleEnd = terminalScrollport.scrollTop + terminalScrollport.clientHeight + overscan;
       const bufferRows = [];
       const activeBuffer = getActiveTerminalBuffer();
+      const scrollportRect = terminalScrollport.getBoundingClientRect();
+
+      function isVisibleScrollRow(row) {
+        const rowRect = row.getBoundingClientRect();
+        const rowTop = rowRect.top - scrollportRect.top + terminalScrollport.scrollTop;
+        const rowBottom = rowTop + rowRect.height;
+        return rowBottom >= visibleStart && rowTop <= visibleEnd;
+      }
+
+      const persistentRows = Array.from(screenElement.querySelectorAll(".terminal-console [data-arch-row], .top-bar [data-arch-row]"))
+        .filter(isVisibleScrollRow);
 
       function pushBlockRows(block) {
         const rows = block.children;
@@ -1947,7 +1970,6 @@ ERA NOTE
 
         const sampleRow = rows[0];
         const rowHeight = sampleRow.offsetHeight || parseFloat(getComputedStyle(sampleRow).lineHeight) || parseFloat(getComputedStyle(block).lineHeight) || 18;
-        const scrollportRect = terminalScrollport.getBoundingClientRect();
         const blockRect = block.getBoundingClientRect();
         const blockTop = blockRect.top - scrollportRect.top + terminalScrollport.scrollTop;
         const localStart = Math.max(0, visibleStart - blockTop);
@@ -1959,8 +1981,6 @@ ERA NOTE
           bufferRows.push(rows[index]);
         }
       }
-
-      terminalScrollport.querySelectorAll(".top-bar .logo-mark").forEach(pushBlockRows);
 
       if (!activeBuffer) {
         return [...persistentRows, ...bufferRows];
@@ -2365,7 +2385,15 @@ ERA NOTE
         node.replaceWith(document.createTextNode(node.textContent));
       });
       clonedDocument.querySelectorAll("[data-arch-row]").forEach((node) => {
-        node.replaceWith(document.createTextNode(node.textContent));
+        const baseStyle = node.dataset.baseStyle || "";
+        node.removeAttribute("data-arch-row");
+        node.removeAttribute("data-arch-processed");
+        node.removeAttribute("data-base-style");
+        if (baseStyle) {
+          node.setAttribute("style", baseStyle);
+        } else {
+          node.removeAttribute("style");
+        }
       });
       clonedDocument.querySelectorAll("[data-raw-text]").forEach((node) => {
         node.textContent = node.dataset.rawText;
@@ -2390,7 +2418,7 @@ ERA NOTE
       const lines = String(message).split("\n");
       lines.forEach((lineText) => {
         const line = document.createElement("span");
-        line.className = "terminal-output-line";
+        line.className = "terminal-output-line terminal-flow-row";
         line.dataset.entryKind = entryKind;
         line.textContent = lineText || " ";
         terminalOutput.appendChild(line);
@@ -2403,6 +2431,9 @@ ERA NOTE
       }
 
       scheduleScreenArchRefresh();
+      if (followCommandOutput) {
+        scrollTerminalConsoleIntoView();
+      }
     }
 
     function writeTerminal(message) {
@@ -2431,10 +2462,12 @@ ERA NOTE
         writeTerminal(message);
       }
 
-      if (terminalScrollport && options.scroll !== false) {
+      if (terminalScrollport && options.scroll === "top") {
         requestAnimationFrame(() => {
           terminalScrollport.scrollTop = 0;
         });
+      } else if (options.scroll === "console") {
+        scrollTerminalConsoleIntoView();
       }
 
       scheduleScreenArchRefresh();
@@ -2455,6 +2488,7 @@ ERA NOTE
         return;
       }
 
+      followCommandOutput = true;
       appendTerminalLine(`ORC> ${rawCommand.trim().toUpperCase()}`, "command");
       commandHistory.push(command);
       historyIndex = commandHistory.length;
@@ -2572,7 +2606,7 @@ ERA NOTE
       writeTerminal(`UNKNOWN COMMAND: ${rawCommand.trim().toUpperCase()}`);
     }
 
-    setView(window.location.hash.slice(1), "OPEN RACE COACH TERMINAL READY", { ghost: false });
+    setView(window.location.hash.slice(1), "OPEN RACE COACH TERMINAL READY", { ghost: false, scroll: "top" });
 
     viewLinks.forEach((link) => {
       link.addEventListener("click", (event) => {
@@ -2584,6 +2618,7 @@ ERA NOTE
     commandLinks.forEach((link) => {
       link.addEventListener("click", (event) => {
         if (link.target === "_blank" && link.href) {
+          followCommandOutput = true;
           appendTerminalLine(`ORC> ${link.dataset.commandLink.toUpperCase()}`, "command");
           writeTerminal(`OPENING ${link.textContent.trim().toUpperCase()}`);
           return;
@@ -2622,7 +2657,20 @@ ERA NOTE
       terminalInput.setSelectionRange(endPosition, endPosition);
     }
 
-    document.addEventListener("pointerdown", (event) => {
+    function scrollTerminalConsoleIntoView() {
+      if (!terminalScrollport || !terminalConsole) {
+        return;
+      }
+
+      window.cancelAnimationFrame(commandScrollFrame);
+      commandScrollFrame = window.requestAnimationFrame(() => {
+        terminalScrollport.scrollTop = terminalScrollport.scrollHeight;
+        focusCommandLine();
+        scheduleScreenArchRefresh();
+      });
+    }
+
+    function handleTerminalFocusGesture(event) {
       const target = event.target;
       if (!(target instanceof Element)) {
         return;
@@ -2633,10 +2681,13 @@ ERA NOTE
       }
 
       requestAnimationFrame(focusCommandLine);
-    });
+    }
+
+    document.addEventListener("pointerdown", handleTerminalFocusGesture);
+    document.addEventListener("mousedown", handleTerminalFocusGesture);
 
     window.addEventListener("hashchange", () => {
-      setView(window.location.hash.slice(1));
+      setView(window.location.hash.slice(1), null, { scroll: false });
     });
 
     focusCommandLine();
