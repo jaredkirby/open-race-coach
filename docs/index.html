@@ -98,24 +98,6 @@
       100% { opacity: calc(var(--flicker-opacity) * 0.93); }
     }
 
-    @keyframes text-shadow-drift {
-      0%, 100% {
-        text-shadow:
-          calc(var(--rgb-split) * 0.35px) 0 1px var(--shadow-blue),
-          calc(var(--rgb-split) * -0.35px) 0 1px var(--shadow-red),
-          0 0 calc(var(--glow) * 2px) var(--phosphor),
-          0 0 calc(var(--glow) * 10px) rgba(var(--phosphor-rgb), 0.42);
-      }
-
-      42% {
-        text-shadow:
-          calc(var(--rgb-split) * 1px) 0 1px var(--shadow-blue),
-          calc(var(--rgb-split) * -1px) 0 1px var(--shadow-red),
-          0 0 calc(var(--glow) * 3px) var(--phosphor-hot),
-          0 0 calc(var(--glow) * 14px) rgba(var(--phosphor-rgb), 0.5);
-      }
-    }
-
     @keyframes raster-jitter {
       0%, 100% {
         transform: translate(0, 0);
@@ -386,8 +368,8 @@
       height: 100%;
       display: grid;
       grid-template-rows: auto minmax(0, 1fr) auto auto;
-      gap: 8px;
-      padding: 12px;
+      gap: 0;
+      padding: 12px 14px;
       margin: 0 auto;
       overflow: hidden;
       color: var(--phosphor);
@@ -499,6 +481,7 @@
     .screen [data-arch-row] {
       display: block;
       max-width: 100%;
+      min-height: calc(var(--font-size) * var(--line-height));
       transform-origin: 50% 50%;
       transform:
         translateX(var(--line-offset, 0px))
@@ -531,6 +514,7 @@
       min-width: 0;
       color: var(--phosphor);
       text-transform: uppercase;
+      padding-bottom: calc(var(--font-size) * var(--line-height) * 0.45);
     }
 
     .footer-bar {
@@ -539,6 +523,7 @@
       align-items: center;
       gap: 12px;
       min-width: 0;
+      padding-top: calc(var(--font-size) * var(--line-height) * 0.45);
       color: var(--screen-text-dim);
       text-transform: uppercase;
     }
@@ -557,20 +542,7 @@
       filter: none;
     }
 
-    .report {
-      min-width: 0;
-      min-height: 0;
-      display: grid;
-      grid-template-columns: minmax(0, 1fr);
-      grid-template-rows: minmax(0, 1fr);
-      overflow: auto;
-      scrollbar-width: none;
-    }
-
-    .report::-webkit-scrollbar {
-      display: none;
-    }
-
+    .report,
     .decisions-panel,
     .source-panel,
     .module-panel {
@@ -578,11 +550,13 @@
       min-width: 0;
       min-height: 0;
       overflow: auto;
-      padding: 10px;
+      padding: 0;
       color: var(--phosphor);
+      scrollbar-width: thin;
       scrollbar-color: rgba(var(--phosphor-rgb), 0.42) rgba(0, 0, 0, 0.38);
     }
 
+    .report::-webkit-scrollbar,
     .decisions-panel::-webkit-scrollbar,
     .source-panel::-webkit-scrollbar,
     .module-panel::-webkit-scrollbar {
@@ -590,12 +564,14 @@
       height: 8px;
     }
 
+    .report::-webkit-scrollbar-track,
     .decisions-panel::-webkit-scrollbar-track,
     .source-panel::-webkit-scrollbar-track,
     .module-panel::-webkit-scrollbar-track {
       background: rgba(0, 0, 0, 0.38);
     }
 
+    .report::-webkit-scrollbar-thumb,
     .decisions-panel::-webkit-scrollbar-thumb,
     .source-panel::-webkit-scrollbar-thumb,
     .module-panel::-webkit-scrollbar-thumb {
@@ -603,19 +579,7 @@
       box-shadow: 0 0 calc(var(--glow) * 8px) rgba(var(--phosphor-rgb), 0.24);
     }
 
-    .decisions-text,
-    .source-text {
-      margin: 8px 0 0;
-      max-width: 150ch;
-      color: var(--phosphor);
-      white-space: pre-wrap;
-      overflow-wrap: anywhere;
-    }
-
-    .screen:not([data-view="report"]) .report {
-      display: none;
-    }
-
+    .screen[data-view="report"] .report,
     .screen[data-view="decisions"] .decisions-panel,
     .screen[data-view="source"] .source-panel,
     .screen[data-view="laps"] .module-panel[data-module="laps"],
@@ -626,15 +590,54 @@
       display: block;
     }
 
+    .terminal-buffer {
+      line-height: inherit;
+      text-shadow: inherit;
+    }
+
+    .crt-text-block,
+    .report-printout,
+    .module-text,
+    .decisions-text,
+    .source-text {
+      margin: 0;
+      width: 100%;
+      max-width: var(--terminal-content-width);
+      min-width: 0;
+      color: var(--phosphor);
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      word-break: normal;
+      line-height: inherit;
+      text-shadow: inherit;
+    }
+
+    .module-text {
+      white-space: pre;
+      overflow-wrap: normal;
+    }
+
+    .decisions-text,
+    .source-text {
+      overflow-wrap: normal;
+    }
+
+    .crt-text-line {
+      min-height: calc(var(--font-size) * var(--line-height));
+    }
+
+    .screen:not([data-view="report"]) .report {
+      display: none;
+    }
+
     .tile {
       position: relative;
       min-width: 0;
       min-height: 0;
-      overflow: hidden;
-      padding: 10px;
+      overflow: visible;
+      padding: 0;
       color: var(--phosphor);
-      display: flex;
-      flex-direction: column;
+      display: block;
     }
 
     h1,
@@ -649,7 +652,7 @@
       color: var(--phosphor-hot);
       font-weight: 700;
       text-transform: uppercase;
-      animation: text-shadow-drift 1.6s infinite;
+      text-shadow: inherit;
     }
 
     .terminal-output,
@@ -669,7 +672,6 @@
 
     .red {
       color: var(--red);
-      text-shadow: 0 0 2px rgba(255, 77, 34, 0.2);
     }
 
     .sx-label {
@@ -704,7 +706,6 @@
     .sx-danger {
       color: var(--syntax-danger);
       font-weight: 700;
-      text-shadow: 0 0 3px rgba(255, 77, 34, 0.28);
     }
 
     .sx-command {
@@ -722,29 +723,6 @@
 
     .sx-quote {
       color: var(--syntax-quote);
-    }
-
-    .report-printout {
-      width: 100%;
-      max-width: 92ch;
-      color: var(--phosphor);
-      white-space: pre-wrap;
-      overflow-wrap: normal;
-      word-break: normal;
-    }
-
-    .module-text {
-      margin: 8px 0 0;
-      max-width: 100%;
-      min-width: 0;
-      color: var(--phosphor);
-      white-space: pre;
-      overflow: auto hidden;
-      scrollbar-width: none;
-    }
-
-    .module-text::-webkit-scrollbar {
-      display: none;
     }
 
     .footer-links {
@@ -769,6 +747,7 @@
       min-width: 0;
       color: var(--phosphor);
       text-transform: uppercase;
+      padding-top: calc(var(--font-size) * var(--line-height) * 0.45);
     }
 
     .terminal-output {
@@ -862,19 +841,10 @@
         display: block;
       }
 
-      .tile {
-        width: 100%;
-        max-width: 100%;
-        overflow: auto;
-      }
-
+      .crt-text-block,
       .report-printout {
         width: 100%;
         max-width: 100%;
-        font-size: 12px;
-        line-height: 1.18;
-        overflow-wrap: normal;
-        word-break: normal;
       }
 
       .footer-links {
@@ -910,25 +880,24 @@
         white-space: normal;
       }
 
-      .module-text {
-        white-space: pre-wrap;
-        overflow-wrap: normal;
-        word-break: normal;
-        overflow: auto;
-      }
-
+      .module-text,
       .source-text {
         max-width: 100%;
+      }
+
+      .module-text {
+        overflow-x: auto;
+      }
+
+      .module-panel[data-module="help"] .module-text {
+        white-space: pre-wrap;
       }
     }
 
     @media (prefers-reduced-motion: reduce) {
       .terminal-grid::after,
       .phosphor-ghost,
-      .crt-screen::after,
-      h1,
-      h2,
-      .hot {
+      .crt-screen::after {
         animation: none;
       }
 
@@ -1001,10 +970,10 @@
 └─┘┴└─└─</pre>
           </header>
 
-          <div class="report" aria-label="Project information displayed as one CRT report">
+          <div class="report terminal-buffer" aria-label="Project information displayed as one CRT report">
             <section class="tile" aria-labelledby="coach-heading">
               <span id="coach-heading" hidden>Open Race Coach</span>
-              <pre class="report-printout" data-syntax="report" aria-label="Sample Open Race Coach terminal report">OPEN RACE COACH
+              <pre class="report-printout crt-text-block" data-syntax="report" aria-label="Sample Open Race Coach terminal report">OPEN RACE COACH
 LOCAL-FIRST POST-SESSION SIM-RACING COACH
 Recorded Session -> Analysis Run -> one
 data-supported Coaching Instruction.
@@ -1039,22 +1008,22 @@ THE ONE THING
             </section>
           </div>
 
-          <section class="decisions-panel" aria-labelledby="decisions-heading">
-            <p class="dim">Rendered artifact</p>
-            <h2 id="decisions-heading">docs/DECISIONS.md</h2>
-            <pre class="decisions-text" id="decisionsText" data-syntax="decisions"></pre>
+          <section class="decisions-panel terminal-buffer" aria-labelledby="decisions-heading">
+            <p class="dim" data-arch-row data-arch-processed="false">Rendered artifact</p>
+            <h2 id="decisions-heading" data-arch-row data-arch-processed="false">docs/DECISIONS.md</h2>
+            <pre class="decisions-text crt-text-block" id="decisionsText" data-syntax="decisions"></pre>
           </section>
 
-          <section class="source-panel" aria-labelledby="source-heading">
-            <p class="dim">Rendered website source</p>
-            <h2 id="source-heading">docs/index.html</h2>
-            <pre class="source-text" id="sourceText" data-syntax="source" aria-label="Website source code"></pre>
+          <section class="source-panel terminal-buffer" aria-labelledby="source-heading">
+            <p class="dim" data-arch-row data-arch-processed="false">Rendered website source</p>
+            <h2 id="source-heading" data-arch-row data-arch-processed="false">docs/index.html</h2>
+            <pre class="source-text crt-text-block" id="sourceText" data-syntax="source" aria-label="Website source code"></pre>
           </section>
 
-          <section class="module-panel" data-module="laps" aria-labelledby="laps-heading">
-            <p class="dim">Post-session lap index / sample Analysis Run</p>
-            <h2 id="laps-heading">LAPS</h2>
-            <pre class="module-text" data-syntax="laps" aria-label="Lap comparison table">Recorded Session 01k2demo
+          <section class="module-panel terminal-buffer" data-module="laps" aria-labelledby="laps-heading">
+            <p class="dim" data-arch-row data-arch-processed="false">Post-session lap index / sample Analysis Run</p>
+            <h2 id="laps-heading" data-arch-row data-arch-processed="false">LAPS</h2>
+            <pre class="module-text crt-text-block" data-syntax="laps" aria-label="Lap comparison table">Recorded Session 01k2demo
 Analysis Run 2026-06-13_201806_best
 
 LAP 001  TIME 0:58.214  GAP -
@@ -1081,10 +1050,10 @@ Reportable Delta: C2 / Lap Loss Cause min_speed / 0.066s median.
 Coaching Instruction: carry 3.0 m/s more minimum speed through the Corner Segment.</pre>
           </section>
 
-          <section class="module-panel" data-module="trace" aria-labelledby="trace-heading">
-            <p class="dim">Static telemetry trace / not live telemetry</p>
-            <h2 id="trace-heading">TRACE</h2>
-            <pre class="module-text" data-syntax="trace" aria-label="ASCII telemetry traces">POST-SESSION STATIC ANALYSIS SNAPSHOT / C2 WINDOW 1185m -> 1405m
+          <section class="module-panel terminal-buffer" data-module="trace" aria-labelledby="trace-heading">
+            <p class="dim" data-arch-row data-arch-processed="false">Static telemetry trace / not live telemetry</p>
+            <h2 id="trace-heading" data-arch-row data-arch-processed="false">TRACE</h2>
+            <pre class="module-text crt-text-block" data-syntax="trace" aria-label="ASCII telemetry traces">POST-SESSION STATIC ANALYSIS SNAPSHOT / C2 WINDOW 1185m -> 1405m
 
         1185m      1225m      1265m      1305m      1345m      1405m
 SPEED R  ___/^^^^^^^\______                                      45 m/s min
@@ -1100,10 +1069,10 @@ DELTA    .......+0.02...+0.05...+0.066s                         Reportable Delta
 Deterministic analysis selects evidence. Coach Refinement may rewrite prose only.</pre>
           </section>
 
-          <section class="module-panel" data-module="map" aria-labelledby="map-heading">
-            <p class="dim">Corner Segment map / simple analysis sketch</p>
-            <h2 id="map-heading">MAP</h2>
-            <pre class="module-text" data-syntax="map" aria-label="ASCII track map with C2 highlight">TRACK SKETCH: BRANDS HATCH INDY STYLE SAMPLE / NO GPS OR SATELLITE CLAIM
+          <section class="module-panel terminal-buffer" data-module="map" aria-labelledby="map-heading">
+            <p class="dim" data-arch-row data-arch-processed="false">Corner Segment map / simple analysis sketch</p>
+            <h2 id="map-heading" data-arch-row data-arch-processed="false">MAP</h2>
+            <pre class="module-text crt-text-block" data-syntax="map" aria-label="ASCII track map with C2 highlight">TRACK SKETCH: BRANDS HATCH INDY STYLE SAMPLE / NO GPS OR SATELLITE CLAIM
 
                  START
                    |
@@ -1123,10 +1092,10 @@ Reference Lap: 01k2demo:lap:1
 Comparison Lap set: Valid Lap rows only; invalid laps excluded before coaching.</pre>
           </section>
 
-          <section class="module-panel" data-module="notes" aria-labelledby="notes-heading">
-            <p class="dim">Engineering notes / local artifact review</p>
-            <h2 id="notes-heading">NOTES</h2>
-            <pre class="module-text" data-syntax="notes" aria-label="Timestamped engineering notes">2026-06-13T20:18:06-07:00  SETUP
+          <section class="module-panel terminal-buffer" data-module="notes" aria-labelledby="notes-heading">
+            <p class="dim" data-arch-row data-arch-processed="false">Engineering notes / local artifact review</p>
+            <h2 id="notes-heading" data-arch-row data-arch-processed="false">NOTES</h2>
+            <pre class="module-text crt-text-block" data-syntax="notes" aria-label="Timestamped engineering notes">2026-06-13T20:18:06-07:00  SETUP
   Recorded Session sample: Formula Trainer Advanced / Brands Hatch Indy style short run.
   Public page remains pre-alpha; live AMS2/ACC simulator validation is not claimed.
 
@@ -1141,10 +1110,10 @@ Comparison Lap set: Valid Lap rows only; invalid laps excluded before coaching.<
   Coach Refinement status: not requested for this static display.</pre>
           </section>
 
-          <section class="module-panel" data-module="help" aria-labelledby="help-heading">
-            <p class="dim">Terminal command list</p>
-            <h2 id="help-heading">HELP</h2>
-            <pre class="module-text" data-syntax="help" aria-label="Terminal command help">COMMANDS
+          <section class="module-panel terminal-buffer" data-module="help" aria-labelledby="help-heading">
+            <p class="dim" data-arch-row data-arch-processed="false">Terminal command list</p>
+            <h2 id="help-heading" data-arch-row data-arch-processed="false">HELP</h2>
+            <pre class="module-text crt-text-block" data-syntax="help" aria-label="Terminal command help">COMMANDS
   REPORT       CRT report and project contract
   LAPS         Lap table and Reference Lap
   TRACE        Speed / brake / throttle traces
@@ -1177,7 +1146,7 @@ ERA NOTE
 
           <section class="terminal-console" aria-live="polite">
             <pre class="terminal-output" id="terminalOutput">OPEN RACE COACH TERMINAL READY</pre>
-            <form class="terminal-command" id="terminalForm">
+            <form class="terminal-command" id="terminalForm" data-arch-row data-arch-processed="false">
               <label for="terminalInput">ORC&gt;</label>
               <input class="terminal-input" id="terminalInput" name="command" autocomplete="off" autocapitalize="none" spellcheck="false" />
             </form>
@@ -1784,17 +1753,43 @@ ERA NOTE
       return `--line-arch: calc(var(--text-warp-bow) * ${lineLift}); --line-skew: ${lineSkew}deg; --line-offset: calc(var(--text-warp-bow) * ${lineOffset}); --line-scale: ${lineScale}; --line-bow-direction: ${lineBowDirection};`;
     }
 
-    function getLineArchStyle(lineIndex, lineCount) {
-      const progress = lineCount <= 1 ? 0.5 : lineIndex / (lineCount - 1);
-      return getArchStyleForProgress(progress, lineIndex);
+    function splitTerminalLine(line, view) {
+      if (view !== "source" && view !== "decisions") {
+        return [line];
+      }
+
+      const maxColumns = view === "source" ? 118 : 122;
+      if (line.length <= maxColumns) {
+        return [line];
+      }
+
+      const chunks = [];
+      let remaining = line;
+      while (remaining.length > maxColumns) {
+        const indentation = remaining.match(/^\s*/)[0];
+        const limit = Math.max(24, maxColumns - indentation.length);
+        const searchStart = Math.max(24, Math.floor(limit * 0.58));
+        const slice = remaining.slice(0, limit);
+        const softBreak = Math.max(
+          slice.lastIndexOf(" ", limit),
+          slice.lastIndexOf(",", limit),
+          slice.lastIndexOf(";", limit),
+          slice.lastIndexOf("|", limit)
+        );
+        const breakAt = softBreak >= searchStart ? softBreak + 1 : limit;
+        chunks.push(remaining.slice(0, breakAt).trimEnd());
+        remaining = `${indentation}${remaining.slice(breakAt).trimStart()}`;
+      }
+
+      chunks.push(remaining);
+      return chunks;
     }
 
     function renderSyntaxText(text, view) {
-      const lines = text.split("\n");
-      return lines.map((line, index) => {
+      const lines = text.split("\n").flatMap((line) => splitTerminalLine(line, view));
+      return lines.map((line) => {
         const lineHtml = highlightSyntaxLine(line, view);
-        const processed = view === "source" ? " data-arch-processed=\"true\"" : "";
-        return `<span class="crt-text-line" data-arch-row${processed} style="${getLineArchStyle(index, lines.length)}">${lineHtml || "&nbsp;"}</span>`;
+        return `<span class="crt-text-line" data-arch-row data-arch-processed="false">${lineHtml || "&nbsp;"}</span>`;
       }).join("");
     }
 
@@ -1875,19 +1870,69 @@ ERA NOTE
       });
     }
 
-    function setArchRow(node, index, count) {
+    function setArchRow(node) {
       const baseStyle = node.dataset.baseStyle ?? node.getAttribute("style") ?? "";
       node.dataset.baseStyle = baseStyle;
       node.dataset.archRow = "";
       node.dataset.archProcessed = "false";
-      node.setAttribute("style", `${baseStyle ? `${baseStyle}; ` : ""}${getLineArchStyle(index, count)}`);
+      node.setAttribute("style", baseStyle);
     }
 
     function applyStaticArchRows() {
-      const rows = Array.from(document.querySelectorAll(".terminal-output, .terminal-status, .terminal-meta, .footer-bar"));
-      rows.forEach((row, index) => setArchRow(row, index, rows.length));
+      const rows = Array.from(document.querySelectorAll(".terminal-output, .terminal-command, .terminal-status, .terminal-meta, .footer-bar"));
+      rows.forEach((row) => setArchRow(row));
       applyScreenPositionArchRows();
       applyArchCharacters(screenElement);
+    }
+
+    function getActiveTerminalBuffer() {
+      return Array.from(screenElement.querySelectorAll(".terminal-buffer"))
+        .find((node) => getComputedStyle(node).display !== "none") || null;
+    }
+
+    function getVisibleArchRows() {
+      const persistentRows = [
+        ...screenElement.querySelectorAll(".top-bar [data-arch-row], .terminal-console [data-arch-row], .footer-bar[data-arch-row]"),
+      ];
+      const activeBuffer = getActiveTerminalBuffer();
+      if (!activeBuffer) {
+        return persistentRows;
+      }
+
+      const overscan = 240;
+      const scrollTop = activeBuffer.scrollTop;
+      const visibleStart = Math.max(0, scrollTop - overscan);
+      const visibleEnd = scrollTop + activeBuffer.clientHeight + overscan;
+      const bufferRows = [];
+
+      activeBuffer.querySelectorAll(":scope > [data-arch-row]").forEach((row) => {
+        const rowTop = row.offsetTop;
+        const rowBottom = rowTop + row.offsetHeight;
+        if (rowBottom >= visibleStart && rowTop <= visibleEnd) {
+          bufferRows.push(row);
+        }
+      });
+
+      activeBuffer.querySelectorAll(".crt-text-block").forEach((block) => {
+        const rows = block.children;
+        if (!rows.length) {
+          return;
+        }
+
+        const sampleRow = rows[0];
+        const rowHeight = sampleRow.offsetHeight || parseFloat(getComputedStyle(sampleRow).lineHeight) || parseFloat(getComputedStyle(block).lineHeight) || 18;
+        const blockTop = block.offsetTop;
+        const localStart = Math.max(0, visibleStart - blockTop);
+        const localEnd = Math.max(localStart, visibleEnd - blockTop);
+        const startIndex = Math.max(0, Math.floor(localStart / rowHeight) - 2);
+        const endIndex = Math.min(rows.length - 1, Math.ceil(localEnd / rowHeight) + 2);
+
+        for (let index = startIndex; index <= endIndex; index += 1) {
+          bufferRows.push(rows[index]);
+        }
+      });
+
+      return [...persistentRows, ...bufferRows];
     }
 
     function applyScreenPositionArchRows() {
@@ -1896,7 +1941,7 @@ ERA NOTE
         return;
       }
 
-      const rows = Array.from(screenElement.querySelectorAll("[data-arch-row]"));
+      const rows = getVisibleArchRows();
       rows.forEach((row, index) => {
         const rowRect = row.getBoundingClientRect();
         if (!rowRect.height || !rowRect.width) {
@@ -1911,7 +1956,9 @@ ERA NOTE
 
     function refreshScreenArch() {
       applyScreenPositionArchRows();
-      applyArchCharacters(screenElement);
+      if (shouldUseCharacterArch()) {
+        applyArchCharacters(screenElement);
+      }
     }
 
     function scheduleScreenArchRefresh() {
@@ -2244,6 +2291,10 @@ ERA NOTE
         scheduleScreenArchRefresh();
       });
     }
+
+    document.querySelectorAll(".terminal-buffer").forEach((scrollport) => {
+      scrollport.addEventListener("scroll", scheduleScreenArchRefresh, { passive: true });
+    });
 
     setSyntaxText(decisionsText, decisionsSource.textContent);
     renderAllSyntax();
