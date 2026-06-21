@@ -88,6 +88,7 @@
       --frame-warp-scale-x: 1.002;
       --font-size: calc(18.28px * var(--font-scale));
       --line-height: 1.14;
+      --terminal-row-height: calc(var(--font-size) * var(--line-height));
     }
 
     @keyframes crt-flicker {
@@ -366,10 +367,8 @@
       z-index: 2;
       width: min(100%, var(--terminal-content-width));
       height: 100%;
-      display: grid;
-      grid-template-rows: auto minmax(0, 1fr) auto auto;
-      gap: 0;
-      padding: 12px 14px;
+      display: block;
+      padding: 0;
       margin: 0 auto;
       overflow: hidden;
       color: var(--phosphor);
@@ -380,6 +379,42 @@
         calc(var(--rgb-split) * -0.2px) 0 0 var(--shadow-red);
       filter: url("#crt-text-warp-3");
       transform: perspective(980px) rotateX(var(--screen-warp-rotate)) scaleX(var(--screen-warp-scale)) translateZ(0);
+    }
+
+    .terminal-surface {
+      position: relative;
+      display: block;
+      width: 100%;
+      height: 100%;
+      min-width: 0;
+      min-height: 0;
+      padding: 12px 14px;
+      overflow: hidden;
+    }
+
+    .terminal-scrollport {
+      min-width: 0;
+      height: 100%;
+      min-height: 0;
+      overflow: auto;
+      padding: 0;
+      color: var(--phosphor);
+      scrollbar-width: thin;
+      scrollbar-color: rgba(var(--phosphor-rgb), 0.42) rgba(0, 0, 0, 0.18);
+    }
+
+    .terminal-scrollport::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    .terminal-scrollport::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.18);
+    }
+
+    .terminal-scrollport::-webkit-scrollbar-thumb {
+      background: rgba(var(--phosphor-rgb), 0.42);
+      box-shadow: 0 0 calc(var(--glow) * 8px) rgba(var(--phosphor-rgb), 0.24);
     }
 
     :root[data-text-warp-level="0"] .screen {
@@ -481,7 +516,7 @@
     .screen [data-arch-row] {
       display: block;
       max-width: 100%;
-      min-height: calc(var(--font-size) * var(--line-height));
+      min-height: var(--terminal-row-height);
       transform-origin: 50% 50%;
       transform:
         translateX(var(--line-offset, 0px))
@@ -497,6 +532,7 @@
     }
 
     .terminal-output[data-arch-row],
+    .terminal-output-line[data-arch-row],
     .terminal-status[data-arch-row],
     .terminal-meta[data-arch-row],
     h2[data-arch-row],
@@ -514,16 +550,14 @@
       min-width: 0;
       color: var(--phosphor);
       text-transform: uppercase;
-      padding-bottom: calc(var(--font-size) * var(--line-height) * 0.45);
+      padding-bottom: calc(var(--terminal-row-height) * 0.5);
     }
 
     .footer-bar {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) auto;
+      display: block;
       align-items: center;
-      gap: 12px;
       min-width: 0;
-      padding-top: calc(var(--font-size) * var(--line-height) * 0.45);
+      padding-top: 0;
       color: var(--screen-text-dim);
       text-transform: uppercase;
     }
@@ -549,34 +583,9 @@
       display: none;
       min-width: 0;
       min-height: 0;
-      overflow: auto;
+      overflow: visible;
       padding: 0;
       color: var(--phosphor);
-      scrollbar-width: thin;
-      scrollbar-color: rgba(var(--phosphor-rgb), 0.42) rgba(0, 0, 0, 0.38);
-    }
-
-    .report::-webkit-scrollbar,
-    .decisions-panel::-webkit-scrollbar,
-    .source-panel::-webkit-scrollbar,
-    .module-panel::-webkit-scrollbar {
-      width: 8px;
-      height: 8px;
-    }
-
-    .report::-webkit-scrollbar-track,
-    .decisions-panel::-webkit-scrollbar-track,
-    .source-panel::-webkit-scrollbar-track,
-    .module-panel::-webkit-scrollbar-track {
-      background: rgba(0, 0, 0, 0.38);
-    }
-
-    .report::-webkit-scrollbar-thumb,
-    .decisions-panel::-webkit-scrollbar-thumb,
-    .source-panel::-webkit-scrollbar-thumb,
-    .module-panel::-webkit-scrollbar-thumb {
-      background: rgba(var(--phosphor-rgb), 0.42);
-      box-shadow: 0 0 calc(var(--glow) * 8px) rgba(var(--phosphor-rgb), 0.24);
     }
 
     .screen[data-view="report"] .report,
@@ -623,7 +632,7 @@
     }
 
     .crt-text-line {
-      min-height: calc(var(--font-size) * var(--line-height));
+      min-height: var(--terminal-row-height);
     }
 
     .screen:not([data-view="report"]) .report {
@@ -728,7 +737,7 @@
     .footer-links {
       display: flex;
       flex-wrap: wrap;
-      justify-content: flex-end;
+      justify-content: flex-start;
       gap: 0 12px;
       width: 100%;
       min-width: 0;
@@ -744,19 +753,41 @@
     }
 
     .terminal-console {
+      position: sticky;
+      bottom: 0;
+      z-index: 4;
       min-width: 0;
       color: var(--phosphor);
       text-transform: uppercase;
-      padding-top: calc(var(--font-size) * var(--line-height) * 0.45);
+      margin-top: calc(var(--terminal-row-height) * 0.45);
+      padding-top: calc(var(--terminal-row-height) * 0.2);
+      background: rgba(4, 5, 4, 0.985);
+      box-shadow: 0 calc(var(--terminal-row-height) * -0.55) calc(var(--terminal-row-height) * 0.8) rgba(0, 0, 0, 0.5);
     }
 
     .terminal-output {
-      min-height: calc(var(--font-size) * var(--line-height));
-      max-height: calc(var(--font-size) * var(--line-height) * 3);
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      min-height: var(--terminal-row-height);
+      max-height: calc(var(--terminal-row-height) * 4);
       overflow: hidden;
       color: var(--screen-text-dim);
       white-space: pre-wrap;
       overflow-wrap: anywhere;
+    }
+
+    .terminal-output-line {
+      display: block;
+      flex: 0 0 auto;
+      min-height: var(--terminal-row-height);
+      color: var(--screen-text-dim);
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    .terminal-output-line[data-entry-kind="command"] {
+      color: var(--screen-text-hot);
     }
 
     .terminal-command {
@@ -826,13 +857,14 @@
       .screen {
         width: 100%;
         max-width: 100%;
-        gap: 6px;
+      }
+
+      .terminal-surface {
         padding: 8px;
       }
 
       .top-bar,
       .footer-bar {
-        grid-template-columns: minmax(0, 1fr);
         max-width: 100%;
         overflow: hidden;
       }
@@ -883,10 +915,8 @@
       .module-text,
       .source-text {
         max-width: 100%;
-      }
-
-      .module-text {
-        overflow-x: auto;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
       }
 
       .module-panel[data-module="help"] .module-text {
@@ -965,15 +995,17 @@
         <div class="terminal-grid" aria-hidden="true"></div>
         <div class="phosphor-ghost" id="phosphorGhost" aria-hidden="true"></div>
         <div class="screen" data-view="report">
-          <header class="top-bar">
-            <pre class="logo-mark" data-syntax="logo" aria-label="Open Race Coach logo">┌─┐┌─┐┌─┐
+          <div class="terminal-surface">
+            <div class="terminal-scrollport" id="terminalScrollport" tabindex="0" aria-label="Open Race Coach terminal scrollback and active display">
+              <header class="top-bar">
+                <pre class="logo-mark" data-syntax="logo" aria-label="Open Race Coach logo">┌─┐┌─┐┌─┐
 └─┘┴└─└─</pre>
-          </header>
+              </header>
 
-          <div class="report terminal-buffer" aria-label="Project information displayed as one CRT report">
-            <section class="tile" aria-labelledby="coach-heading">
-              <span id="coach-heading" hidden>Open Race Coach</span>
-              <pre class="report-printout crt-text-block" data-syntax="report" aria-label="Sample Open Race Coach terminal report">OPEN RACE COACH
+              <div class="report terminal-buffer" aria-label="Project information displayed as one CRT report">
+                <section class="tile" aria-labelledby="coach-heading">
+                  <span id="coach-heading" hidden>Open Race Coach</span>
+                  <pre class="report-printout crt-text-block" data-syntax="report" aria-label="Sample Open Race Coach terminal report">OPEN RACE COACH
 LOCAL-FIRST POST-SESSION SIM-RACING COACH
 Recorded Session -> Analysis Run -> one
 data-supported Coaching Instruction.
@@ -1005,25 +1037,25 @@ THE ONE THING
   Carry 3.0 m/s more minimum speed in C2.
   Reference 45 m/s / Comparison 42 m/s
   Seen on 100% of 5 Comparison Laps.</pre>
-            </section>
-          </div>
+                </section>
+              </div>
 
-          <section class="decisions-panel terminal-buffer" aria-labelledby="decisions-heading">
-            <p class="dim" data-arch-row data-arch-processed="false">Rendered artifact</p>
-            <h2 id="decisions-heading" data-arch-row data-arch-processed="false">docs/DECISIONS.md</h2>
-            <pre class="decisions-text crt-text-block" id="decisionsText" data-syntax="decisions"></pre>
-          </section>
+              <section class="decisions-panel terminal-buffer" aria-labelledby="decisions-heading">
+                <p class="dim" data-arch-row data-arch-processed="false">Rendered artifact</p>
+                <h2 id="decisions-heading" data-arch-row data-arch-processed="false">docs/DECISIONS.md</h2>
+                <pre class="decisions-text crt-text-block" id="decisionsText" data-syntax="decisions"></pre>
+              </section>
 
-          <section class="source-panel terminal-buffer" aria-labelledby="source-heading">
-            <p class="dim" data-arch-row data-arch-processed="false">Rendered website source</p>
-            <h2 id="source-heading" data-arch-row data-arch-processed="false">docs/index.html</h2>
-            <pre class="source-text crt-text-block" id="sourceText" data-syntax="source" aria-label="Website source code"></pre>
-          </section>
+              <section class="source-panel terminal-buffer" aria-labelledby="source-heading">
+                <p class="dim" data-arch-row data-arch-processed="false">Rendered website source</p>
+                <h2 id="source-heading" data-arch-row data-arch-processed="false">docs/index.html</h2>
+                <pre class="source-text crt-text-block" id="sourceText" data-syntax="source" aria-label="Website source code"></pre>
+              </section>
 
-          <section class="module-panel terminal-buffer" data-module="laps" aria-labelledby="laps-heading">
-            <p class="dim" data-arch-row data-arch-processed="false">Post-session lap index / sample Analysis Run</p>
-            <h2 id="laps-heading" data-arch-row data-arch-processed="false">LAPS</h2>
-            <pre class="module-text crt-text-block" data-syntax="laps" aria-label="Lap comparison table">Recorded Session 01k2demo
+              <section class="module-panel terminal-buffer" data-module="laps" aria-labelledby="laps-heading">
+                <p class="dim" data-arch-row data-arch-processed="false">Post-session lap index / sample Analysis Run</p>
+                <h2 id="laps-heading" data-arch-row data-arch-processed="false">LAPS</h2>
+                <pre class="module-text crt-text-block" data-syntax="laps" aria-label="Lap comparison table">Recorded Session 01k2demo
 Analysis Run 2026-06-13_201806_best
 
 LAP 001  TIME 0:58.214  GAP -
@@ -1048,12 +1080,12 @@ LAP 005  TIME 0:58.377  GAP +0.163
 
 Reportable Delta: C2 / Lap Loss Cause min_speed / 0.066s median.
 Coaching Instruction: carry 3.0 m/s more minimum speed through the Corner Segment.</pre>
-          </section>
+              </section>
 
-          <section class="module-panel terminal-buffer" data-module="trace" aria-labelledby="trace-heading">
-            <p class="dim" data-arch-row data-arch-processed="false">Static telemetry trace / not live telemetry</p>
-            <h2 id="trace-heading" data-arch-row data-arch-processed="false">TRACE</h2>
-            <pre class="module-text crt-text-block" data-syntax="trace" aria-label="ASCII telemetry traces">POST-SESSION STATIC ANALYSIS SNAPSHOT / C2 WINDOW 1185m -> 1405m
+              <section class="module-panel terminal-buffer" data-module="trace" aria-labelledby="trace-heading">
+                <p class="dim" data-arch-row data-arch-processed="false">Static telemetry trace / not live telemetry</p>
+                <h2 id="trace-heading" data-arch-row data-arch-processed="false">TRACE</h2>
+                <pre class="module-text crt-text-block" data-syntax="trace" aria-label="ASCII telemetry traces">POST-SESSION STATIC ANALYSIS SNAPSHOT / C2 WINDOW 1185m -> 1405m
 
         1185m      1225m      1265m      1305m      1345m      1405m
 SPEED R  ___/^^^^^^^\______                                      45 m/s min
@@ -1067,12 +1099,12 @@ RPM/G C  3:^^^\___2:^^^^^                                       lower mid-corner
 DELTA    .......+0.02...+0.05...+0.066s                         Reportable Delta
 
 Deterministic analysis selects evidence. Coach Refinement may rewrite prose only.</pre>
-          </section>
+              </section>
 
-          <section class="module-panel terminal-buffer" data-module="map" aria-labelledby="map-heading">
-            <p class="dim" data-arch-row data-arch-processed="false">Corner Segment map / simple analysis sketch</p>
-            <h2 id="map-heading" data-arch-row data-arch-processed="false">MAP</h2>
-            <pre class="module-text crt-text-block" data-syntax="map" aria-label="ASCII track map with C2 highlight">TRACK SKETCH: BRANDS HATCH INDY STYLE SAMPLE / NO GPS OR SATELLITE CLAIM
+              <section class="module-panel terminal-buffer" data-module="map" aria-labelledby="map-heading">
+                <p class="dim" data-arch-row data-arch-processed="false">Corner Segment map / simple analysis sketch</p>
+                <h2 id="map-heading" data-arch-row data-arch-processed="false">MAP</h2>
+                <pre class="module-text crt-text-block" data-syntax="map" aria-label="ASCII track map with C2 highlight">TRACK SKETCH: BRANDS HATCH INDY STYLE SAMPLE / NO GPS OR SATELLITE CLAIM
 
                  START
                    |
@@ -1090,12 +1122,12 @@ Deterministic analysis selects evidence. Coach Refinement may rewrite prose only
 Corner Segment C2 is the selected Reportable Delta.
 Reference Lap: 01k2demo:lap:1
 Comparison Lap set: Valid Lap rows only; invalid laps excluded before coaching.</pre>
-          </section>
+              </section>
 
-          <section class="module-panel terminal-buffer" data-module="notes" aria-labelledby="notes-heading">
-            <p class="dim" data-arch-row data-arch-processed="false">Engineering notes / local artifact review</p>
-            <h2 id="notes-heading" data-arch-row data-arch-processed="false">NOTES</h2>
-            <pre class="module-text crt-text-block" data-syntax="notes" aria-label="Timestamped engineering notes">2026-06-13T20:18:06-07:00  SETUP
+              <section class="module-panel terminal-buffer" data-module="notes" aria-labelledby="notes-heading">
+                <p class="dim" data-arch-row data-arch-processed="false">Engineering notes / local artifact review</p>
+                <h2 id="notes-heading" data-arch-row data-arch-processed="false">NOTES</h2>
+                <pre class="module-text crt-text-block" data-syntax="notes" aria-label="Timestamped engineering notes">2026-06-13T20:18:06-07:00  SETUP
   Recorded Session sample: Formula Trainer Advanced / Brands Hatch Indy style short run.
   Public page remains pre-alpha; live AMS2/ACC simulator validation is not claimed.
 
@@ -1108,12 +1140,12 @@ Comparison Lap set: Valid Lap rows only; invalid laps excluded before coaching.<
 2026-06-13T20:24:03-07:00  NEXT-RUN FOCUS
   Use the Coach Report's one Coaching Instruction: carry 3.0 m/s more minimum speed in C2.
   Coach Refinement status: not requested for this static display.</pre>
-          </section>
+              </section>
 
-          <section class="module-panel terminal-buffer" data-module="help" aria-labelledby="help-heading">
-            <p class="dim" data-arch-row data-arch-processed="false">Terminal command list</p>
-            <h2 id="help-heading" data-arch-row data-arch-processed="false">HELP</h2>
-            <pre class="module-text crt-text-block" data-syntax="help" aria-label="Terminal command help">COMMANDS
+              <section class="module-panel terminal-buffer" data-module="help" aria-labelledby="help-heading">
+                <p class="dim" data-arch-row data-arch-processed="false">Terminal command list</p>
+                <h2 id="help-heading" data-arch-row data-arch-processed="false">HELP</h2>
+                <pre class="module-text crt-text-block" data-syntax="help" aria-label="Terminal command help">COMMANDS
   REPORT       CRT report and project contract
   LAPS         Lap table and Reference Lap
   TRACE        Speed / brake / throttle traces
@@ -1142,32 +1174,33 @@ ERA NOTE
   early-1990s CRT workstation shell.
   Modules are static post-session
   analysis surfaces, not live telemetry.</pre>
-          </section>
+              </section>
 
-          <section class="terminal-console" aria-live="polite">
-            <pre class="terminal-output" id="terminalOutput">OPEN RACE COACH TERMINAL READY</pre>
-            <form class="terminal-command" id="terminalForm" data-arch-row data-arch-processed="false">
-              <label for="terminalInput">ORC&gt;</label>
-              <input class="terminal-input" id="terminalInput" name="command" autocomplete="off" autocapitalize="none" spellcheck="false" />
-            </form>
-            <p class="terminal-status">PROFILE AMBER / RASTER GRID / CRT CHARACTER 03 WORN / A3 B3 J3 T5 F3</p>
-            <p class="terminal-meta">OPEN REPO / PRE-ALPHA / OPENRACECOACH.COM</p>
-          </section>
+              <section class="terminal-console" aria-label="Terminal command area">
+                <div class="terminal-output" id="terminalOutput" aria-live="polite" aria-label="Terminal output"></div>
+                <form class="terminal-command" id="terminalForm" data-arch-row data-arch-processed="false">
+                  <label for="terminalInput">ORC&gt;</label>
+                  <input class="terminal-input" id="terminalInput" name="command" autocomplete="off" autocapitalize="none" spellcheck="false" />
+                </form>
+                <p class="terminal-status">PROFILE AMBER / RASTER GRID / CRT CHARACTER 03 WORN / A3 B3 J3 T5 F3</p>
+                <p class="terminal-meta">OPEN REPO / PRE-ALPHA / OPENRACECOACH.COM</p>
 
-          <footer class="footer-bar">
-            <span class="site-mark">OPENRACECOACH.COM</span>
-            <nav class="footer-links" aria-label="Project links">
-              <a href="https://github.com/jaredkirby/open-race-coach" target="_blank" rel="noopener noreferrer" data-command-link="github">GITHUB</a>
-              <a href="#report" data-view-link="report">CRT REPORT</a>
-              <a href="#laps" data-view-link="laps">LAPS</a>
-              <a href="#trace" data-view-link="trace">TRACE</a>
-              <a href="#map" data-view-link="map">MAP</a>
-              <a href="#notes" data-view-link="notes">NOTES</a>
-              <a href="#help" data-view-link="help">HELP</a>
-              <a href="#decisions" data-view-link="decisions">DECISIONS</a>
-              <a href="#source" data-view-link="source">SOURCE</a>
-            </nav>
-          </footer>
+                <footer class="footer-bar">
+                  <nav class="footer-links" aria-label="Project links">
+                    <a href="https://github.com/jaredkirby/open-race-coach" target="_blank" rel="noopener noreferrer" data-command-link="github">GITHUB</a>
+                    <a href="#report" data-view-link="report">CRT REPORT</a>
+                    <a href="#laps" data-view-link="laps">LAPS</a>
+                    <a href="#trace" data-view-link="trace">TRACE</a>
+                    <a href="#map" data-view-link="map">MAP</a>
+                    <a href="#notes" data-view-link="notes">NOTES</a>
+                    <a href="#help" data-view-link="help">HELP</a>
+                    <a href="#decisions" data-view-link="decisions">DECISIONS</a>
+                    <a href="#source" data-view-link="source">SOURCE</a>
+                  </nav>
+                </footer>
+              </section>
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -1251,6 +1284,7 @@ ERA NOTE
     const rootElement = document.documentElement;
     const crtScreen = document.querySelector(".crt-screen");
     const screenElement = document.querySelector(".screen");
+    const terminalScrollport = document.getElementById("terminalScrollport");
     const decisionsText = document.getElementById("decisionsText");
     const decisionsSource = document.getElementById("decisionsSource");
     const sourceText = document.getElementById("sourceText");
@@ -1261,6 +1295,7 @@ ERA NOTE
     const terminalMeta = document.querySelector(".terminal-meta");
     const phosphorGhost = document.getElementById("phosphorGhost");
     const viewLinks = Array.from(document.querySelectorAll("[data-view-link]"));
+    const commandLinks = Array.from(document.querySelectorAll("[data-command-link]"));
     const commandHistory = [];
     let historyIndex = 0;
 
@@ -1879,7 +1914,7 @@ ERA NOTE
     }
 
     function applyStaticArchRows() {
-      const rows = Array.from(document.querySelectorAll(".terminal-output, .terminal-command, .terminal-status, .terminal-meta, .footer-bar"));
+      const rows = Array.from(document.querySelectorAll(".terminal-command, .terminal-status, .terminal-meta, .footer-bar"));
       rows.forEach((row) => setArchRow(row));
       applyScreenPositionArchRows();
       applyArchCharacters(screenElement);
@@ -1892,18 +1927,44 @@ ERA NOTE
 
     function getVisibleArchRows() {
       const persistentRows = [
-        ...screenElement.querySelectorAll(".top-bar [data-arch-row], .terminal-console [data-arch-row], .footer-bar[data-arch-row]"),
+        ...screenElement.querySelectorAll(".terminal-console [data-arch-row], .footer-bar[data-arch-row]"),
       ];
-      const activeBuffer = getActiveTerminalBuffer();
-      if (!activeBuffer) {
+      if (!terminalScrollport) {
         return persistentRows;
       }
 
       const overscan = 240;
-      const scrollTop = activeBuffer.scrollTop;
-      const visibleStart = Math.max(0, scrollTop - overscan);
-      const visibleEnd = scrollTop + activeBuffer.clientHeight + overscan;
+      const visibleStart = Math.max(0, terminalScrollport.scrollTop - overscan);
+      const visibleEnd = terminalScrollport.scrollTop + terminalScrollport.clientHeight + overscan;
       const bufferRows = [];
+      const activeBuffer = getActiveTerminalBuffer();
+
+      function pushBlockRows(block) {
+        const rows = block.children;
+        if (!rows.length) {
+          return;
+        }
+
+        const sampleRow = rows[0];
+        const rowHeight = sampleRow.offsetHeight || parseFloat(getComputedStyle(sampleRow).lineHeight) || parseFloat(getComputedStyle(block).lineHeight) || 18;
+        const scrollportRect = terminalScrollport.getBoundingClientRect();
+        const blockRect = block.getBoundingClientRect();
+        const blockTop = blockRect.top - scrollportRect.top + terminalScrollport.scrollTop;
+        const localStart = Math.max(0, visibleStart - blockTop);
+        const localEnd = Math.max(localStart, visibleEnd - blockTop);
+        const startIndex = Math.max(0, Math.floor(localStart / rowHeight) - 2);
+        const endIndex = Math.min(rows.length - 1, Math.ceil(localEnd / rowHeight) + 2);
+
+        for (let index = startIndex; index <= endIndex; index += 1) {
+          bufferRows.push(rows[index]);
+        }
+      }
+
+      terminalScrollport.querySelectorAll(".top-bar .logo-mark").forEach(pushBlockRows);
+
+      if (!activeBuffer) {
+        return [...persistentRows, ...bufferRows];
+      }
 
       activeBuffer.querySelectorAll(":scope > [data-arch-row]").forEach((row) => {
         const rowTop = row.offsetTop;
@@ -1914,22 +1975,7 @@ ERA NOTE
       });
 
       activeBuffer.querySelectorAll(".crt-text-block").forEach((block) => {
-        const rows = block.children;
-        if (!rows.length) {
-          return;
-        }
-
-        const sampleRow = rows[0];
-        const rowHeight = sampleRow.offsetHeight || parseFloat(getComputedStyle(sampleRow).lineHeight) || parseFloat(getComputedStyle(block).lineHeight) || 18;
-        const blockTop = block.offsetTop;
-        const localStart = Math.max(0, visibleStart - blockTop);
-        const localEnd = Math.max(localStart, visibleEnd - blockTop);
-        const startIndex = Math.max(0, Math.floor(localStart / rowHeight) - 2);
-        const endIndex = Math.min(rows.length - 1, Math.ceil(localEnd / rowHeight) + 2);
-
-        for (let index = startIndex; index <= endIndex; index += 1) {
-          bufferRows.push(rows[index]);
-        }
+        pushBlockRows(block);
       });
 
       return [...persistentRows, ...bufferRows];
@@ -2292,9 +2338,9 @@ ERA NOTE
       });
     }
 
-    document.querySelectorAll(".terminal-buffer").forEach((scrollport) => {
-      scrollport.addEventListener("scroll", scheduleScreenArchRefresh, { passive: true });
-    });
+    if (terminalScrollport) {
+      terminalScrollport.addEventListener("scroll", scheduleScreenArchRefresh, { passive: true });
+    }
 
     setSyntaxText(decisionsText, decisionsSource.textContent);
     renderAllSyntax();
@@ -2338,11 +2384,34 @@ ERA NOTE
         setSyntaxText(sourceText, getCurrentDocumentSource());
       });
 
-    function writeTerminal(message) {
-      terminalOutput.textContent = message;
-      terminalOutput.dataset.archProcessed = "false";
-      applyArchCharacters(terminalOutput);
+    const terminalOutputLimit = 8;
+
+    function appendTerminalLine(message, entryKind = "output") {
+      const lines = String(message).split("\n");
+      lines.forEach((lineText) => {
+        const line = document.createElement("span");
+        line.className = "terminal-output-line";
+        line.dataset.entryKind = entryKind;
+        line.textContent = lineText || " ";
+        terminalOutput.appendChild(line);
+        setArchRow(line);
+        applyArchCharacters(line);
+      });
+
+      while (terminalOutput.children.length > terminalOutputLimit) {
+        terminalOutput.firstElementChild.remove();
+      }
+
       scheduleScreenArchRefresh();
+    }
+
+    function writeTerminal(message) {
+      appendTerminalLine(message, "output");
+    }
+
+    function resetTerminalOutput() {
+      terminalOutput.innerHTML = "";
+      appendTerminalLine("OPEN RACE COACH TERMINAL READY", "output");
     }
 
     const views = new Set(["report", "laps", "trace", "map", "notes", "help", "decisions", "source"]);
@@ -2362,6 +2431,12 @@ ERA NOTE
         writeTerminal(message);
       }
 
+      if (terminalScrollport && options.scroll !== false) {
+        requestAnimationFrame(() => {
+          terminalScrollport.scrollTop = 0;
+        });
+      }
+
       scheduleScreenArchRefresh();
     }
 
@@ -2377,10 +2452,10 @@ ERA NOTE
       const argument = (tokens[1] || "").toUpperCase();
 
       if (!command) {
-        writeTerminal("");
         return;
       }
 
+      appendTerminalLine(`ORC> ${rawCommand.trim().toUpperCase()}`, "command");
       commandHistory.push(command);
       historyIndex = commandHistory.length;
 
@@ -2490,7 +2565,7 @@ ERA NOTE
       }
 
       if (command === "clear" || command === "cls") {
-        writeTerminal("");
+        resetTerminalOutput();
         return;
       }
 
@@ -2502,8 +2577,20 @@ ERA NOTE
     viewLinks.forEach((link) => {
       link.addEventListener("click", (event) => {
         event.preventDefault();
-        setView(link.dataset.viewLink, `${link.textContent.trim()} READY`);
-        window.location.hash = link.dataset.viewLink;
+        runCommand(link.dataset.viewLink === "report" ? "report" : link.dataset.viewLink);
+      });
+    });
+
+    commandLinks.forEach((link) => {
+      link.addEventListener("click", (event) => {
+        if (link.target === "_blank" && link.href) {
+          appendTerminalLine(`ORC> ${link.dataset.commandLink.toUpperCase()}`, "command");
+          writeTerminal(`OPENING ${link.textContent.trim().toUpperCase()}`);
+          return;
+        }
+
+        event.preventDefault();
+        runCommand(link.dataset.commandLink);
       });
     });
 
