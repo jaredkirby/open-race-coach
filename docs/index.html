@@ -33,30 +33,30 @@
       /* Static, local/system-safe font stack only; no cool-retro-term assets are imported. */
       --mono: "Courier New", "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
       --terminal-font-era: "late-1980s-system-mono";
-      --glow: 0.76;
-      --rgb-split: 1;
-      --scanline-opacity: 0.08;
+      --glow: 0.82;
+      --rgb-split: 1.12;
+      --scanline-opacity: 0.1;
       --scanline-size: 3px;
-      --subpixel-opacity: 0.055;
-      --raster-mask-opacity: 0.82;
-      --grid-engineering-opacity: 0.05;
-      --grid-warp-opacity: 0.06;
-      --pixel-grain-opacity: 0.08;
+      --subpixel-opacity: 0.068;
+      --raster-mask-opacity: 0.9;
+      --grid-engineering-opacity: 0.064;
+      --grid-warp-opacity: 0.08;
+      --pixel-grain-opacity: 0.1;
       --pixel-grain-scale: 11px;
-      --black-grain-opacity: 0.055;
+      --black-grain-opacity: 0.075;
       --black-grain-scale: 5px;
-      --flicker-opacity: 0.28;
-      --flicker-speed: 0.16s;
-      --vignette-strength: 0.51;
-      --edge-falloff: 0.34;
-      --top-falloff: 0.3;
-      --text-bloom: 0.26;
-      --text-bloom-strong: 0.48;
-      --raster-text-bloom: 0.04;
-      --raster-text-bloom-strong: 0.07;
-      --reflection-opacity: 0.11;
+      --flicker-opacity: 0.32;
+      --flicker-speed: 0.14s;
+      --vignette-strength: 0.62;
+      --edge-falloff: 0.48;
+      --top-falloff: 0.42;
+      --text-bloom: 0.31;
+      --text-bloom-strong: 0.58;
+      --raster-text-bloom: 0.065;
+      --raster-text-bloom-strong: 0.105;
+      --reflection-opacity: 0.14;
       --frame-shine-opacity: 0.22;
-      --curvature-shadow-opacity: 0.44;
+      --curvature-shadow-opacity: 0.58;
       --bezel-thickness: 14px;
       --font-scale: 0.93;
       --frame-padding: 10px;
@@ -75,6 +75,17 @@
       --noise-opacity: 0.08;
       --jitter-x: 0.18px;
       --jitter-y: 0.08px;
+      --text-warp-strength: 0.72;
+      --text-warp-arch: 6px;
+      --text-warp-bow: 3px;
+      --screen-warp-rotate: 0.42deg;
+      --screen-warp-scale: 1.012;
+      --screen-text-dim: rgba(var(--phosphor-rgb), 0.68);
+      --screen-text-muted: rgba(var(--phosphor-rgb), 0.52);
+      --screen-text-hot: rgba(var(--phosphor-rgb), 0.92);
+      --frame-warp-perspective: 900px;
+      --frame-warp-rotate-x: 0.45deg;
+      --frame-warp-scale-x: 1.002;
       --font-size: calc(18.28px * var(--font-scale));
       --line-height: 1.14;
     }
@@ -106,16 +117,38 @@
     }
 
     @keyframes raster-jitter {
-      0%, 100% { transform: translate(0, 0); }
-      31% { transform: translate(var(--jitter-x), 0); }
-      59% { transform: translate(calc(var(--jitter-x) * -1), var(--jitter-y)); }
-      83% { transform: translate(0, calc(var(--jitter-y) * -1)); }
+      0%, 100% {
+        transform: translate(0, 0);
+        background-position: 0 -24%, 0 0, 0 0, 0 0, 0 0, 0 0;
+      }
+
+      31% {
+        transform: translate(var(--jitter-x), 0);
+        background-position: 0 8%, 0 2px, 1px 0, -1px 1px, 2px -1px, 0 0;
+      }
+
+      59% {
+        transform: translate(calc(var(--jitter-x) * -1), var(--jitter-y));
+        background-position: 0 36%, 0 -1px, -1px 1px, 1px -1px, 0 2px, 1px 0;
+      }
+
+      83% {
+        transform: translate(0, calc(var(--jitter-y) * -1));
+        background-position: 0 72%, 0 1px, 2px -1px, 0 1px, -1px 0, -1px 1px;
+      }
     }
 
     * {
       box-sizing: border-box;
       font: inherit;
       letter-spacing: 0;
+    }
+
+    .crt-filter-defs {
+      position: absolute;
+      width: 0;
+      height: 0;
+      overflow: hidden;
     }
 
     html,
@@ -172,6 +205,8 @@
         0 28px 90px rgba(0, 0, 0, 0.72),
         inset 0 0 0 1px rgba(var(--phosphor-rgb), 0.08),
         inset 0 0 32px rgba(var(--phosphor-rgb), 0.06);
+      filter: url("#crt-frame-warp-3");
+      transform: perspective(var(--frame-warp-perspective)) rotateX(var(--frame-warp-rotate-x)) scaleX(var(--frame-warp-scale-x)) translateZ(0);
     }
 
     .terminal-frame::before,
@@ -247,6 +282,10 @@
     .crt-screen::after {
       animation: crt-flicker var(--flicker-speed) infinite;
       background:
+        radial-gradient(ellipse at 0% 50%, rgba(0, 0, 0, calc(var(--edge-falloff) * 0.72)), transparent 31%),
+        radial-gradient(ellipse at 100% 50%, rgba(0, 0, 0, calc(var(--edge-falloff) * 0.72)), transparent 31%),
+        radial-gradient(ellipse at 50% 0%, rgba(0, 0, 0, calc(var(--top-falloff) * 0.92)), transparent 29%),
+        radial-gradient(ellipse at 50% 100%, rgba(0, 0, 0, calc(var(--edge-falloff) * 0.62)), transparent 28%),
         linear-gradient(180deg, rgba(0, 0, 0, var(--top-falloff)), transparent 18%, transparent 78%, rgba(0, 0, 0, calc(var(--edge-falloff) * 0.56))),
         radial-gradient(ellipse at 50% -10%, rgba(0, 0, 0, calc(var(--top-falloff) * 0.82)), transparent 38%),
         linear-gradient(110deg, transparent 0 15%, rgba(255, 255, 255, var(--reflection-opacity)) 19%, transparent 28% 100%),
@@ -288,6 +327,8 @@
       position: absolute;
       inset: 0;
       background:
+        linear-gradient(180deg, transparent 0 12%, rgba(0, 0, 0, calc(var(--edge-falloff) * 0.18)) 15%, rgba(var(--phosphor-rgb), calc(var(--noise-opacity) * 0.88)) 17%, transparent 23% 100%),
+        repeating-linear-gradient(0deg, transparent 0 17px, rgba(0, 0, 0, calc(var(--black-grain-opacity) * 0.45)) 18px, transparent 20px 39px),
         radial-gradient(circle at 11% 16%, rgba(var(--phosphor-rgb), var(--pixel-grain-opacity)) 0 0.55px, transparent 1.3px),
         radial-gradient(circle at 64% 31%, rgba(var(--phosphor-rgb), calc(var(--pixel-grain-opacity) * 0.7)) 0 0.7px, transparent 1.5px),
         radial-gradient(circle at 37% 73%, rgba(255, 255, 255, calc(var(--pixel-grain-opacity) * 0.5)) 0 0.45px, transparent 1.1px),
@@ -298,11 +339,13 @@
           transparent 9px 17px
         );
       background-size:
+        100% 180%,
+        100% 39px,
         var(--pixel-grain-scale) calc(var(--pixel-grain-scale) * 0.82),
         calc(var(--pixel-grain-scale) * 1.7) calc(var(--pixel-grain-scale) * 1.22),
         calc(var(--pixel-grain-scale) * 2.3) calc(var(--pixel-grain-scale) * 1.55),
         31px 31px;
-      opacity: 0.42;
+      opacity: 0.52;
       animation: raster-jitter 0.42s steps(2, end) infinite;
     }
 
@@ -347,29 +390,157 @@
       padding: 12px;
       margin: 0 auto;
       overflow: hidden;
+      color: var(--phosphor);
       text-shadow:
-        0 0 calc(var(--glow) * 2px) rgba(var(--phosphor-rgb), var(--text-bloom)),
-        0 0 calc(var(--glow) * 6px) rgba(var(--phosphor-rgb), var(--raster-text-bloom)),
-        calc(var(--rgb-split) * 0.25px) 0 0 var(--shadow-blue),
-        calc(var(--rgb-split) * -0.25px) 0 0 var(--shadow-red);
+        0 0 calc(var(--glow) * 2.2px) rgba(var(--phosphor-rgb), var(--text-bloom)),
+        0 0 calc(var(--glow) * 7px) rgba(var(--phosphor-rgb), var(--raster-text-bloom)),
+        calc(var(--rgb-split) * 0.2px) 0 0 var(--shadow-blue),
+        calc(var(--rgb-split) * -0.2px) 0 0 var(--shadow-red);
+      filter: url("#crt-text-warp-3");
+      transform: perspective(980px) rotateX(var(--screen-warp-rotate)) scaleX(var(--screen-warp-scale)) translateZ(0);
     }
 
-    .top-bar,
+    :root[data-text-warp-level="0"] .screen {
+      --text-warp-strength: 0;
+      --text-warp-arch: 0px;
+      --text-warp-bow: 0px;
+      --screen-warp-rotate: 0deg;
+      --screen-warp-scale: 1;
+      filter: url("#crt-text-warp-0");
+    }
+
+    :root[data-text-warp-level="1"] .screen {
+      --text-warp-strength: 0.2;
+      --text-warp-arch: 2px;
+      --text-warp-bow: 1px;
+      --screen-warp-rotate: 0.12deg;
+      --screen-warp-scale: 1.003;
+      filter: url("#crt-text-warp-1");
+    }
+
+    :root[data-text-warp-level="2"] .screen {
+      --text-warp-strength: 0.4;
+      --text-warp-arch: 3px;
+      --text-warp-bow: 2px;
+      --screen-warp-rotate: 0.24deg;
+      --screen-warp-scale: 1.006;
+      filter: url("#crt-text-warp-2");
+    }
+
+    :root[data-text-warp-level="3"] .screen {
+      --text-warp-strength: 0.62;
+      --text-warp-arch: 5px;
+      --text-warp-bow: 2.8px;
+      --screen-warp-rotate: 0.36deg;
+      --screen-warp-scale: 1.009;
+      filter: url("#crt-text-warp-3");
+    }
+
+    :root[data-text-warp-level="4"] .screen {
+      --text-warp-strength: 0.82;
+      --text-warp-arch: 7px;
+      --text-warp-bow: 4px;
+      --screen-warp-rotate: 0.52deg;
+      --screen-warp-scale: 1.014;
+      filter: url("#crt-text-warp-4");
+    }
+
+    :root[data-text-warp-level="5"] .screen {
+      --text-warp-strength: 1;
+      --text-warp-arch: 10px;
+      --text-warp-bow: 6px;
+      --screen-warp-rotate: 0.72deg;
+      --screen-warp-scale: 1.022;
+      filter: url("#crt-text-warp-5");
+    }
+
+    :root[data-frame-warp-level="0"] .terminal-frame {
+      --frame-warp-perspective: 1200px;
+      --frame-warp-rotate-x: 0deg;
+      --frame-warp-scale-x: 1;
+      filter: url("#crt-frame-warp-0");
+    }
+
+    :root[data-frame-warp-level="1"] .terminal-frame {
+      --frame-warp-perspective: 1100px;
+      --frame-warp-rotate-x: 0.2deg;
+      --frame-warp-scale-x: 1.001;
+      filter: url("#crt-frame-warp-1");
+    }
+
+    :root[data-frame-warp-level="2"] .terminal-frame {
+      --frame-warp-perspective: 1000px;
+      --frame-warp-rotate-x: 0.34deg;
+      --frame-warp-scale-x: 1.002;
+      filter: url("#crt-frame-warp-2");
+    }
+
+    :root[data-frame-warp-level="3"] .terminal-frame {
+      --frame-warp-perspective: 900px;
+      --frame-warp-rotate-x: 0.45deg;
+      --frame-warp-scale-x: 1.003;
+      filter: url("#crt-frame-warp-3");
+    }
+
+    :root[data-frame-warp-level="4"] .terminal-frame {
+      --frame-warp-perspective: 820px;
+      --frame-warp-rotate-x: 0.6deg;
+      --frame-warp-scale-x: 1.004;
+      filter: url("#crt-frame-warp-4");
+    }
+
+    :root[data-frame-warp-level="5"] .terminal-frame {
+      --frame-warp-perspective: 760px;
+      --frame-warp-rotate-x: 0.78deg;
+      --frame-warp-scale-x: 1.006;
+      filter: url("#crt-frame-warp-5");
+    }
+
+    .screen [data-arch-row] {
+      display: block;
+      max-width: 100%;
+      transform-origin: 50% 50%;
+      transform:
+        translateX(var(--line-offset, 0px))
+        translateY(calc(var(--line-arch, 0px) * -1))
+        skewX(var(--line-skew, 0deg))
+        scaleX(var(--line-scale, 1));
+    }
+
+    .terminal-command[data-arch-row],
+    .top-bar[data-arch-row],
+    .footer-bar[data-arch-row] {
+      display: grid;
+    }
+
+    .terminal-output[data-arch-row],
+    .terminal-status[data-arch-row],
+    .terminal-meta[data-arch-row],
+    h2[data-arch-row],
+    p[data-arch-row] {
+      display: block;
+    }
+
+    .screen [data-arch-char] {
+      display: inline-block;
+      transform: translate(var(--char-push, 0), var(--char-bow, 0));
+      transform-origin: 50% 50%;
+    }
+
+    .top-bar {
+      min-width: 0;
+      color: var(--phosphor);
+      text-transform: uppercase;
+    }
+
     .footer-bar {
       display: grid;
       grid-template-columns: minmax(0, 1fr) auto;
       align-items: center;
       gap: 12px;
       min-width: 0;
-      color: var(--phosphor-dim);
+      color: var(--screen-text-dim);
       text-transform: uppercase;
-    }
-
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      min-width: 0;
     }
 
     .logo-mark,
@@ -379,21 +550,11 @@
     }
 
     .logo-mark {
-      flex: 0 0 auto;
-      color: var(--phosphor-hot);
+      color: var(--screen-text-hot);
       font-weight: 700;
       line-height: 1.05;
-      text-shadow:
-        0.35px 0 1px var(--shadow-blue),
-        -0.35px 0 1px var(--shadow-red),
-        0 0 8px rgba(var(--phosphor-rgb), 0.38);
-    }
-
-    .brand-text,
-    .state-text {
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
+      text-shadow: inherit;
+      filter: none;
     }
 
     .report {
@@ -402,10 +563,16 @@
       display: grid;
       grid-template-columns: minmax(0, 1fr);
       grid-template-rows: minmax(0, 1fr);
-      overflow: hidden;
+      overflow: auto;
+      scrollbar-width: none;
+    }
+
+    .report::-webkit-scrollbar {
+      display: none;
     }
 
     .decisions-panel,
+    .source-panel,
     .module-panel {
       display: none;
       min-width: 0;
@@ -417,23 +584,27 @@
     }
 
     .decisions-panel::-webkit-scrollbar,
+    .source-panel::-webkit-scrollbar,
     .module-panel::-webkit-scrollbar {
       width: 8px;
       height: 8px;
     }
 
     .decisions-panel::-webkit-scrollbar-track,
+    .source-panel::-webkit-scrollbar-track,
     .module-panel::-webkit-scrollbar-track {
       background: rgba(0, 0, 0, 0.38);
     }
 
     .decisions-panel::-webkit-scrollbar-thumb,
+    .source-panel::-webkit-scrollbar-thumb,
     .module-panel::-webkit-scrollbar-thumb {
       background: rgba(var(--phosphor-rgb), 0.42);
       box-shadow: 0 0 calc(var(--glow) * 8px) rgba(var(--phosphor-rgb), 0.24);
     }
 
-    .decisions-text {
+    .decisions-text,
+    .source-text {
       margin: 8px 0 0;
       max-width: 150ch;
       color: var(--phosphor);
@@ -446,6 +617,7 @@
     }
 
     .screen[data-view="decisions"] .decisions-panel,
+    .screen[data-view="source"] .source-panel,
     .screen[data-view="laps"] .module-panel[data-module="laps"],
     .screen[data-view="trace"] .module-panel[data-module="trace"],
     .screen[data-view="map"] .module-panel[data-module="map"],
@@ -480,25 +652,14 @@
       animation: text-shadow-drift 1.6s infinite;
     }
 
-    .brand-title,
-    .logo-mark,
     .terminal-output,
     .terminal-input,
     .footer-links a[data-active="true"] {
-      text-shadow:
-        0 0 calc(var(--glow) * 4px) rgba(var(--phosphor-rgb), var(--text-bloom-strong)),
-        0 0 calc(var(--glow) * 10px) rgba(var(--phosphor-rgb), var(--raster-text-bloom-strong)),
-        0 0 calc(var(--glow) * 12px) rgba(var(--phosphor-rgb), calc(var(--text-bloom-strong) * 0.42));
-    }
-
-    .brand-title {
-      color: var(--phosphor);
-      font-weight: 700;
-      text-transform: uppercase;
+      text-shadow: inherit;
     }
 
     .dim {
-      color: var(--phosphor-dim);
+      color: var(--screen-text-dim);
       text-transform: uppercase;
     }
 
@@ -563,29 +724,13 @@
       color: var(--syntax-quote);
     }
 
-    .lines {
-      display: grid;
-      gap: 4px;
-      margin-top: 8px;
-      min-width: 0;
-    }
-
-    .line {
-      display: grid;
-      grid-template-columns: 12ch minmax(0, 1fr);
-      gap: 1ch;
-      min-width: 0;
-    }
-
-    .value {
-      min-width: 0;
-      overflow-wrap: anywhere;
-    }
-
-    .report-text {
-      margin-top: auto;
+    .report-printout {
+      width: 100%;
+      max-width: 92ch;
       color: var(--phosphor);
-      overflow-wrap: anywhere;
+      white-space: pre-wrap;
+      overflow-wrap: normal;
+      word-break: normal;
     }
 
     .module-text {
@@ -616,11 +761,8 @@
     }
 
     .footer-links a[data-active="true"] {
-      color: var(--phosphor);
-      text-shadow:
-        0.35px 0 1px var(--shadow-blue),
-        -0.35px 0 1px var(--shadow-red),
-        0 0 calc(var(--glow) * 8px) rgba(var(--phosphor-rgb), 0.5);
+      color: var(--screen-text-hot);
+      text-shadow: inherit;
     }
 
     .terminal-console {
@@ -633,7 +775,7 @@
       min-height: calc(var(--font-size) * var(--line-height));
       max-height: calc(var(--font-size) * var(--line-height) * 3);
       overflow: hidden;
-      color: var(--phosphor-dim);
+      color: var(--screen-text-dim);
       white-space: pre-wrap;
       overflow-wrap: anywhere;
     }
@@ -645,6 +787,31 @@
       min-width: 0;
     }
 
+    .terminal-status {
+      margin-top: 2px;
+      color: var(--screen-text-dim);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .terminal-meta {
+      margin-top: 2px;
+      color: var(--screen-text-dim);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .status-profile,
+    .status-raster,
+    .status-character,
+    .status-character-detail,
+    .status-adjustments-detail,
+    .status-site {
+      color: var(--phosphor);
+    }
+
     .terminal-input {
       min-width: 0;
       width: 100%;
@@ -652,13 +819,10 @@
       border: 0;
       outline: 0;
       background: transparent;
-      color: var(--phosphor-hot);
-      caret-color: var(--phosphor-hot);
+      color: var(--screen-text-hot);
+      caret-color: var(--screen-text-hot);
       text-transform: uppercase;
-      text-shadow:
-        0.35px 0 1px var(--shadow-blue),
-        -0.35px 0 1px var(--shadow-red),
-        0 0 calc(var(--glow) * 7px) rgba(var(--phosphor-rgb), 0.45);
+      text-shadow: inherit;
     }
 
     .terminal-input::selection {
@@ -694,68 +858,23 @@
         overflow: hidden;
       }
 
-      .state-text {
-        display: none;
-      }
-
-      .brand {
-        align-items: flex-start;
-      }
-
-      .brand-text {
-        white-space: normal;
-      }
-
       .mobile-break {
         display: block;
-      }
-
-      .report {
-        width: 100%;
-        max-width: 100%;
-        overflow: auto;
-        scrollbar-width: none;
-      }
-
-      .report::-webkit-scrollbar {
-        display: none;
       }
 
       .tile {
         width: 100%;
         max-width: 100%;
         overflow: auto;
-        overflow-wrap: anywhere;
-        word-break: break-word;
       }
 
-      .report-text {
+      .report-printout {
         width: 100%;
         max-width: 100%;
         font-size: 12px;
         line-height: 1.18;
-        overflow-wrap: anywhere;
-      }
-
-      .lines {
-        width: 100%;
-        max-width: 100%;
-      }
-
-      .line {
-        display: block;
-        width: 100%;
-        max-width: 100%;
-        gap: 0;
-      }
-
-      .value {
-        display: block;
-        width: 100%;
-        max-width: 100%;
-        white-space: normal;
-        overflow-wrap: anywhere;
-        word-break: break-word;
+        overflow-wrap: normal;
+        word-break: normal;
       }
 
       .footer-links {
@@ -764,17 +883,42 @@
         gap: 0 10px;
       }
 
+      .site-mark {
+        display: none;
+      }
+
       .footer-links a[data-view-link="laps"],
       .footer-links a[data-view-link="trace"],
       .footer-links a[data-view-link="map"],
-      .footer-links a[data-view-link="notes"] {
+      .footer-links a[data-view-link="notes"],
+      .footer-links a[data-view-link="source"] {
         display: none;
+      }
+
+      .status-adjustments,
+      .status-adjustments-detail,
+      .status-character,
+      .status-character-detail,
+      .status-site {
+        display: none;
+      }
+
+      .terminal-status,
+      .terminal-meta {
+        overflow: visible;
+        text-overflow: clip;
+        white-space: normal;
       }
 
       .module-text {
         white-space: pre-wrap;
-        overflow-wrap: anywhere;
+        overflow-wrap: normal;
+        word-break: normal;
         overflow: auto;
+      }
+
+      .source-text {
+        max-width: 100%;
       }
     }
 
@@ -796,6 +940,56 @@
   </style>
 </head>
 <body>
+  <svg class="crt-filter-defs" aria-hidden="true" focusable="false">
+    <filter id="crt-frame-warp-0" x="-3%" y="-3%" width="106%" height="106%" color-interpolation-filters="sRGB">
+      <feTurbulence type="fractalNoise" baseFrequency="0.003 0.014" numOctaves="1" seed="43" result="frameNoise" />
+      <feDisplacementMap in="SourceGraphic" in2="frameNoise" scale="0.35" xChannelSelector="R" yChannelSelector="G" />
+    </filter>
+    <filter id="crt-frame-warp-1" x="-3%" y="-3%" width="106%" height="106%" color-interpolation-filters="sRGB">
+      <feTurbulence type="fractalNoise" baseFrequency="0.004 0.016" numOctaves="1" seed="47" result="frameNoise" />
+      <feDisplacementMap in="SourceGraphic" in2="frameNoise" scale="0.75" xChannelSelector="R" yChannelSelector="G" />
+    </filter>
+    <filter id="crt-frame-warp-2" x="-4%" y="-4%" width="108%" height="108%" color-interpolation-filters="sRGB">
+      <feTurbulence type="fractalNoise" baseFrequency="0.004 0.018" numOctaves="1" seed="51" result="frameNoise" />
+      <feDisplacementMap in="SourceGraphic" in2="frameNoise" scale="1.3" xChannelSelector="R" yChannelSelector="G" />
+    </filter>
+    <filter id="crt-frame-warp-3" x="-4%" y="-4%" width="108%" height="108%" color-interpolation-filters="sRGB">
+      <feTurbulence type="fractalNoise" baseFrequency="0.005 0.021" numOctaves="1" seed="53" result="frameNoise" />
+      <feDisplacementMap in="SourceGraphic" in2="frameNoise" scale="2.2" xChannelSelector="R" yChannelSelector="G" />
+    </filter>
+    <filter id="crt-frame-warp-4" x="-5%" y="-5%" width="110%" height="110%" color-interpolation-filters="sRGB">
+      <feTurbulence type="fractalNoise" baseFrequency="0.006 0.024" numOctaves="1" seed="59" result="frameNoise" />
+      <feDisplacementMap in="SourceGraphic" in2="frameNoise" scale="3.1" xChannelSelector="R" yChannelSelector="G" />
+    </filter>
+    <filter id="crt-frame-warp-5" x="-5%" y="-5%" width="110%" height="110%" color-interpolation-filters="sRGB">
+      <feTurbulence type="fractalNoise" baseFrequency="0.007 0.028" numOctaves="1" seed="61" result="frameNoise" />
+      <feDisplacementMap in="SourceGraphic" in2="frameNoise" scale="4.1" xChannelSelector="R" yChannelSelector="G" />
+    </filter>
+    <filter id="crt-text-warp-0" x="-2%" y="-2%" width="104%" height="104%" color-interpolation-filters="sRGB">
+      <feTurbulence type="fractalNoise" baseFrequency="0.006 0.034" numOctaves="1" seed="14" result="noise" />
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="0.25" xChannelSelector="R" yChannelSelector="G" />
+    </filter>
+    <filter id="crt-text-warp-1" x="-2%" y="-2%" width="104%" height="104%" color-interpolation-filters="sRGB">
+      <feTurbulence type="fractalNoise" baseFrequency="0.004 0.022" numOctaves="1" seed="18" result="noise" />
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="1.25" xChannelSelector="R" yChannelSelector="G" />
+    </filter>
+    <filter id="crt-text-warp-2" x="-2%" y="-2%" width="104%" height="104%" color-interpolation-filters="sRGB">
+      <feTurbulence type="fractalNoise" baseFrequency="0.003 0.018" numOctaves="1" seed="23" result="noise" />
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="1.55" xChannelSelector="R" yChannelSelector="G" />
+    </filter>
+    <filter id="crt-text-warp-3" x="-2%" y="-2%" width="104%" height="104%" color-interpolation-filters="sRGB">
+      <feTurbulence type="fractalNoise" baseFrequency="0.0024 0.014" numOctaves="1" seed="31" result="noise" />
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="2.05" xChannelSelector="R" yChannelSelector="G" />
+    </filter>
+    <filter id="crt-text-warp-4" x="-3%" y="-3%" width="106%" height="106%" color-interpolation-filters="sRGB">
+      <feTurbulence type="fractalNoise" baseFrequency="0.0018 0.011" numOctaves="1" seed="37" result="noise" />
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="2.7" xChannelSelector="R" yChannelSelector="G" />
+    </filter>
+    <filter id="crt-text-warp-5" x="-4%" y="-4%" width="108%" height="108%" color-interpolation-filters="sRGB">
+      <feTurbulence type="fractalNoise" baseFrequency="0.0012 0.007" numOctaves="1" seed="41" result="noise" />
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="3.4" xChannelSelector="R" yChannelSelector="G" />
+    </filter>
+  </svg>
   <main class="app">
     <section class="terminal-frame" aria-label="Open Race Coach landing page">
       <div class="crt-screen">
@@ -803,64 +997,45 @@
         <div class="phosphor-ghost" id="phosphorGhost" aria-hidden="true"></div>
         <div class="screen" data-view="report">
           <header class="top-bar">
-            <div class="brand">
-              <pre class="logo-mark" aria-label="Open Race Coach logo">┌─┐┌─┐┌─┐
+            <pre class="logo-mark" data-syntax="logo" aria-label="Open Race Coach logo">┌─┐┌─┐┌─┐
 └─┘┴└─└─</pre>
-              <span class="brand-text"><span class="brand-title">OPEN RACE COACH</span> / CRT REPORT RENDER</span>
-            </div>
-            <span class="state-text">PUBLIC REPO / PRE-ALPHA</span>
           </header>
 
           <div class="report" aria-label="Project information displayed as one CRT report">
             <section class="tile" aria-labelledby="coach-heading">
-              <p class="dim">Local-first post-session sim-racing coach</p>
               <span id="coach-heading" hidden>Open Race Coach</span>
-              <div class="lines">
-                <p class="line">
-                  <span class="dim">Purpose</span>
-                  <span class="value">Recorded Session -> Analysis Run -><br class="mobile-break" /> one data-supported Coaching Instruction.</span>
-                </p>
-                <p class="line">
-                  <span class="dim">Status</span>
-                  <span class="value red">Pre-alpha. Live AMS2/ACC simulator validation<br class="mobile-break" /> is not proven by this repo.</span>
-                </p>
-                <p class="line">
-                  <span class="dim">Contract</span>
-                  <span class="value">Deterministic analysis owns evidence, status,<br class="mobile-break" /> Reference Lap, Corner Segment,<br class="mobile-break" /> and Reportable Delta.</span>
-                </p>
-                <p class="line">
-                  <span class="dim">Workflow</span>
-                  <span class="value">Record / Validate / Analyze /<br class="mobile-break" /> optionally refine prose.</span>
-                </p>
-              </div>
-              <pre class="report-text" data-syntax="report" aria-label="Sample coaching instruction">
-+------------------------------------------+
-| THE ONE THING                            |
-+------------------------------------------+
-| C2: carry 3.0 m/s more minimum speed.    |
-| Reference: 45 m/s                        |
-| Comparison median: 42 m/s                |
-| Seen on 100% of 5 comparison laps.       |
-+------------------------------------------+</pre>
-              <div class="lines">
-                <p class="line">
-                  <span class="dim">Reference</span>
-                  <span class="value">01k2demo:lap:1</span>
-                </p>
-                <p class="line">
-                  <span class="dim">Loss</span>
-                  <span class="value hot">0.066s median</span>
-                </p>
-                <p class="line">
-                  <span class="dim">Segment</span>
-                  <span class="value">1185m -> 1405m / sim distance</span>
-                </p>
-                <p class="line">
-                  <span class="dim">Cause</span>
-                  <span class="value">min_speed / 3 m/s bad-direction delta</span>
-                </p>
-              </div>
+              <pre class="report-printout" data-syntax="report" aria-label="Sample Open Race Coach terminal report">OPEN RACE COACH
+LOCAL-FIRST POST-SESSION SIM-RACING COACH
+Recorded Session -> Analysis Run -> one
+data-supported Coaching Instruction.
 
+STATUS
+  PRE-ALPHA / live AMS2/ACC validation
+  is not proven by this repo.
+
+CONTRACT
+  Deterministic analysis owns evidence:
+  Reference Lap, Comparison Laps,
+  Corner Segment, Reportable Delta,
+  and Lap Loss Cause.
+  Coach Refinement rewrites prose only.
+
+WORKFLOW
+  record -> validate -> analyze ->
+  optional prose refinement
+
+SAMPLE COACH REPORT
+  Ref Lap     01k2demo:lap:1
+  Compare     5 Valid Laps
+  Segment     C2 / 1185m -> 1405m sim
+  Cause       min_speed
+  Loss        0.066s median
+  Delta       3 m/s bad-direction
+
+THE ONE THING
+  Carry 3.0 m/s more minimum speed in C2.
+  Reference 45 m/s / Comparison 42 m/s
+  Seen on 100% of 5 Comparison Laps.</pre>
             </section>
           </div>
 
@@ -868,6 +1043,12 @@
             <p class="dim">Rendered artifact</p>
             <h2 id="decisions-heading">docs/DECISIONS.md</h2>
             <pre class="decisions-text" id="decisionsText" data-syntax="decisions"></pre>
+          </section>
+
+          <section class="source-panel" aria-labelledby="source-heading">
+            <p class="dim">Rendered website source</p>
+            <h2 id="source-heading">docs/index.html</h2>
+            <pre class="source-text" id="sourceText" data-syntax="source" aria-label="Website source code"></pre>
           </section>
 
           <section class="module-panel" data-module="laps" aria-labelledby="laps-heading">
@@ -964,22 +1145,34 @@ Comparison Lap set: Valid Lap rows only; invalid laps excluded before coaching.<
             <p class="dim">Terminal command list</p>
             <h2 id="help-heading">HELP</h2>
             <pre class="module-text" data-syntax="help" aria-label="Terminal command help">COMMANDS
-  REPORT       CRT report and pre-alpha project contract
-  LAPS         Recorded Session lap table and Reference Lap comparison
-  TRACE        Post-session ASCII traces for speed, brake, throttle, RPM/gear, delta-time
-  MAP          Text Corner Segment sketch with C2 highlight
-  NOTES        Timestamped engineering notes and next-run focus
+  REPORT       CRT report and project contract
+  LAPS         Lap table and Reference Lap
+  TRACE        Speed / brake / throttle traces
+  MAP          Corner Segment sketch
+  NOTES        Engineering notes and next focus
   DECISIONS    Render docs/DECISIONS.md
-  GITHUB       Open the public repository
+  SOURCE       Render docs/index.html source
+  CODE         Alias for SOURCE
+  GITHUB       Open public repository
   SITE         Open openracecoach.com
   PROFILE AMBER|GREEN|VGA|LCD
   RASTER GRID|SCANLINE|PIXEL|CLEAN
-  STATUS       Report active display profile, raster mode, and current view
+  CHARACTER 0-5|UP|DOWN
+  CRT CHARACTER 0-5
+  ADJUST ARTIFACT 0-5|UP|DOWN
+  ADJUST BLOOM    0-5|UP|DOWN
+  ADJUST JITTER   0-5|UP|DOWN
+  ADJUST TEXT     0-5|UP|DOWN
+  ADJUST FRAME    0-5|UP|DOWN
+  ADJUST RESET
+  STATUS       Show profile / raster / view
   CLEAR        Clear terminal output
 
 ERA NOTE
-  Visual fiction: restrained late-1980s / early-1990s CRT workstation shell.
-  The modules are static post-session analysis surfaces, not live telemetry dashboards.</pre>
+  Visual fiction: restrained late-1980s /
+  early-1990s CRT workstation shell.
+  Modules are static post-session
+  analysis surfaces, not live telemetry.</pre>
           </section>
 
           <section class="terminal-console" aria-live="polite">
@@ -988,10 +1181,12 @@ ERA NOTE
               <label for="terminalInput">ORC&gt;</label>
               <input class="terminal-input" id="terminalInput" name="command" autocomplete="off" autocapitalize="none" spellcheck="false" />
             </form>
+            <p class="terminal-status">PROFILE AMBER / RASTER GRID / CRT CHARACTER 03 WORN / A3 B3 J3 T5 F3</p>
+            <p class="terminal-meta">OPEN REPO / PRE-ALPHA / OPENRACECOACH.COM</p>
           </section>
 
           <footer class="footer-bar">
-            <span>OPENRACECOACH.COM</span>
+            <span class="site-mark">OPENRACECOACH.COM</span>
             <nav class="footer-links" aria-label="Project links">
               <a href="https://github.com/jaredkirby/open-race-coach" target="_blank" rel="noopener noreferrer" data-command-link="github">GITHUB</a>
               <a href="#report" data-view-link="report">CRT REPORT</a>
@@ -1001,6 +1196,7 @@ ERA NOTE
               <a href="#notes" data-view-link="notes">NOTES</a>
               <a href="#help" data-view-link="help">HELP</a>
               <a href="#decisions" data-view-link="decisions">DECISIONS</a>
+              <a href="#source" data-view-link="source">SOURCE</a>
             </nav>
           </footer>
         </div>
@@ -1088,9 +1284,12 @@ ERA NOTE
     const screenElement = document.querySelector(".screen");
     const decisionsText = document.getElementById("decisionsText");
     const decisionsSource = document.getElementById("decisionsSource");
+    const sourceText = document.getElementById("sourceText");
     const terminalForm = document.getElementById("terminalForm");
     const terminalInput = document.getElementById("terminalInput");
     const terminalOutput = document.getElementById("terminalOutput");
+    const terminalStatus = document.querySelector(".terminal-status");
+    const terminalMeta = document.querySelector(".terminal-meta");
     const phosphorGhost = document.getElementById("phosphorGhost");
     const viewLinks = Array.from(document.querySelectorAll("[data-view-link]"));
     const commandHistory = [];
@@ -1121,18 +1320,18 @@ ERA NOTE
         case: "#050504",
         frameBorder: "#2b2518",
         screenBorder: "#24210f",
-        shadowBlue: "rgba(50, 88, 255, 0.14)",
-        shadowRed: "rgba(255, 62, 34, 0.18)",
-        glow: 0.62,
-        rgbSplit: 0.62,
-        flickerOpacity: 0.2,
-        flickerSpeed: "0.19s",
-        vignetteStrength: 0.56,
-        textBloom: 0.25,
-        textBloomStrong: 0.48,
-        reflectionOpacity: 0.09,
-        frameShineOpacity: 0.22,
-        curvatureShadowOpacity: 0.44,
+        shadowBlue: "rgba(50, 88, 255, 0.2)",
+        shadowRed: "rgba(255, 62, 34, 0.24)",
+        glow: 0.78,
+        rgbSplit: 0.9,
+        flickerOpacity: 0.27,
+        flickerSpeed: "0.15s",
+        vignetteStrength: 0.66,
+        textBloom: 0.32,
+        textBloomStrong: 0.58,
+        reflectionOpacity: 0.14,
+        frameShineOpacity: 0.26,
+        curvatureShadowOpacity: 0.6,
         fontScale: 0.92,
         framePadding: "10px",
         frameInset: "10px",
@@ -1164,18 +1363,18 @@ ERA NOTE
         case: "#030604",
         frameBorder: "#172a18",
         screenBorder: "#143018",
-        shadowBlue: "rgba(20, 110, 255, 0.1)",
-        shadowRed: "rgba(255, 40, 22, 0.1)",
-        glow: 0.76,
-        rgbSplit: 0.32,
-        flickerOpacity: 0.24,
-        flickerSpeed: "0.18s",
-        vignetteStrength: 0.52,
-        textBloom: 0.28,
-        textBloomStrong: 0.55,
-        reflectionOpacity: 0.08,
+        shadowBlue: "rgba(20, 110, 255, 0.15)",
+        shadowRed: "rgba(255, 40, 22, 0.14)",
+        glow: 0.88,
+        rgbSplit: 0.48,
+        flickerOpacity: 0.3,
+        flickerSpeed: "0.15s",
+        vignetteStrength: 0.62,
+        textBloom: 0.34,
+        textBloomStrong: 0.64,
+        reflectionOpacity: 0.12,
         frameShineOpacity: 0.18,
-        curvatureShadowOpacity: 0.47,
+        curvatureShadowOpacity: 0.58,
         fontScale: 0.92,
         framePadding: "10px",
         frameInset: "10px",
@@ -1209,16 +1408,16 @@ ERA NOTE
         screenBorder: "#17243d",
         shadowBlue: "rgba(32, 108, 255, 0.26)",
         shadowRed: "rgba(255, 42, 92, 0.2)",
-        glow: 0.55,
-        rgbSplit: 1.05,
-        flickerOpacity: 0.15,
-        flickerSpeed: "0.24s",
-        vignetteStrength: 0.43,
-        textBloom: 0.18,
-        textBloomStrong: 0.36,
-        reflectionOpacity: 0.1,
+        glow: 0.66,
+        rgbSplit: 1.24,
+        flickerOpacity: 0.2,
+        flickerSpeed: "0.2s",
+        vignetteStrength: 0.54,
+        textBloom: 0.24,
+        textBloomStrong: 0.45,
+        reflectionOpacity: 0.14,
         frameShineOpacity: 0.2,
-        curvatureShadowOpacity: 0.36,
+        curvatureShadowOpacity: 0.48,
         fontScale: 0.9,
         framePadding: "10px",
         frameInset: "10px",
@@ -1252,16 +1451,16 @@ ERA NOTE
         screenBorder: "#202b28",
         shadowBlue: "rgba(80, 120, 255, 0.05)",
         shadowRed: "rgba(255, 70, 70, 0.04)",
-        glow: 0.18,
-        rgbSplit: 0.05,
-        flickerOpacity: 0.03,
+        glow: 0.24,
+        rgbSplit: 0.09,
+        flickerOpacity: 0.05,
         flickerSpeed: "1.2s",
-        vignetteStrength: 0.25,
-        textBloom: 0.06,
-        textBloomStrong: 0.12,
-        reflectionOpacity: 0.05,
+        vignetteStrength: 0.34,
+        textBloom: 0.09,
+        textBloomStrong: 0.16,
+        reflectionOpacity: 0.07,
         frameShineOpacity: 0.12,
-        curvatureShadowOpacity: 0.18,
+        curvatureShadowOpacity: 0.26,
         fontScale: 0.9,
         framePadding: "10px",
         frameInset: "10px",
@@ -1274,72 +1473,72 @@ ERA NOTE
     const rasterModes = {
       GRID: {
         label: "GRID",
-        scanlineOpacity: 0.045,
+        scanlineOpacity: 0.07,
         scanlineSize: "3px",
-        subpixelOpacity: 0.028,
-        rasterMaskOpacity: 0.62,
-        terminalGridOpacity: 0.026,
-        pixelGridOpacity: 0.012,
-        gridEngineeringOpacity: 0.046,
-        gridWarpOpacity: 0.055,
-        pixelGrainOpacity: 0.032,
-        pixelGrainScale: "13px",
-        blackGrainOpacity: 0.04,
-        blackGrainScale: "5px",
-        rasterOpacity: 0.19,
-        noiseOpacity: 0.04,
-        rasterTextBloom: 0.045,
-        rasterTextBloomStrong: 0.07,
-        edgeFalloff: 0.42,
-        topFalloff: 0.34,
-        jitterX: "0.13px",
-        jitterY: "0.06px",
+        subpixelOpacity: 0.042,
+        rasterMaskOpacity: 0.78,
+        terminalGridOpacity: 0.034,
+        pixelGridOpacity: 0.017,
+        gridEngineeringOpacity: 0.064,
+        gridWarpOpacity: 0.072,
+        pixelGrainOpacity: 0.045,
+        pixelGrainScale: "12px",
+        blackGrainOpacity: 0.066,
+        blackGrainScale: "4px",
+        rasterOpacity: 0.25,
+        noiseOpacity: 0.058,
+        rasterTextBloom: 0.07,
+        rasterTextBloomStrong: 0.11,
+        edgeFalloff: 0.56,
+        topFalloff: 0.48,
+        jitterX: "0.2px",
+        jitterY: "0.1px",
       },
       SCANLINE: {
         label: "SCANLINE",
-        scanlineOpacity: 0.195,
+        scanlineOpacity: 0.245,
         scanlineSize: "3px",
-        subpixelOpacity: 0.018,
-        rasterMaskOpacity: 0.92,
+        subpixelOpacity: 0.028,
+        rasterMaskOpacity: 0.96,
         terminalGridOpacity: 0,
         pixelGridOpacity: 0,
         gridEngineeringOpacity: 0,
         gridWarpOpacity: 0,
-        pixelGrainOpacity: 0.018,
+        pixelGrainOpacity: 0.03,
         pixelGrainScale: "17px",
-        blackGrainOpacity: 0.035,
+        blackGrainOpacity: 0.052,
         blackGrainScale: "5px",
-        rasterOpacity: 0.035,
-        noiseOpacity: 0.03,
-        rasterTextBloom: 0.055,
-        rasterTextBloomStrong: 0.09,
-        edgeFalloff: 0.46,
-        topFalloff: 0.38,
-        jitterX: "0.08px",
-        jitterY: "0.05px",
+        rasterOpacity: 0.055,
+        noiseOpacity: 0.046,
+        rasterTextBloom: 0.08,
+        rasterTextBloomStrong: 0.13,
+        edgeFalloff: 0.58,
+        topFalloff: 0.5,
+        jitterX: "0.12px",
+        jitterY: "0.07px",
       },
       PIXEL: {
         label: "PIXEL",
-        scanlineOpacity: 0.075,
+        scanlineOpacity: 0.1,
         scanlineSize: "2px",
-        subpixelOpacity: 0.045,
-        rasterMaskOpacity: 0.78,
-        terminalGridOpacity: 0.012,
-        pixelGridOpacity: 0.042,
-        gridEngineeringOpacity: 0.014,
-        gridWarpOpacity: 0.048,
-        pixelGrainOpacity: 0.118,
-        pixelGrainScale: "9px",
-        blackGrainOpacity: 0.09,
+        subpixelOpacity: 0.062,
+        rasterMaskOpacity: 0.88,
+        terminalGridOpacity: 0.016,
+        pixelGridOpacity: 0.058,
+        gridEngineeringOpacity: 0.02,
+        gridWarpOpacity: 0.066,
+        pixelGrainOpacity: 0.15,
+        pixelGrainScale: "8px",
+        blackGrainOpacity: 0.12,
         blackGrainScale: "4px",
-        rasterOpacity: 0.29,
-        noiseOpacity: 0.07,
-        rasterTextBloom: 0.06,
-        rasterTextBloomStrong: 0.095,
-        edgeFalloff: 0.44,
-        topFalloff: 0.35,
-        jitterX: "0.14px",
-        jitterY: "0.07px",
+        rasterOpacity: 0.36,
+        noiseOpacity: 0.095,
+        rasterTextBloom: 0.085,
+        rasterTextBloomStrong: 0.14,
+        edgeFalloff: 0.58,
+        topFalloff: 0.49,
+        jitterX: "0.22px",
+        jitterY: "0.11px",
       },
       CLEAN: {
         label: "CLEAN",
@@ -1359,8 +1558,8 @@ ERA NOTE
         noiseOpacity: 0,
         rasterTextBloom: 0,
         rasterTextBloomStrong: 0,
-        edgeFalloff: 0.22,
-        topFalloff: 0.12,
+        edgeFalloff: 0.26,
+        topFalloff: 0.16,
         jitterX: "0px",
         jitterY: "0px",
       },
@@ -1369,10 +1568,105 @@ ERA NOTE
     let activeDisplayProfile = "AMBER";
     let activeRasterMode = "GRID";
     let activeFontScale = Number(displayProfiles[activeDisplayProfile].fontScale) || 0.93;
+    let activeCharacterLevel = 3;
+    const activeAdjustmentLevels = {
+      artifact: null,
+      bloom: null,
+      jitter: null,
+      text: 5,
+      frame: null,
+    };
     let ghostTimer;
+    let archRefreshFrame = 0;
     const fontScaleStep = 0.04;
     const fontScaleMin = 0.74;
     const fontScaleMax = 1.14;
+    const characterLevels = [
+      { label: "SERVICE", artifactScale: 0.46, bloomScale: 0.68, jitterScale: 0.3 },
+      { label: "STABLE", artifactScale: 0.62, bloomScale: 0.78, jitterScale: 0.48 },
+      { label: "USED", artifactScale: 0.82, bloomScale: 0.9, jitterScale: 0.72 },
+      { label: "WORN", artifactScale: 1, bloomScale: 1, jitterScale: 1 },
+      { label: "HOT", artifactScale: 1.18, bloomScale: 1.12, jitterScale: 1.26 },
+      { label: "ABUSED", artifactScale: 1.38, bloomScale: 1.25, jitterScale: 1.58 },
+    ];
+    const adjustmentControls = {
+      artifact: {
+        label: "ARTIFACT",
+        statusLabel: "A",
+        aliases: ["artifact", "artifacts", "raster", "noise", "grain", "scanline", "scanlines"],
+      },
+      bloom: {
+        label: "BLOOM",
+        statusLabel: "B",
+        aliases: ["bloom", "glow", "phosphor"],
+      },
+      jitter: {
+        label: "JITTER",
+        statusLabel: "J",
+        aliases: ["jitter", "swim", "crawl"],
+      },
+      text: {
+        label: "TEXT",
+        statusLabel: "T",
+        aliases: ["text", "textwarp", "glyph", "glyphs", "type"],
+      },
+      frame: {
+        label: "FRAME",
+        statusLabel: "F",
+        aliases: ["frame", "bezel", "case", "glass"],
+      },
+    };
+    const characterArtifactKeys = new Set([
+      "scanlineOpacity",
+      "subpixelOpacity",
+      "rasterMaskOpacity",
+      "gridEngineeringOpacity",
+      "gridWarpOpacity",
+      "pixelGrainOpacity",
+      "blackGrainOpacity",
+      "rasterOpacity",
+      "noiseOpacity",
+      "flickerOpacity",
+      "vignetteStrength",
+      "edgeFalloff",
+      "topFalloff",
+      "reflectionOpacity",
+      "curvatureShadowOpacity",
+      "rgbSplit",
+    ]);
+    const characterBloomKeys = new Set([
+      "glow",
+      "textBloom",
+      "textBloomStrong",
+      "rasterTextBloom",
+      "rasterTextBloomStrong",
+    ]);
+    const characterJitterKeys = new Set(["jitterX", "jitterY"]);
+    const characterCaps = {
+      blackGrainOpacity: 0.18,
+      curvatureShadowOpacity: 0.84,
+      edgeFalloff: 0.76,
+      flickerOpacity: 0.46,
+      glow: 1.18,
+      gridEngineeringOpacity: 0.095,
+      gridWarpOpacity: 0.12,
+      jitterX: 0.38,
+      jitterY: 0.2,
+      noiseOpacity: 0.14,
+      pixelGrainOpacity: 0.22,
+      rasterMaskOpacity: 1,
+      rasterOpacity: 0.48,
+      rasterTextBloom: 0.13,
+      rasterTextBloomStrong: 0.19,
+      reflectionOpacity: 0.2,
+      rgbSplit: 1.72,
+      scanlineOpacity: 0.34,
+      subpixelOpacity: 0.095,
+      textBloom: 0.44,
+      textBloomStrong: 0.78,
+      topFalloff: 0.66,
+      vignetteStrength: 0.82,
+    };
 
     const commonSyntaxRules = [
       { className: "sx-danger", pattern: /\b(?:ERROR|INVALID|VALID NO|EXCLUDED|NOT PROVEN|NO GPS OR SATELLITE CLAIM)\b/ },
@@ -1405,13 +1699,19 @@ ERA NOTE
         { className: "sx-quote", pattern: /"[^"]+"/ },
       ],
       help: [
-        { className: "sx-command", pattern: /\b(?:REPORT|LAPS|TRACE|MAP|NOTES|DECISIONS|GITHUB|SITE|PROFILE|AMBER|GREEN|VGA|LCD|RASTER|GRID|SCANLINE|PIXEL|CLEAN|STATUS|CLEAR|HELP)\b/ },
+        { className: "sx-command", pattern: /\b(?:REPORT|LAPS|TRACE|MAP|NOTES|DECISIONS|SOURCE|CODE|GITHUB|SITE|PROFILE|AMBER|GREEN|VGA|LCD|RASTER|GRID|SCANLINE|PIXEL|CLEAN|CHARACTER|CHAR|CRT|ADJUST|ADJ|ARTIFACT|BLOOM|JITTER|TEXT|FRAME|RESET|UP|DOWN|STATUS|CLEAR|HELP)\b/ },
         { className: "sx-label", pattern: /\b(?:COMMANDS|ERA NOTE)\b/ },
       ],
       decisions: [
         { className: "sx-id", pattern: /\d{4}-\d{2}-\d{2}/ },
         { className: "sx-warn", pattern: /Alternatives rejected:/ },
         { className: "sx-command", pattern: /`[^`]+`/ },
+      ],
+      source: [
+        { className: "sx-command", pattern: /<\/?[a-z][^>]*>/i },
+        { className: "sx-label", pattern: /\b(?:doctype|html|head|body|style|script|section|const|function|return|if|else|querySelector|addEventListener)\b/i },
+        { className: "sx-id", pattern: /\b(?:class|id|data-[a-z-]+|href|aria-[a-z-]+|target|rel)\b/i },
+        { className: "sx-metric", pattern: /#[0-9a-f]{3,6}|\b\d+(?:\.\d+)?(?:px|rem|vh|vw|ch|ms|s|%)\b/i },
       ],
     };
 
@@ -1473,14 +1773,157 @@ ERA NOTE
       return output;
     }
 
+    function getArchStyleForProgress(progress, lineIndex = 0) {
+      const distanceFromCenter = Math.abs(progress - 0.5) * 2;
+      const verticalDirection = progress < 0.5 ? -1 : 1;
+      const lineLift = Number((verticalDirection * distanceFromCenter * 0.42).toFixed(3));
+      const lineSkew = Number(((progress - 0.5) * 0.18).toFixed(3));
+      const lineOffset = Number(((0.5 - progress) * 0.52).toFixed(3));
+      const lineScale = Number((1 - distanceFromCenter * 0.018).toFixed(3));
+      const lineBowDirection = progress < 0.48 ? 1 : progress > 0.52 ? -1 : 0;
+      return `--line-arch: calc(var(--text-warp-bow) * ${lineLift}); --line-skew: ${lineSkew}deg; --line-offset: calc(var(--text-warp-bow) * ${lineOffset}); --line-scale: ${lineScale}; --line-bow-direction: ${lineBowDirection};`;
+    }
+
+    function getLineArchStyle(lineIndex, lineCount) {
+      const progress = lineCount <= 1 ? 0.5 : lineIndex / (lineCount - 1);
+      return getArchStyleForProgress(progress, lineIndex);
+    }
+
     function renderSyntaxText(text, view) {
-      return text.split("\n").map((line) => highlightSyntaxLine(line, view)).join("\n");
+      const lines = text.split("\n");
+      return lines.map((line, index) => {
+        const lineHtml = highlightSyntaxLine(line, view);
+        const processed = view === "source" ? " data-arch-processed=\"true\"" : "";
+        return `<span class="crt-text-line" data-arch-row${processed} style="${getLineArchStyle(index, lines.length)}">${lineHtml || "&nbsp;"}</span>`;
+      }).join("");
+    }
+
+    function shouldUseCharacterArch() {
+      return false;
+    }
+
+    function unwrapArchCharacters(node) {
+      node.querySelectorAll("[data-arch-char]").forEach((characterNode) => {
+        characterNode.replaceWith(document.createTextNode(characterNode.textContent));
+      });
+    }
+
+    function applyArchCharacters(node) {
+      const rows = [
+        ...(node.matches && node.matches("[data-arch-row]") ? [node] : []),
+        ...node.querySelectorAll("[data-arch-row]"),
+      ];
+
+      if (!shouldUseCharacterArch()) {
+        unwrapArchCharacters(node);
+        rows.forEach((row) => {
+          row.dataset.archProcessed = "true";
+        });
+        return;
+      }
+
+      rows.forEach((row) => {
+        if (row.dataset.archProcessed === "true" && !row.querySelector("[data-arch-char]") && !row.closest(".source-text")) {
+          row.dataset.archProcessed = "false";
+        }
+
+        if (row.dataset.archProcessed === "true") {
+          return;
+        }
+
+        const lineLength = row.textContent.length;
+        if (lineLength > 180) {
+          row.dataset.archProcessed = "true";
+          return;
+        }
+
+        let characterIndex = 0;
+        const walker = document.createTreeWalker(row, NodeFilter.SHOW_TEXT);
+        const textNodes = [];
+        let textNode = walker.nextNode();
+
+        while (textNode) {
+          textNodes.push(textNode);
+          textNode = walker.nextNode();
+        }
+
+        textNodes.forEach((currentTextNode) => {
+          const fragment = document.createDocumentFragment();
+          Array.from(currentTextNode.nodeValue).forEach((character) => {
+            if (character === " " || character === "\t") {
+              fragment.appendChild(document.createTextNode(character));
+              characterIndex += 1;
+              return;
+            }
+
+            const position = lineLength <= 1 ? 0.5 : characterIndex / (lineLength - 1);
+            const fromCenter = Math.abs(position - 0.5) * 2;
+            const curve = Math.max(0, 1 - (fromCenter * fromCenter));
+            const push = position - 0.5;
+            const characterSpan = document.createElement("span");
+            characterSpan.dataset.archChar = "";
+            characterSpan.style.setProperty("--char-bow", `calc(var(--text-warp-arch) * ${curve.toFixed(3)} * var(--line-bow-direction, 1) * 0.18)`);
+            characterSpan.style.setProperty("--char-push", `calc(var(--text-warp-bow) * ${push.toFixed(3)} * 0.08)`);
+            characterSpan.textContent = character;
+            fragment.appendChild(characterSpan);
+            characterIndex += 1;
+          });
+
+          currentTextNode.parentNode.replaceChild(fragment, currentTextNode);
+        });
+        row.dataset.archProcessed = "true";
+      });
+    }
+
+    function setArchRow(node, index, count) {
+      const baseStyle = node.dataset.baseStyle ?? node.getAttribute("style") ?? "";
+      node.dataset.baseStyle = baseStyle;
+      node.dataset.archRow = "";
+      node.dataset.archProcessed = "false";
+      node.setAttribute("style", `${baseStyle ? `${baseStyle}; ` : ""}${getLineArchStyle(index, count)}`);
+    }
+
+    function applyStaticArchRows() {
+      const rows = Array.from(document.querySelectorAll(".terminal-output, .terminal-status, .terminal-meta, .footer-bar"));
+      rows.forEach((row, index) => setArchRow(row, index, rows.length));
+      applyScreenPositionArchRows();
+      applyArchCharacters(screenElement);
+    }
+
+    function applyScreenPositionArchRows() {
+      const screenRect = screenElement.getBoundingClientRect();
+      if (!screenRect.height) {
+        return;
+      }
+
+      const rows = Array.from(screenElement.querySelectorAll("[data-arch-row]"));
+      rows.forEach((row, index) => {
+        const rowRect = row.getBoundingClientRect();
+        if (!rowRect.height || !rowRect.width) {
+          return;
+        }
+
+        const progress = Math.min(1, Math.max(0, ((rowRect.top + rowRect.bottom) / 2 - screenRect.top) / screenRect.height));
+        const baseStyle = row.dataset.baseStyle ?? "";
+        row.setAttribute("style", `${baseStyle ? `${baseStyle}; ` : ""}${getArchStyleForProgress(progress, index)}`);
+      });
+    }
+
+    function refreshScreenArch() {
+      applyScreenPositionArchRows();
+      applyArchCharacters(screenElement);
+    }
+
+    function scheduleScreenArchRefresh() {
+      window.cancelAnimationFrame(archRefreshFrame);
+      archRefreshFrame = window.requestAnimationFrame(refreshScreenArch);
     }
 
     function renderSyntaxNode(node, text = node.dataset.rawText || node.textContent) {
       const rawText = text.trimEnd();
       node.dataset.rawText = rawText;
       node.innerHTML = renderSyntaxText(rawText, node.dataset.syntax);
+      applyArchCharacters(node);
     }
 
     function renderAllSyntax() {
@@ -1491,6 +1934,7 @@ ERA NOTE
 
     function setSyntaxText(node, text) {
       renderSyntaxNode(node, text.trim());
+      scheduleScreenArchRefresh();
     }
 
     function updateTerminalGridMetrics(profile) {
@@ -1517,6 +1961,137 @@ ERA NOTE
       });
     }
 
+    function formatCharacterLevel() {
+      const characterLevel = characterLevels[activeCharacterLevel];
+      return `CRT CHARACTER ${String(activeCharacterLevel).padStart(2, "0")} ${characterLevel.label}`;
+    }
+
+    function getAdjustmentLevel(controlName) {
+      return activeAdjustmentLevels[controlName] ?? activeCharacterLevel;
+    }
+
+    function getAdjustmentScale(controlName, scaleKey) {
+      return characterLevels[getAdjustmentLevel(controlName)][scaleKey];
+    }
+
+    function formatAdjustmentStatus() {
+      return Object.entries(adjustmentControls)
+        .map(([controlName, control]) => `${control.statusLabel}${getAdjustmentLevel(controlName)}`)
+        .join(" ");
+    }
+
+    function updateTerminalStatus() {
+      terminalStatus.innerHTML = `<span class="status-profile">PROFILE ${activeDisplayProfile}</span> / <span class="status-raster">RASTER ${activeRasterMode}</span><span class="status-character-detail"> / <span class="status-character">${formatCharacterLevel()}</span></span><span class="status-adjustments-detail"> / <span class="status-adjustments">${formatAdjustmentStatus()}</span></span>`;
+      terminalMeta.innerHTML = `OPEN REPO / PRE-ALPHA / <span class="status-site">OPENRACECOACH.COM</span>`;
+      [terminalStatus, terminalMeta].forEach((node) => {
+        node.dataset.archProcessed = "false";
+        applyArchCharacters(node);
+      });
+      scheduleScreenArchRefresh();
+    }
+
+    function scaleNumericVariable(key, value, scale) {
+      if (typeof value !== "number") {
+        return null;
+      }
+
+      const cap = characterCaps[key] ?? Number.POSITIVE_INFINITY;
+      return Math.min(cap, value * scale);
+    }
+
+    function scaleLengthVariable(key, value, scale) {
+      if (typeof value !== "string") {
+        return null;
+      }
+
+      const match = value.match(/^(-?\d+(?:\.\d+)?)([a-z%]+)$/i);
+      if (!match) {
+        return null;
+      }
+
+      const cap = characterCaps[key] ?? Number.POSITIVE_INFINITY;
+      const scaled = Math.min(cap, Number(match[1]) * scale);
+      return `${Number(scaled.toFixed(3))}${match[2]}`;
+    }
+
+    function applyCharacterDefinition(definition) {
+      Object.entries(definition).forEach(([key, value]) => {
+        let scaledValue = null;
+
+        if (characterArtifactKeys.has(key)) {
+          scaledValue = scaleNumericVariable(key, value, getAdjustmentScale("artifact", "artifactScale"));
+        }
+
+        if (characterBloomKeys.has(key)) {
+          scaledValue = scaleNumericVariable(key, value, getAdjustmentScale("bloom", "bloomScale"));
+        }
+
+        if (characterJitterKeys.has(key)) {
+          scaledValue = scaleLengthVariable(key, value, getAdjustmentScale("jitter", "jitterScale"));
+        }
+
+        if (scaledValue !== null) {
+          rootElement.style.setProperty(toCustomPropertyName(key), String(scaledValue));
+        }
+      });
+    }
+
+    function applyVisualAdjustments() {
+      applyCharacterDefinition(displayProfiles[activeDisplayProfile]);
+      applyCharacterDefinition(rasterModes[activeRasterMode]);
+      rootElement.dataset.characterLevel = String(activeCharacterLevel);
+      rootElement.dataset.textWarpLevel = String(getAdjustmentLevel("text"));
+      rootElement.dataset.frameWarpLevel = String(getAdjustmentLevel("frame"));
+      updateTerminalStatus();
+    }
+
+    function applyCharacterLevel(nextLevel, options = {}) {
+      const clampedLevel = Math.min(characterLevels.length - 1, Math.max(0, Number(nextLevel)));
+      if (!Number.isFinite(clampedLevel)) {
+        return false;
+      }
+
+      activeCharacterLevel = clampedLevel;
+      if (options.clearAdjustments) {
+        Object.keys(activeAdjustmentLevels).forEach((controlName) => {
+          activeAdjustmentLevels[controlName] = null;
+        });
+      }
+
+      applyVisualAdjustments();
+
+      if (options.message !== false) {
+        writeTerminal(`${formatCharacterLevel()} READY`);
+      }
+
+      return true;
+    }
+
+    function applyAdjustmentLevel(controlName, nextLevel) {
+      const clampedLevel = Math.min(characterLevels.length - 1, Math.max(0, Number(nextLevel)));
+      if (!Number.isFinite(clampedLevel)) {
+        return false;
+      }
+
+      activeAdjustmentLevels[controlName] = clampedLevel;
+      applyVisualAdjustments();
+      writeTerminal(`${adjustmentControls[controlName].label} ${String(clampedLevel).padStart(2, "0")} ${characterLevels[clampedLevel].label} READY`);
+      return true;
+    }
+
+    function clearAdjustmentLevels(controlName = null) {
+      if (controlName) {
+        activeAdjustmentLevels[controlName] = null;
+      } else {
+        Object.keys(activeAdjustmentLevels).forEach((name) => {
+          activeAdjustmentLevels[name] = null;
+        });
+      }
+
+      applyVisualAdjustments();
+      writeTerminal(controlName ? `${adjustmentControls[controlName].label} FOLLOWS ${formatCharacterLevel()}` : `ALL ADJUSTMENTS FOLLOW ${formatCharacterLevel()}`);
+    }
+
     function applyDisplayProfile(profileName) {
       const profile = displayProfiles[profileName];
       if (!profile) {
@@ -1529,6 +2104,7 @@ ERA NOTE
       rootElement.style.setProperty("--font-scale", activeFontScale.toFixed(2));
       rootElement.dataset.displayProfile = profile.label;
       updateTerminalGridMetrics(profile);
+      applyCharacterLevel(activeCharacterLevel, { message: false });
       return true;
     }
 
@@ -1541,11 +2117,76 @@ ERA NOTE
       activeRasterMode = modeName;
       applyVariables(rasterMode);
       rootElement.dataset.rasterMode = rasterMode.label;
+      applyCharacterLevel(activeCharacterLevel, { message: false });
       return true;
     }
 
     function getVisualStatus() {
-      return `SYSTEM PROFILE ${activeDisplayProfile} / RASTER ${activeRasterMode} / FONT ${Math.round(activeFontScale * 100)}% / VIEW ${screenElement.dataset.view.toUpperCase()}`;
+      return `SYSTEM PROFILE ${activeDisplayProfile} / RASTER ${activeRasterMode} / ${formatCharacterLevel()} / ADJUST ${formatAdjustmentStatus()} / FONT ${Math.round(activeFontScale * 100)}% / VIEW ${screenElement.dataset.view.toUpperCase()}`;
+    }
+
+    function resolveLevelArgument(rawArgument, currentLevel) {
+      const argument = rawArgument.toUpperCase();
+
+      if (!argument) {
+        return null;
+      }
+
+      if (argument === "UP" || argument === "MORE" || argument === "+" || argument === "PLUS") {
+        return currentLevel + 1;
+      }
+
+      if (argument === "DOWN" || argument === "LESS" || argument === "-" || argument === "MINUS") {
+        return currentLevel - 1;
+      }
+
+      const namedLevel = characterLevels.findIndex((level) => level.label === argument);
+      if (namedLevel >= 0) {
+        return namedLevel;
+      }
+
+      if (/^[0-5]$/.test(argument)) {
+        return Number(argument);
+      }
+
+      return Number.NaN;
+    }
+
+    function resolveCharacterCommand(tokens) {
+      const verb = tokens[0];
+      const firstArgument = tokens[1] || "";
+      const secondArgument = tokens[2] || "";
+      const rawArgument = verb === "crt" && (firstArgument === "character" || firstArgument === "char")
+        ? secondArgument
+        : firstArgument;
+      return resolveLevelArgument(rawArgument, activeCharacterLevel);
+    }
+
+    function resolveAdjustmentControl(rawControl) {
+      const normalizedControl = rawControl.toLowerCase();
+      return Object.keys(adjustmentControls).find((controlName) => adjustmentControls[controlName].aliases.includes(normalizedControl)) || null;
+    }
+
+    function resolveAdjustmentCommand(tokens) {
+      const controlName = resolveAdjustmentControl(tokens[1] || "");
+      const rawLevel = tokens[2] || "";
+
+      if ((tokens[1] || "").toLowerCase() === "reset") {
+        return { resetAll: true };
+      }
+
+      if (!controlName) {
+        return { error: "CONTROL" };
+      }
+
+      if (rawLevel.toLowerCase() === "reset") {
+        return { resetControl: controlName };
+      }
+
+      return {
+        controlName,
+        level: resolveLevelArgument(rawLevel, getAdjustmentLevel(controlName)),
+      };
     }
 
     function setFontScale(nextScale) {
@@ -1553,6 +2194,7 @@ ERA NOTE
       activeFontScale = Number(clampedScale.toFixed(2));
       rootElement.style.setProperty("--font-scale", activeFontScale.toFixed(2));
       updateTerminalGridMetrics(displayProfiles[activeDisplayProfile]);
+      scheduleScreenArchRefresh();
       writeTerminal(`FONT SCALE ${Math.round(activeFontScale * 100)}%`);
     }
 
@@ -1588,20 +2230,24 @@ ERA NOTE
 
     applyDisplayProfile(activeDisplayProfile);
     applyRasterMode(activeRasterMode);
+    applyCharacterLevel(activeCharacterLevel, { message: false });
 
     if ("ResizeObserver" in window) {
       const terminalGridObserver = new ResizeObserver(() => {
         updateTerminalGridMetrics(displayProfiles[activeDisplayProfile]);
+        scheduleScreenArchRefresh();
       });
       terminalGridObserver.observe(crtScreen);
     } else {
       window.addEventListener("resize", () => {
         updateTerminalGridMetrics(displayProfiles[activeDisplayProfile]);
+        scheduleScreenArchRefresh();
       });
     }
 
     setSyntaxText(decisionsText, decisionsSource.textContent);
     renderAllSyntax();
+    applyStaticArchRows();
 
     fetch("./DECISIONS.md")
       .then((response) => (response.ok ? response.text() : Promise.reject(new Error("DECISIONS.md fetch failed"))))
@@ -1612,11 +2258,43 @@ ERA NOTE
         setSyntaxText(decisionsText, decisionsSource.textContent);
       });
 
-    function writeTerminal(message) {
-      terminalOutput.textContent = message;
+    function getCurrentDocumentSource() {
+      const clonedDocument = document.documentElement.cloneNode(true);
+      clonedDocument.querySelectorAll(".phosphor-ghost").forEach((node) => {
+        node.textContent = "";
+        node.removeAttribute("data-active");
+      });
+      clonedDocument.querySelectorAll("[data-arch-char]").forEach((node) => {
+        node.replaceWith(document.createTextNode(node.textContent));
+      });
+      clonedDocument.querySelectorAll("[data-arch-row]").forEach((node) => {
+        node.replaceWith(document.createTextNode(node.textContent));
+      });
+      clonedDocument.querySelectorAll("[data-raw-text]").forEach((node) => {
+        node.textContent = node.dataset.rawText;
+        delete node.dataset.rawText;
+      });
+      return `<!doctype html>\n${clonedDocument.outerHTML}`;
     }
 
-    const views = new Set(["report", "laps", "trace", "map", "notes", "help", "decisions"]);
+    setSyntaxText(sourceText, "SOURCE LOADING...");
+    fetch("./index.html")
+      .then((response) => (response.ok ? response.text() : Promise.reject(new Error("index.html fetch failed"))))
+      .then((text) => {
+        setSyntaxText(sourceText, text);
+      })
+      .catch(() => {
+        setSyntaxText(sourceText, getCurrentDocumentSource());
+      });
+
+    function writeTerminal(message) {
+      terminalOutput.textContent = message;
+      terminalOutput.dataset.archProcessed = "false";
+      applyArchCharacters(terminalOutput);
+      scheduleScreenArchRefresh();
+    }
+
+    const views = new Set(["report", "laps", "trace", "map", "notes", "help", "decisions", "source"]);
 
     function setView(view, message, options = {}) {
       const nextView = views.has(view) ? view : "report";
@@ -1632,6 +2310,8 @@ ERA NOTE
       if (message) {
         writeTerminal(message);
       }
+
+      scheduleScreenArchRefresh();
     }
 
     function openExternal(url, message) {
@@ -1660,7 +2340,7 @@ ERA NOTE
       }
 
       if (command === "help" || command === "?") {
-        setView("help", "COMMANDS: REPORT / LAPS / TRACE / MAP / NOTES / HELP / DECISIONS / PROFILE / RASTER / STATUS / GITHUB / SITE / CLEAR");
+        setView("help", "COMMANDS: REPORT / LAPS / TRACE / MAP / NOTES / HELP / DECISIONS / SOURCE / PROFILE / RASTER / CHARACTER / ADJUST / STATUS / GITHUB / SITE / CLEAR");
         window.location.hash = "help";
         return;
       }
@@ -1694,15 +2374,57 @@ ERA NOTE
         return;
       }
 
-      if (views.has(command)) {
-        setView(command, `${command.toUpperCase()} READY`);
-        window.location.hash = command;
+      if (verb === "adjust" || verb === "adj") {
+        const adjustment = resolveAdjustmentCommand(tokens);
+        if (adjustment.resetAll) {
+          flashPhosphorGhost();
+          clearAdjustmentLevels();
+          return;
+        }
+
+        if (adjustment.resetControl) {
+          flashPhosphorGhost();
+          clearAdjustmentLevels(adjustment.resetControl);
+          return;
+        }
+
+        if (adjustment.error || adjustment.level === null || !Number.isFinite(adjustment.level) || adjustment.level < 0 || adjustment.level >= characterLevels.length) {
+          writeTerminal("ADJUST ERROR: USE ADJUST ARTIFACT|BLOOM|JITTER|TEXT|FRAME 0-5, UP, DOWN, OR RESET");
+          return;
+        }
+
+        flashPhosphorGhost();
+        applyAdjustmentLevel(adjustment.controlName, adjustment.level);
+        return;
+      }
+
+      if (verb === "character" || verb === "char" || verb === "crt") {
+        const nextCharacterLevel = resolveCharacterCommand(tokens);
+        if (nextCharacterLevel === null || !Number.isFinite(nextCharacterLevel) || nextCharacterLevel < 0 || nextCharacterLevel >= characterLevels.length) {
+          writeTerminal(`${formatCharacterLevel()} / USE CHARACTER 0-5, CHARACTER UP, OR CHARACTER DOWN`);
+          return;
+        }
+
+        flashPhosphorGhost();
+        applyCharacterLevel(nextCharacterLevel, { clearAdjustments: true });
         return;
       }
 
       if (command === "decisions" || command === "decision log" || command === "decision") {
         setView("decisions", "DOCS/DECISIONS.MD READY");
         window.location.hash = "decisions";
+        return;
+      }
+
+      if (command === "source" || command === "code" || command === "index" || command === "index.html") {
+        setView("source", "DOCS/INDEX.HTML SOURCE READY");
+        window.location.hash = "source";
+        return;
+      }
+
+      if (views.has(command)) {
+        setView(command, `${command.toUpperCase()} READY`);
+        window.location.hash = command;
         return;
       }
 
