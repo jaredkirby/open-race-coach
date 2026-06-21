@@ -226,7 +226,8 @@
       overflow: hidden;
     }
 
-    .decisions-panel {
+    .decisions-panel,
+    .module-panel {
       display: none;
       min-width: 0;
       min-height: 0;
@@ -236,16 +237,19 @@
       scrollbar-color: rgba(var(--phosphor-rgb), 0.42) rgba(0, 0, 0, 0.38);
     }
 
-    .decisions-panel::-webkit-scrollbar {
+    .decisions-panel::-webkit-scrollbar,
+    .module-panel::-webkit-scrollbar {
       width: 8px;
       height: 8px;
     }
 
-    .decisions-panel::-webkit-scrollbar-track {
+    .decisions-panel::-webkit-scrollbar-track,
+    .module-panel::-webkit-scrollbar-track {
       background: rgba(0, 0, 0, 0.38);
     }
 
-    .decisions-panel::-webkit-scrollbar-thumb {
+    .decisions-panel::-webkit-scrollbar-thumb,
+    .module-panel::-webkit-scrollbar-thumb {
       background: rgba(var(--phosphor-rgb), 0.42);
       box-shadow: 0 0 calc(var(--glow) * 8px) rgba(var(--phosphor-rgb), 0.24);
     }
@@ -258,11 +262,16 @@
       overflow-wrap: anywhere;
     }
 
-    .screen[data-view="decisions"] .report {
+    .screen:not([data-view="report"]) .report {
       display: none;
     }
 
-    .screen[data-view="decisions"] .decisions-panel {
+    .screen[data-view="decisions"] .decisions-panel,
+    .screen[data-view="laps"] .module-panel[data-module="laps"],
+    .screen[data-view="trace"] .module-panel[data-module="trace"],
+    .screen[data-view="map"] .module-panel[data-module="map"],
+    .screen[data-view="notes"] .module-panel[data-module="notes"],
+    .screen[data-view="help"] .module-panel[data-module="help"] {
       display: block;
     }
 
@@ -344,12 +353,31 @@
       overflow-wrap: anywhere;
     }
 
+    .module-text {
+      margin: 8px 0 0;
+      max-width: 100%;
+      min-width: 0;
+      color: var(--phosphor);
+      white-space: pre;
+      overflow: auto hidden;
+      scrollbar-width: none;
+    }
+
+    .module-text::-webkit-scrollbar {
+      display: none;
+    }
+
     .footer-links {
       display: flex;
       flex-wrap: wrap;
       justify-content: flex-end;
-      gap: 0 14px;
+      gap: 0 12px;
+      width: 100%;
       min-width: 0;
+    }
+
+    .footer-links a {
+      white-space: nowrap;
     }
 
     .footer-links a[data-active="true"] {
@@ -410,15 +438,19 @@
 
       .terminal-frame {
         inset: 4px;
+        width: calc(100vw - 8px);
       }
 
       .screen {
+        max-width: 100%;
         padding: 10px;
       }
 
       .top-bar,
       .footer-bar {
         grid-template-columns: minmax(0, 1fr);
+        max-width: 100%;
+        overflow: hidden;
       }
 
       .state-text {
@@ -444,7 +476,22 @@
       }
 
       .footer-links {
+        max-width: calc(100vw - 32px);
         justify-content: flex-start;
+        gap: 0 10px;
+      }
+
+      .footer-links a[data-view-link="laps"],
+      .footer-links a[data-view-link="trace"],
+      .footer-links a[data-view-link="map"],
+      .footer-links a[data-view-link="notes"] {
+        display: none;
+      }
+
+      .module-text {
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        overflow: auto;
       }
     }
 
@@ -531,6 +578,115 @@
             <pre class="decisions-text" id="decisionsText"></pre>
           </section>
 
+          <section class="module-panel" data-module="laps" aria-labelledby="laps-heading">
+            <p class="dim">Post-session lap index / sample Analysis Run</p>
+            <h2 id="laps-heading">LAPS</h2>
+            <pre class="module-text" aria-label="Lap comparison table">Recorded Session 01k2demo
+Analysis Run 2026-06-13_201806_best
+
+LAP 001  TIME 0:58.214  GAP -
+  S1 18.442  S2 21.006  S3 18.766
+  VALID YES  DELTA 0.000  REF Reference Lap
+
+LAP 002  TIME 0:58.441  GAP +0.227
+  S1 18.506  S2 21.151  S3 18.784
+  VALID YES  DELTA +0.066 C2  REF Comparison Lap
+
+LAP 003  TIME 0:58.402  GAP +0.188
+  S1 18.493  S2 21.126  S3 18.783
+  VALID YES  DELTA +0.061 C2  REF Comparison Lap
+
+LAP 004  TIME 0:59.018  GAP +0.804
+  S1 18.811  S2 21.322  S3 18.885
+  VALID NO   DELTA EXCLUDED  REF Invalid Lap
+
+LAP 005  TIME 0:58.377  GAP +0.163
+  S1 18.488  S2 21.109  S3 18.780
+  VALID YES  DELTA +0.064 C2  REF Comparison Lap
+
+Reportable Delta: C2 / Lap Loss Cause min_speed / 0.066s median.
+Coaching Instruction: carry 3.0 m/s more minimum speed through the Corner Segment.</pre>
+          </section>
+
+          <section class="module-panel" data-module="trace" aria-labelledby="trace-heading">
+            <p class="dim">Static telemetry trace / not live telemetry</p>
+            <h2 id="trace-heading">TRACE</h2>
+            <pre class="module-text" aria-label="ASCII telemetry traces">POST-SESSION STATIC ANALYSIS SNAPSHOT / C2 WINDOW 1185m -> 1405m
+
+        1185m      1225m      1265m      1305m      1345m      1405m
+SPEED R  ___/^^^^^^^\______                                      45 m/s min
+SPEED C  __/^^^^^\_________                                      42 m/s min
+BRAKE R  ____----____.....                                       release earlier
+BRAKE C  ___------___.....                                       Lap Loss Cause input
+THRTL R  ........____^^^^^                                       progressive return
+THRTL C  ..........___^^^^                                       later reapplication
+RPM/G R  3:^^^^\__2:^^^^^^                                      stable exit pull
+RPM/G C  3:^^^\___2:^^^^^                                       lower mid-corner speed
+DELTA    .......+0.02...+0.05...+0.066s                         Reportable Delta
+
+Deterministic analysis selects evidence. Coach Refinement may rewrite prose only.</pre>
+          </section>
+
+          <section class="module-panel" data-module="map" aria-labelledby="map-heading">
+            <p class="dim">Corner Segment map / simple analysis sketch</p>
+            <h2 id="map-heading">MAP</h2>
+            <pre class="module-text" aria-label="ASCII track map with C2 highlight">TRACK SKETCH: BRANDS HATCH INDY STYLE SAMPLE / NO GPS OR SATELLITE CLAIM
+
+                 START
+                   |
+          C4       |      C1
+        .----------+----------.
+       /                      \
+      /                        \
+     |                          |
+     |          [ C2 ]           |
+     |       1185m -> 1405m      |
+      \        ********        /
+       \______/        \______/
+              C3
+
+Corner Segment C2 is the selected Reportable Delta.
+Reference Lap: 01k2demo:lap:1
+Comparison Lap set: Valid Lap rows only; invalid laps excluded before coaching.</pre>
+          </section>
+
+          <section class="module-panel" data-module="notes" aria-labelledby="notes-heading">
+            <p class="dim">Engineering notes / local artifact review</p>
+            <h2 id="notes-heading">NOTES</h2>
+            <pre class="module-text" aria-label="Timestamped engineering notes">2026-06-13T20:18:06-07:00  SETUP
+  Recorded Session sample: Formula Trainer Advanced / Brands Hatch Indy style short run.
+  Public page remains pre-alpha; live AMS2/ACC simulator validation is not claimed.
+
+2026-06-13T20:19:42-07:00  CONDITIONS
+  Dry reference conditions assumed for the visual fixture. Paths are locators, not identity.
+
+2026-06-13T20:22:11-07:00  DRIVER COMMENT
+  "C2 feels safe but slow; car waits before throttle."
+
+2026-06-13T20:24:03-07:00  NEXT-RUN FOCUS
+  Use the Coach Report's one Coaching Instruction: carry 3.0 m/s more minimum speed in C2.
+  Coach Refinement status: not requested for this static display.</pre>
+          </section>
+
+          <section class="module-panel" data-module="help" aria-labelledby="help-heading">
+            <p class="dim">Terminal command list</p>
+            <h2 id="help-heading">HELP</h2>
+            <pre class="module-text" aria-label="Terminal command help">COMMANDS
+  REPORT       CRT report and pre-alpha project contract
+  LAPS         Recorded Session lap table and Reference Lap comparison
+  TRACE        Post-session ASCII traces for speed, brake, throttle, RPM/gear, delta-time
+  MAP          Text Corner Segment sketch with C2 highlight
+  NOTES        Timestamped engineering notes and next-run focus
+  DECISIONS    Render docs/DECISIONS.md
+  GITHUB       Open the public repository
+  SITE         Open openracecoach.com
+  CLEAR        Clear terminal output
+
+ERA NOTE
+  Visual fiction: restrained late-1980s / early-1990s CRT workstation shell.
+  The modules are static post-session analysis surfaces, not live telemetry dashboards.</pre>
+          </section>
+
           <section class="terminal-console" aria-live="polite">
             <pre class="terminal-output" id="terminalOutput">OPEN RACE COACH TERMINAL READY</pre>
             <form class="terminal-command" id="terminalForm">
@@ -544,6 +700,11 @@
             <nav class="footer-links" aria-label="Project links">
               <a href="https://github.com/jaredkirby/open-race-coach" target="_blank" rel="noopener noreferrer" data-command-link="github">GITHUB</a>
               <a href="#report" data-view-link="report">CRT REPORT</a>
+              <a href="#laps" data-view-link="laps">LAPS</a>
+              <a href="#trace" data-view-link="trace">TRACE</a>
+              <a href="#map" data-view-link="map">MAP</a>
+              <a href="#notes" data-view-link="notes">NOTES</a>
+              <a href="#help" data-view-link="help">HELP</a>
               <a href="#decisions" data-view-link="decisions">DECISIONS</a>
             </nav>
           </footer>
@@ -652,8 +813,10 @@
       terminalOutput.textContent = message;
     }
 
+    const views = new Set(["report", "laps", "trace", "map", "notes", "help", "decisions"]);
+
     function setView(view, message) {
-      const nextView = view === "decisions" ? "decisions" : "report";
+      const nextView = views.has(view) ? view : "report";
       screenElement.dataset.view = nextView;
       viewLinks.forEach((link) => {
         link.dataset.active = String(link.dataset.viewLink === nextView);
@@ -686,6 +849,12 @@
         return;
       }
 
+      if (views.has(command)) {
+        setView(command, `${command.toUpperCase()} READY`);
+        window.location.hash = command;
+        return;
+      }
+
       if (command === "decisions" || command === "decision log" || command === "decision") {
         setView("decisions", "DOCS/DECISIONS.MD READY");
         window.location.hash = "decisions";
@@ -703,7 +872,8 @@
       }
 
       if (command === "help" || command === "?") {
-        writeTerminal("COMMANDS: REPORT / DECISIONS / GITHUB / SITE / CLEAR");
+        setView("help", "COMMANDS: REPORT / LAPS / TRACE / MAP / NOTES / HELP / DECISIONS / GITHUB / SITE / CLEAR");
+        window.location.hash = "help";
         return;
       }
 
