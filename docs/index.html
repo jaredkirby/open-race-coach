@@ -537,7 +537,6 @@
     .terminal-output[data-arch-row],
     .terminal-output-line[data-arch-row],
     .terminal-status[data-arch-row],
-    .terminal-meta[data-arch-row],
     h2[data-arch-row],
     p[data-arch-row] {
       display: block;
@@ -573,11 +572,21 @@
     }
 
     .logo-mark {
+      display: block;
+      width: max-content;
+      max-width: 100%;
       color: var(--screen-text-hot);
       font-weight: 700;
-      line-height: inherit;
+      line-height: 0.78;
+      white-space: pre;
       text-shadow: inherit;
       filter: none;
+    }
+
+    .logo-mark [data-arch-row],
+    .logo-mark .crt-text-line {
+      min-height: 0;
+      line-height: inherit;
     }
 
     .report,
@@ -740,15 +749,18 @@
     }
 
     .footer-links {
-      display: block;
+      display: flex;
+      flex-wrap: wrap;
+      column-gap: 1ch;
       width: 100%;
       min-width: 0;
     }
 
+    .screen .footer-links a[data-arch-row],
     .footer-links a {
       display: inline-block;
       min-height: var(--terminal-row-height);
-      margin-right: 1ch;
+      margin-right: 0;
       color: inherit;
       line-height: inherit;
       white-space: nowrap;
@@ -779,8 +791,8 @@
     .terminal-output {
       display: block;
       min-height: var(--terminal-row-height);
-      max-height: none;
-      overflow: visible;
+      max-height: calc(var(--terminal-row-height) * 3);
+      overflow: hidden;
       color: var(--screen-text-dim);
       white-space: pre-wrap;
       overflow-wrap: anywhere;
@@ -816,20 +828,10 @@
       overflow-wrap: anywhere;
     }
 
-    .terminal-meta {
-      margin-top: 0;
-      color: var(--screen-text-dim);
-      overflow: visible;
-      white-space: pre-wrap;
-      overflow-wrap: anywhere;
-    }
-
     .status-profile,
     .status-raster,
     .status-character,
-    .status-character-detail,
-    .status-adjustments-detail,
-    .status-site {
+    .status-view {
       color: var(--phosphor);
     }
 
@@ -901,24 +903,7 @@
         display: none;
       }
 
-      .footer-links a[data-view-link="laps"],
-      .footer-links a[data-view-link="trace"],
-      .footer-links a[data-view-link="map"],
-      .footer-links a[data-view-link="notes"],
-      .footer-links a[data-view-link="source"] {
-        display: none;
-      }
-
-      .status-adjustments,
-      .status-adjustments-detail,
-      .status-character,
-      .status-character-detail,
-      .status-site {
-        display: none;
-      }
-
-      .terminal-status,
-      .terminal-meta {
+      .terminal-status {
         overflow: visible;
         text-overflow: clip;
         white-space: normal;
@@ -1166,8 +1151,8 @@ Comparison Lap set: Valid Lap rows only; invalid laps excluded before coaching.<
   DECISIONS    Render docs/DECISIONS.md
   SOURCE       Render docs/index.html source
   CODE         Alias for SOURCE
-  GITHUB       Open public repository
-  SITE         Open openracecoach.com
+  GITHUB/REPO  Open public repository
+  SITE/OPENRACECOACH.COM
   PROFILE AMBER|GREEN|VGA|LCD
   RASTER GRID|SCANLINE|PIXEL|CLEAN
   CHARACTER 0-5|UP|DOWN
@@ -1178,8 +1163,8 @@ Comparison Lap set: Valid Lap rows only; invalid laps excluded before coaching.<
   ADJUST TEXT     0-5|UP|DOWN
   ADJUST FRAME    0-5|UP|DOWN
   ADJUST RESET
-  STATUS       Show profile / raster / view
-  CLEAR        Clear terminal output
+  STATUS/SYSTEM Show full system / repo status
+  CLEAR/CLS    Clear terminal output
 
 ERA NOTE
   Visual fiction: restrained late-1980s /
@@ -1194,13 +1179,11 @@ ERA NOTE
                   <label for="terminalInput">ORC&gt;</label>
                   <input class="terminal-input" id="terminalInput" name="command" autocomplete="off" autocapitalize="none" spellcheck="false" />
                 </form>
-                <p class="terminal-status terminal-flow-row">PROFILE AMBER / RASTER GRID / CRT CHARACTER 03 WORN / A3 B3 J3 T5 F3</p>
-                <p class="terminal-meta terminal-flow-row">OPEN REPO / PRE-ALPHA / OPENRACECOACH.COM</p>
+                <p class="terminal-status terminal-flow-row">AMBER / GRID / CHAR 03 WORN / VIEW REPORT</p>
 
                 <footer class="footer-bar">
-                  <nav class="footer-links" aria-label="Project links">
-                    <a class="terminal-flow-row" href="https://github.com/jaredkirby/open-race-coach" target="_blank" rel="noopener noreferrer" data-command-link="github">GITHUB</a>
-                    <a class="terminal-flow-row" href="#report" data-view-link="report">CRT REPORT</a>
+                  <nav class="footer-links" aria-label="Content views">
+                    <a class="terminal-flow-row" href="#report" data-view-link="report">REPORT</a>
                     <a class="terminal-flow-row" href="#laps" data-view-link="laps">LAPS</a>
                     <a class="terminal-flow-row" href="#trace" data-view-link="trace">TRACE</a>
                     <a class="terminal-flow-row" href="#map" data-view-link="map">MAP</a>
@@ -1305,7 +1288,6 @@ ERA NOTE
     const terminalOutput = document.getElementById("terminalOutput");
     const terminalConsole = document.querySelector(".terminal-console");
     const terminalStatus = document.querySelector(".terminal-status");
-    const terminalMeta = document.querySelector(".terminal-meta");
     const phosphorGhost = document.getElementById("phosphorGhost");
     const viewLinks = Array.from(document.querySelectorAll("[data-view-link]"));
     const commandLinks = Array.from(document.querySelectorAll("[data-command-link]"));
@@ -1929,7 +1911,7 @@ ERA NOTE
     }
 
     function applyStaticArchRows() {
-      const rows = Array.from(document.querySelectorAll(".terminal-flow-row, .terminal-command, .terminal-status, .terminal-meta, .footer-links a"));
+      const rows = Array.from(document.querySelectorAll(".terminal-flow-row, .terminal-command, .terminal-status, .footer-links a"));
       rows.forEach((row) => setArchRow(row));
       applyScreenPositionArchRows();
       applyArchCharacters(screenElement);
@@ -2094,12 +2076,10 @@ ERA NOTE
     }
 
     function updateTerminalStatus() {
-      terminalStatus.innerHTML = `<span class="status-profile">PROFILE ${activeDisplayProfile}</span> / <span class="status-raster">RASTER ${activeRasterMode}</span><span class="status-character-detail"> / <span class="status-character">${formatCharacterLevel()}</span></span><span class="status-adjustments-detail"> / <span class="status-adjustments">${formatAdjustmentStatus()}</span></span>`;
-      terminalMeta.innerHTML = `OPEN REPO / PRE-ALPHA / <span class="status-site">OPENRACECOACH.COM</span>`;
-      [terminalStatus, terminalMeta].forEach((node) => {
-        node.dataset.archProcessed = "false";
-        applyArchCharacters(node);
-      });
+      const currentView = (screenElement.dataset.view || "report").toUpperCase();
+      terminalStatus.innerHTML = `<span class="status-profile">${activeDisplayProfile}</span> / <span class="status-raster">${activeRasterMode}</span> / <span class="status-character">${formatCharacterLevel().replace("CRT CHARACTER", "CHAR")}</span> / <span class="status-view">VIEW ${currentView}</span>`;
+      terminalStatus.dataset.archProcessed = "false";
+      applyArchCharacters(terminalStatus);
       scheduleScreenArchRefresh();
     }
 
@@ -2235,7 +2215,11 @@ ERA NOTE
     }
 
     function getVisualStatus() {
-      return `SYSTEM PROFILE ${activeDisplayProfile} / RASTER ${activeRasterMode} / ${formatCharacterLevel()} / ADJUST ${formatAdjustmentStatus()} / FONT ${Math.round(activeFontScale * 100)}% / VIEW ${screenElement.dataset.view.toUpperCase()}`;
+      return [
+        `PROFILE ${activeDisplayProfile} / RASTER ${activeRasterMode} / VIEW ${screenElement.dataset.view.toUpperCase()}`,
+        `${formatCharacterLevel().replace("CRT CHARACTER", "CHAR")} / FONT${Math.round(activeFontScale * 100)}% / ADJ ${formatAdjustmentStatus().replace(/\s+/g, "")}`,
+        "REPO OPEN / PRE-ALPHA / OPENRACECOACH.COM",
+      ].join("\n");
     }
 
     function resolveLevelArgument(rawArgument, currentLevel) {
@@ -2412,7 +2396,7 @@ ERA NOTE
         setSyntaxText(sourceText, getCurrentDocumentSource());
       });
 
-    const terminalOutputLimit = 8;
+    const terminalOutputLimit = 3;
 
     function appendTerminalLine(message, entryKind = "output") {
       const lines = String(message).split("\n");
@@ -2457,6 +2441,7 @@ ERA NOTE
       viewLinks.forEach((link) => {
         link.dataset.active = String(link.dataset.viewLink === nextView);
       });
+      updateTerminalStatus();
 
       if (message) {
         writeTerminal(message);
