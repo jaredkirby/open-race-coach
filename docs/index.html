@@ -75,11 +75,6 @@
       --noise-opacity: 0.08;
       --jitter-x: 0.18px;
       --jitter-y: 0.08px;
-      --text-warp-strength: 0.72;
-      --text-warp-arch: 6px;
-      --text-warp-bow: 3px;
-      --screen-warp-rotate: 0.42deg;
-      --screen-warp-scale: 1.012;
       --screen-text-dim: rgba(var(--phosphor-rgb), 0.68);
       --screen-text-muted: rgba(var(--phosphor-rgb), 0.52);
       --screen-text-hot: rgba(var(--phosphor-rgb), 0.92);
@@ -377,8 +372,7 @@
         0 0 calc(var(--glow) * 7px) rgba(var(--phosphor-rgb), var(--raster-text-bloom)),
         calc(var(--rgb-split) * 0.2px) 0 0 var(--shadow-blue),
         calc(var(--rgb-split) * -0.2px) 0 0 var(--shadow-red);
-      filter: url("#crt-text-warp-3");
-      transform: perspective(980px) rotateX(var(--screen-warp-rotate)) scaleX(var(--screen-warp-scale)) translateZ(0);
+      /* The actual terminal plane stays flat so pointer hit-testing matches visible text. */
     }
 
     .terminal-surface {
@@ -419,57 +413,93 @@
     }
 
     :root[data-text-warp-level="0"] .screen {
-      --text-warp-strength: 0;
-      --text-warp-arch: 0px;
-      --text-warp-bow: 0px;
-      --screen-warp-rotate: 0deg;
-      --screen-warp-scale: 1;
-      filter: url("#crt-text-warp-0");
+      --text-bloom: 0.12;
+      --text-bloom-strong: 0.22;
+      --raster-text-bloom: 0.018;
+      --raster-text-bloom-strong: 0.035;
+      --rgb-split: 0.18;
+    }
+
+    :root[data-text-warp-level="0"] .crt-screen {
+      --reflection-opacity: 0.05;
+      --curvature-shadow-opacity: 0.3;
+      --edge-falloff: 0.3;
+      --top-falloff: 0.18;
     }
 
     :root[data-text-warp-level="1"] .screen {
-      --text-warp-strength: 0.2;
-      --text-warp-arch: 2px;
-      --text-warp-bow: 1px;
-      --screen-warp-rotate: 0.12deg;
-      --screen-warp-scale: 1.003;
-      filter: url("#crt-text-warp-1");
+      --text-bloom: 0.2;
+      --text-bloom-strong: 0.36;
+      --raster-text-bloom: 0.035;
+      --raster-text-bloom-strong: 0.06;
+      --rgb-split: 0.48;
+    }
+
+    :root[data-text-warp-level="1"] .crt-screen {
+      --reflection-opacity: 0.08;
+      --curvature-shadow-opacity: 0.4;
+      --edge-falloff: 0.4;
+      --top-falloff: 0.28;
     }
 
     :root[data-text-warp-level="2"] .screen {
-      --text-warp-strength: 0.4;
-      --text-warp-arch: 3px;
-      --text-warp-bow: 2px;
-      --screen-warp-rotate: 0.24deg;
-      --screen-warp-scale: 1.006;
-      filter: url("#crt-text-warp-2");
+      --text-bloom: 0.26;
+      --text-bloom-strong: 0.48;
+      --raster-text-bloom: 0.052;
+      --raster-text-bloom-strong: 0.082;
+      --rgb-split: 0.78;
+    }
+
+    :root[data-text-warp-level="2"] .crt-screen {
+      --reflection-opacity: 0.11;
+      --curvature-shadow-opacity: 0.5;
+      --edge-falloff: 0.48;
+      --top-falloff: 0.36;
     }
 
     :root[data-text-warp-level="3"] .screen {
-      --text-warp-strength: 0.62;
-      --text-warp-arch: 5px;
-      --text-warp-bow: 2.8px;
-      --screen-warp-rotate: 0.36deg;
-      --screen-warp-scale: 1.009;
-      filter: url("#crt-text-warp-3");
+      --text-bloom: 0.31;
+      --text-bloom-strong: 0.58;
+      --raster-text-bloom: 0.065;
+      --raster-text-bloom-strong: 0.105;
+      --rgb-split: 1.12;
+    }
+
+    :root[data-text-warp-level="3"] .crt-screen {
+      --reflection-opacity: 0.14;
+      --curvature-shadow-opacity: 0.58;
+      --edge-falloff: 0.56;
+      --top-falloff: 0.42;
     }
 
     :root[data-text-warp-level="4"] .screen {
-      --text-warp-strength: 0.82;
-      --text-warp-arch: 7px;
-      --text-warp-bow: 4px;
-      --screen-warp-rotate: 0.52deg;
-      --screen-warp-scale: 1.014;
-      filter: url("#crt-text-warp-4");
+      --text-bloom: 0.38;
+      --text-bloom-strong: 0.68;
+      --raster-text-bloom: 0.09;
+      --raster-text-bloom-strong: 0.145;
+      --rgb-split: 1.42;
+    }
+
+    :root[data-text-warp-level="4"] .crt-screen {
+      --reflection-opacity: 0.17;
+      --curvature-shadow-opacity: 0.68;
+      --edge-falloff: 0.64;
+      --top-falloff: 0.5;
     }
 
     :root[data-text-warp-level="5"] .screen {
-      --text-warp-strength: 1;
-      --text-warp-arch: 10px;
-      --text-warp-bow: 6px;
-      --screen-warp-rotate: 0.72deg;
-      --screen-warp-scale: 1.022;
-      filter: url("#crt-text-warp-5");
+      --text-bloom: 0.44;
+      --text-bloom-strong: 0.78;
+      --raster-text-bloom: 0.12;
+      --raster-text-bloom-strong: 0.18;
+      --rgb-split: 1.68;
+    }
+
+    :root[data-text-warp-level="5"] .crt-screen {
+      --reflection-opacity: 0.2;
+      --curvature-shadow-opacity: 0.78;
+      --edge-falloff: 0.72;
+      --top-falloff: 0.58;
     }
 
     :root[data-frame-warp-level="0"] .terminal-frame {
@@ -522,12 +552,6 @@
       line-height: inherit;
       color: inherit;
       text-shadow: inherit;
-      transform-origin: 50% 50%;
-      transform:
-        translateX(var(--line-offset, 0px))
-        translateY(calc(var(--line-arch, 0px) * -1))
-        skewX(var(--line-skew, 0deg))
-        scaleX(var(--line-scale, 1));
     }
 
     .terminal-command[data-arch-row] {
@@ -540,12 +564,6 @@
     h2[data-arch-row],
     p[data-arch-row] {
       display: block;
-    }
-
-    .screen [data-arch-char] {
-      display: inline-block;
-      transform: translate(var(--char-push, 0), var(--char-bow, 0));
-      transform-origin: 50% 50%;
     }
 
     .top-bar {
@@ -960,30 +978,6 @@
     <filter id="crt-frame-warp-5" x="-5%" y="-5%" width="110%" height="110%" color-interpolation-filters="sRGB">
       <feTurbulence type="fractalNoise" baseFrequency="0.007 0.028" numOctaves="1" seed="61" result="frameNoise" />
       <feDisplacementMap in="SourceGraphic" in2="frameNoise" scale="4.1" xChannelSelector="R" yChannelSelector="G" />
-    </filter>
-    <filter id="crt-text-warp-0" x="-2%" y="-2%" width="104%" height="104%" color-interpolation-filters="sRGB">
-      <feTurbulence type="fractalNoise" baseFrequency="0.006 0.034" numOctaves="1" seed="14" result="noise" />
-      <feDisplacementMap in="SourceGraphic" in2="noise" scale="0.25" xChannelSelector="R" yChannelSelector="G" />
-    </filter>
-    <filter id="crt-text-warp-1" x="-2%" y="-2%" width="104%" height="104%" color-interpolation-filters="sRGB">
-      <feTurbulence type="fractalNoise" baseFrequency="0.004 0.022" numOctaves="1" seed="18" result="noise" />
-      <feDisplacementMap in="SourceGraphic" in2="noise" scale="1.25" xChannelSelector="R" yChannelSelector="G" />
-    </filter>
-    <filter id="crt-text-warp-2" x="-2%" y="-2%" width="104%" height="104%" color-interpolation-filters="sRGB">
-      <feTurbulence type="fractalNoise" baseFrequency="0.003 0.018" numOctaves="1" seed="23" result="noise" />
-      <feDisplacementMap in="SourceGraphic" in2="noise" scale="1.55" xChannelSelector="R" yChannelSelector="G" />
-    </filter>
-    <filter id="crt-text-warp-3" x="-2%" y="-2%" width="104%" height="104%" color-interpolation-filters="sRGB">
-      <feTurbulence type="fractalNoise" baseFrequency="0.0024 0.014" numOctaves="1" seed="31" result="noise" />
-      <feDisplacementMap in="SourceGraphic" in2="noise" scale="2.05" xChannelSelector="R" yChannelSelector="G" />
-    </filter>
-    <filter id="crt-text-warp-4" x="-3%" y="-3%" width="106%" height="106%" color-interpolation-filters="sRGB">
-      <feTurbulence type="fractalNoise" baseFrequency="0.0018 0.011" numOctaves="1" seed="37" result="noise" />
-      <feDisplacementMap in="SourceGraphic" in2="noise" scale="2.7" xChannelSelector="R" yChannelSelector="G" />
-    </filter>
-    <filter id="crt-text-warp-5" x="-4%" y="-4%" width="108%" height="108%" color-interpolation-filters="sRGB">
-      <feTurbulence type="fractalNoise" baseFrequency="0.0012 0.007" numOctaves="1" seed="41" result="noise" />
-      <feDisplacementMap in="SourceGraphic" in2="noise" scale="3.4" xChannelSelector="R" yChannelSelector="G" />
     </filter>
   </svg>
   <main class="app">
@@ -1572,11 +1566,10 @@ ERA NOTE
       artifact: null,
       bloom: null,
       jitter: null,
-      text: 5,
+      text: null,
       frame: null,
     };
     let ghostTimer;
-    let archRefreshFrame = 0;
     let commandScrollFrame = 0;
     let followCommandOutput = false;
     const fontScaleStep = 0.04;
@@ -1774,17 +1767,6 @@ ERA NOTE
       return output;
     }
 
-    function getArchStyleForProgress(progress, lineIndex = 0) {
-      const distanceFromCenter = Math.abs(progress - 0.5) * 2;
-      const verticalDirection = progress < 0.5 ? -1 : 1;
-      const lineLift = Number((verticalDirection * distanceFromCenter * 0.42).toFixed(3));
-      const lineSkew = Number(((progress - 0.5) * 0.18).toFixed(3));
-      const lineOffset = Number(((0.5 - progress) * 0.52).toFixed(3));
-      const lineScale = Number((1 - distanceFromCenter * 0.018).toFixed(3));
-      const lineBowDirection = progress < 0.48 ? 1 : progress > 0.52 ? -1 : 0;
-      return `--line-arch: calc(var(--text-warp-bow) * ${lineLift}); --line-skew: ${lineSkew}deg; --line-offset: calc(var(--text-warp-bow) * ${lineOffset}); --line-scale: ${lineScale}; --line-bow-direction: ${lineBowDirection};`;
-    }
-
     function splitTerminalLine(line, view) {
       if (view !== "source" && view !== "decisions") {
         return [line];
@@ -1825,10 +1807,6 @@ ERA NOTE
       }).join("");
     }
 
-    function shouldUseCharacterArch() {
-      return false;
-    }
-
     function unwrapArchCharacters(node) {
       node.querySelectorAll("[data-arch-char]").forEach((characterNode) => {
         characterNode.replaceWith(document.createTextNode(characterNode.textContent));
@@ -1841,63 +1819,8 @@ ERA NOTE
         ...node.querySelectorAll("[data-arch-row]"),
       ];
 
-      if (!shouldUseCharacterArch()) {
-        unwrapArchCharacters(node);
-        rows.forEach((row) => {
-          row.dataset.archProcessed = "true";
-        });
-        return;
-      }
-
+      unwrapArchCharacters(node);
       rows.forEach((row) => {
-        if (row.dataset.archProcessed === "true" && !row.querySelector("[data-arch-char]") && !row.closest(".source-text")) {
-          row.dataset.archProcessed = "false";
-        }
-
-        if (row.dataset.archProcessed === "true") {
-          return;
-        }
-
-        const lineLength = row.textContent.length;
-        if (lineLength > 180) {
-          row.dataset.archProcessed = "true";
-          return;
-        }
-
-        let characterIndex = 0;
-        const walker = document.createTreeWalker(row, NodeFilter.SHOW_TEXT);
-        const textNodes = [];
-        let textNode = walker.nextNode();
-
-        while (textNode) {
-          textNodes.push(textNode);
-          textNode = walker.nextNode();
-        }
-
-        textNodes.forEach((currentTextNode) => {
-          const fragment = document.createDocumentFragment();
-          Array.from(currentTextNode.nodeValue).forEach((character) => {
-            if (character === " " || character === "\t") {
-              fragment.appendChild(document.createTextNode(character));
-              characterIndex += 1;
-              return;
-            }
-
-            const position = lineLength <= 1 ? 0.5 : characterIndex / (lineLength - 1);
-            const fromCenter = Math.abs(position - 0.5) * 2;
-            const curve = Math.max(0, 1 - (fromCenter * fromCenter));
-            const push = position - 0.5;
-            const characterSpan = document.createElement("span");
-            characterSpan.dataset.archChar = "";
-            characterSpan.style.setProperty("--char-bow", `calc(var(--text-warp-arch) * ${curve.toFixed(3)} * var(--line-bow-direction, 1) * 0.18)`);
-            characterSpan.style.setProperty("--char-push", `calc(var(--text-warp-bow) * ${push.toFixed(3)} * 0.08)`);
-            characterSpan.textContent = character;
-            fragment.appendChild(characterSpan);
-            characterIndex += 1;
-          });
-
-          currentTextNode.parentNode.replaceChild(fragment, currentTextNode);
-        });
         row.dataset.archProcessed = "true";
       });
     }
@@ -1913,105 +1836,11 @@ ERA NOTE
     function applyStaticArchRows() {
       const rows = Array.from(document.querySelectorAll(".terminal-flow-row, .terminal-command, .terminal-status, .footer-links a"));
       rows.forEach((row) => setArchRow(row));
-      applyScreenPositionArchRows();
       applyArchCharacters(screenElement);
     }
 
-    function getActiveTerminalBuffer() {
-      return Array.from(screenElement.querySelectorAll(".terminal-buffer"))
-        .find((node) => getComputedStyle(node).display !== "none") || null;
-    }
-
-    function getVisibleArchRows() {
-      if (!terminalScrollport) {
-        return Array.from(screenElement.querySelectorAll("[data-arch-row]"));
-      }
-
-      const overscan = 240;
-      const visibleStart = Math.max(0, terminalScrollport.scrollTop - overscan);
-      const visibleEnd = terminalScrollport.scrollTop + terminalScrollport.clientHeight + overscan;
-      const bufferRows = [];
-      const activeBuffer = getActiveTerminalBuffer();
-      const scrollportRect = terminalScrollport.getBoundingClientRect();
-
-      function isVisibleScrollRow(row) {
-        const rowRect = row.getBoundingClientRect();
-        const rowTop = rowRect.top - scrollportRect.top + terminalScrollport.scrollTop;
-        const rowBottom = rowTop + rowRect.height;
-        return rowBottom >= visibleStart && rowTop <= visibleEnd;
-      }
-
-      const persistentRows = Array.from(screenElement.querySelectorAll(".terminal-console [data-arch-row], .top-bar [data-arch-row]"))
-        .filter(isVisibleScrollRow);
-
-      function pushBlockRows(block) {
-        const rows = block.children;
-        if (!rows.length) {
-          return;
-        }
-
-        const sampleRow = rows[0];
-        const rowHeight = sampleRow.offsetHeight || parseFloat(getComputedStyle(sampleRow).lineHeight) || parseFloat(getComputedStyle(block).lineHeight) || 18;
-        const blockRect = block.getBoundingClientRect();
-        const blockTop = blockRect.top - scrollportRect.top + terminalScrollport.scrollTop;
-        const localStart = Math.max(0, visibleStart - blockTop);
-        const localEnd = Math.max(localStart, visibleEnd - blockTop);
-        const startIndex = Math.max(0, Math.floor(localStart / rowHeight) - 2);
-        const endIndex = Math.min(rows.length - 1, Math.ceil(localEnd / rowHeight) + 2);
-
-        for (let index = startIndex; index <= endIndex; index += 1) {
-          bufferRows.push(rows[index]);
-        }
-      }
-
-      if (!activeBuffer) {
-        return [...persistentRows, ...bufferRows];
-      }
-
-      activeBuffer.querySelectorAll(":scope > [data-arch-row]").forEach((row) => {
-        const rowTop = row.offsetTop;
-        const rowBottom = rowTop + row.offsetHeight;
-        if (rowBottom >= visibleStart && rowTop <= visibleEnd) {
-          bufferRows.push(row);
-        }
-      });
-
-      activeBuffer.querySelectorAll(".crt-text-block").forEach((block) => {
-        pushBlockRows(block);
-      });
-
-      return [...persistentRows, ...bufferRows];
-    }
-
-    function applyScreenPositionArchRows() {
-      const screenRect = screenElement.getBoundingClientRect();
-      if (!screenRect.height) {
-        return;
-      }
-
-      const rows = getVisibleArchRows();
-      rows.forEach((row, index) => {
-        const rowRect = row.getBoundingClientRect();
-        if (!rowRect.height || !rowRect.width) {
-          return;
-        }
-
-        const progress = Math.min(1, Math.max(0, ((rowRect.top + rowRect.bottom) / 2 - screenRect.top) / screenRect.height));
-        const baseStyle = row.dataset.baseStyle ?? "";
-        row.setAttribute("style", `${baseStyle ? `${baseStyle}; ` : ""}${getArchStyleForProgress(progress, index)}`);
-      });
-    }
-
-    function refreshScreenArch() {
-      applyScreenPositionArchRows();
-      if (shouldUseCharacterArch()) {
-        applyArchCharacters(screenElement);
-      }
-    }
-
     function scheduleScreenArchRefresh() {
-      window.cancelAnimationFrame(archRefreshFrame);
-      archRefreshFrame = window.requestAnimationFrame(refreshScreenArch);
+      // Rows stay flat; this hook remains for existing scroll/resize call sites.
     }
 
     function renderSyntaxNode(node, text = node.dataset.rawText || node.textContent) {
