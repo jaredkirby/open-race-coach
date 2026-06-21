@@ -13,21 +13,68 @@
       --phosphor-dim: #89b896;
       --green: #66ff33;
       --red: #ff4d22;
+      --syntax-label: #9fb28d;
+      --syntax-domain: #eac16f;
+      --syntax-metric: #ffe2a3;
+      --syntax-id: #a8d5ff;
+      --syntax-ok: #9cff88;
+      --syntax-warn: #ff775f;
+      --syntax-danger: #ff503c;
+      --syntax-command: #fff2c7;
+      --syntax-trace: #88dbff;
+      --syntax-border: #c69748;
+      --syntax-quote: #d9ffce;
       --glass: #10100f;
       --case: #050505;
+      --frame-border: #24211c;
+      --screen-border: #1c1a17;
       --shadow-blue: rgba(35, 80, 255, 0.22);
       --shadow-red: rgba(255, 24, 56, 0.22);
-      --mono: "Courier New", Courier, monospace;
+      /* Static, local/system-safe font stack only; no cool-retro-term assets are imported. */
+      --mono: "Courier New", "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
+      --terminal-font-era: "late-1980s-system-mono";
       --glow: 0.76;
       --rgb-split: 1;
       --scanline-opacity: 0.08;
       --scanline-size: 3px;
+      --subpixel-opacity: 0.055;
+      --raster-mask-opacity: 0.82;
+      --grid-engineering-opacity: 0.05;
+      --grid-warp-opacity: 0.06;
+      --pixel-grain-opacity: 0.08;
+      --pixel-grain-scale: 11px;
+      --black-grain-opacity: 0.055;
+      --black-grain-scale: 5px;
       --flicker-opacity: 0.28;
       --flicker-speed: 0.16s;
       --vignette-strength: 0.51;
+      --edge-falloff: 0.34;
+      --top-falloff: 0.3;
+      --text-bloom: 0.26;
+      --text-bloom-strong: 0.48;
+      --raster-text-bloom: 0.04;
+      --raster-text-bloom-strong: 0.07;
+      --reflection-opacity: 0.11;
+      --frame-shine-opacity: 0.22;
+      --curvature-shadow-opacity: 0.44;
+      --bezel-thickness: 14px;
       --font-scale: 0.93;
       --frame-padding: 10px;
+      --frame-inset: 10px;
       --screen-radius: 2px;
+      --terminal-columns: 132;
+      --terminal-rows: 44;
+      --terminal-cell-width: 9px;
+      --terminal-cell-height: 18px;
+      --terminal-content-width: 132ch;
+      --pixel-cell-width: 4.5px;
+      --pixel-cell-height: 9px;
+      --terminal-grid-opacity: 0.06;
+      --pixel-grid-opacity: 0.035;
+      --raster-opacity: 0.18;
+      --noise-opacity: 0.08;
+      --jitter-x: 0.18px;
+      --jitter-y: 0.08px;
       --font-size: calc(18.28px * var(--font-scale));
       --line-height: 1.14;
     }
@@ -58,6 +105,13 @@
       }
     }
 
+    @keyframes raster-jitter {
+      0%, 100% { transform: translate(0, 0); }
+      31% { transform: translate(var(--jitter-x), 0); }
+      59% { transform: translate(calc(var(--jitter-x) * -1), var(--jitter-y)); }
+      83% { transform: translate(0, calc(var(--jitter-y) * -1)); }
+    }
+
     * {
       box-sizing: border-box;
       font: inherit;
@@ -71,8 +125,8 @@
       margin: 0;
       overflow: hidden;
       background:
-        radial-gradient(circle at 50% 44%, rgba(var(--phosphor-rgb), 0.06), transparent 56%),
-        linear-gradient(145deg, #080807, #000 74%);
+        radial-gradient(circle at 50% 44%, rgba(var(--phosphor-rgb), 0.05), transparent 56%),
+        linear-gradient(145deg, #090806, #000 74%);
       color: var(--phosphor);
       font: var(--font-size) / var(--line-height) var(--mono);
     }
@@ -94,24 +148,25 @@
       padding: var(--frame-padding);
       overflow: hidden;
       background:
-        linear-gradient(rgba(var(--phosphor-rgb), 0.018) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(var(--phosphor-rgb), 0.014) 1px, transparent 1px),
+        linear-gradient(rgba(var(--phosphor-rgb), 0.014) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(var(--phosphor-rgb), 0.012) 1px, transparent 1px),
         #030303;
       background-size: 18px 18px;
     }
 
     .terminal-frame {
       position: fixed;
-      inset: 10px;
+      inset: var(--frame-inset);
       width: auto;
       height: auto;
       min-width: 0;
       min-height: 0;
-      padding: 8px;
-      border: 1px solid #24211c;
+      padding: var(--bezel-thickness);
+      overflow: hidden;
+      border: 1px solid var(--frame-border);
       border-radius: 4px;
       background:
-        linear-gradient(180deg, #171511, #050505 58%, #010101),
+        linear-gradient(180deg, #17140f, #050505 58%, #010101),
         var(--case);
       box-shadow:
         0 28px 90px rgba(0, 0, 0, 0.72),
@@ -119,23 +174,48 @@
         inset 0 0 32px rgba(var(--phosphor-rgb), 0.06);
     }
 
+    .terminal-frame::before,
+    .terminal-frame::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .terminal-frame::before {
+      background:
+        linear-gradient(105deg, rgba(255, 255, 255, var(--frame-shine-opacity)), transparent 16% 83%, rgba(var(--phosphor-rgb), 0.08)),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 14% 84%, rgba(0, 0, 0, 0.46));
+      opacity: 0.44;
+    }
+
+    .terminal-frame::after {
+      inset: var(--bezel-thickness);
+      border: 1px solid rgba(var(--phosphor-rgb), 0.08);
+      border-radius: var(--screen-radius);
+      box-shadow:
+        inset 0 1px rgba(255, 255, 255, 0.08),
+        inset 0 -1px rgba(0, 0, 0, 0.7);
+    }
+
     .crt-screen {
       position: relative;
+      z-index: 1;
       isolation: isolate;
       width: 100%;
       height: 100%;
       overflow: hidden;
-      border: 1px solid #1c1a17;
+      border: 1px solid var(--screen-border);
       border-radius: var(--screen-radius);
       background:
-        linear-gradient(rgba(var(--phosphor-rgb), 0.018) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(var(--phosphor-rgb), 0.012) 1px, transparent 1px),
-        radial-gradient(ellipse at center, rgba(var(--phosphor-rgb), 0.075), rgba(20, 19, 17, 0.98) 64%, #080808 100%),
+        radial-gradient(ellipse at center, rgba(var(--phosphor-rgb), 0.066), rgba(20, 18, 13, 0.98) 64%, #080808 100%),
         var(--glass);
-      background-size: 8px 8px, 8px 8px, auto, auto;
+      /* Curvature is an optical overlay only; the interactive surface remains flat. */
       box-shadow:
         inset 0 0 64px rgba(0, 0, 0, 0.86),
-        inset 0 0 22px rgba(var(--phosphor-rgb), 0.08);
+        inset 0 0 22px rgba(var(--phosphor-rgb), 0.08),
+        inset 0 0 130px rgba(0, 0, 0, var(--curvature-shadow-opacity));
     }
 
     .crt-screen::before,
@@ -149,30 +229,129 @@
 
     .crt-screen::before {
       background:
-        linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, var(--scanline-opacity)) 50%),
-        linear-gradient(90deg, rgba(255, 0, 0, 0.055), rgba(var(--phosphor-rgb), 0.035), rgba(0, 65, 255, 0.055));
-      background-size: 100% var(--scanline-size), 3px 100%;
-      mix-blend-mode: screen;
-      opacity: 0.86;
+        radial-gradient(circle at 17% 31%, rgba(0, 0, 0, var(--black-grain-opacity)) 0 0.45px, transparent 0.75px),
+        radial-gradient(circle at 63% 78%, rgba(0, 0, 0, calc(var(--black-grain-opacity) * 0.82)) 0 0.38px, transparent 0.72px),
+        radial-gradient(circle at 82% 22%, rgba(0, 0, 0, calc(var(--black-grain-opacity) * 0.62)) 0 0.5px, transparent 0.9px),
+        linear-gradient(rgba(255, 255, 255, calc(var(--scanline-opacity) * 0.14)) 0 35%, rgba(0, 0, 0, var(--scanline-opacity)) 54% 100%),
+        linear-gradient(90deg, rgba(255, 0, 0, var(--subpixel-opacity)), rgba(var(--phosphor-rgb), calc(var(--subpixel-opacity) * 0.58)), rgba(0, 65, 255, var(--subpixel-opacity)));
+      background-size:
+        var(--black-grain-scale) calc(var(--black-grain-scale) * 1.28),
+        calc(var(--black-grain-scale) * 1.7) calc(var(--black-grain-scale) * 0.92),
+        calc(var(--black-grain-scale) * 2.15) calc(var(--black-grain-scale) * 1.55),
+        100% var(--scanline-size),
+        3px 100%;
+      mix-blend-mode: overlay;
+      opacity: var(--raster-mask-opacity);
     }
 
     .crt-screen::after {
       animation: crt-flicker var(--flicker-speed) infinite;
       background:
+        linear-gradient(180deg, rgba(0, 0, 0, var(--top-falloff)), transparent 18%, transparent 78%, rgba(0, 0, 0, calc(var(--edge-falloff) * 0.56))),
+        radial-gradient(ellipse at 50% -10%, rgba(0, 0, 0, calc(var(--top-falloff) * 0.82)), transparent 38%),
+        linear-gradient(110deg, transparent 0 15%, rgba(255, 255, 255, var(--reflection-opacity)) 19%, transparent 28% 100%),
+        radial-gradient(ellipse at 23% 0%, rgba(255, 255, 255, calc(var(--reflection-opacity) * 0.86)), transparent 34%),
+        radial-gradient(ellipse at 50% 52%, transparent 55%, rgba(0, 0, 0, calc(var(--edge-falloff) * 0.5)) 76%, rgba(0, 0, 0, var(--edge-falloff)) 100%),
         radial-gradient(ellipse at center, transparent 44%, rgba(0, 0, 0, 0.24) 74%, rgba(0, 0, 0, var(--vignette-strength)) 100%),
         rgba(18, 16, 16, 0.13);
+    }
+
+    .terminal-grid {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+      background:
+        linear-gradient(90deg, rgba(var(--phosphor-rgb), var(--terminal-grid-opacity)) 1px, transparent 1px),
+        linear-gradient(rgba(var(--phosphor-rgb), var(--terminal-grid-opacity)) 1px, transparent 1px),
+        repeating-linear-gradient(98deg, transparent 0 41px, rgba(var(--phosphor-rgb), var(--grid-engineering-opacity)) 42px, transparent 43px 89px),
+        repeating-linear-gradient(7deg, transparent 0 67px, rgba(var(--phosphor-rgb), calc(var(--grid-engineering-opacity) * 0.74)) 68px, transparent 69px 131px),
+        radial-gradient(ellipse at 18% 23%, rgba(var(--phosphor-rgb), var(--grid-warp-opacity)), transparent 39%),
+        radial-gradient(ellipse at 74% 68%, rgba(var(--phosphor-rgb), calc(var(--grid-warp-opacity) * 0.72)), transparent 35%),
+        radial-gradient(circle at 35% 42%, rgba(var(--phosphor-rgb), var(--pixel-grid-opacity)) 0 0.75px, transparent 1.4px),
+        radial-gradient(circle at 78% 16%, rgba(var(--phosphor-rgb), calc(var(--pixel-grid-opacity) * 0.76)) 0 0.9px, transparent 1.8px);
+      background-size:
+        var(--terminal-cell-width) var(--terminal-cell-height),
+        var(--terminal-cell-width) var(--terminal-cell-height),
+        calc(var(--terminal-cell-width) * 7) calc(var(--terminal-cell-height) * 5),
+        calc(var(--terminal-cell-width) * 11) calc(var(--terminal-cell-height) * 7),
+        100% 100%,
+        100% 100%,
+        var(--pixel-cell-width) var(--pixel-cell-height),
+        calc(var(--pixel-cell-width) * 1.7) calc(var(--pixel-cell-height) * 1.35);
+      mix-blend-mode: screen;
+      opacity: var(--raster-opacity);
+    }
+
+    .terminal-grid::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 11% 16%, rgba(var(--phosphor-rgb), var(--pixel-grain-opacity)) 0 0.55px, transparent 1.3px),
+        radial-gradient(circle at 64% 31%, rgba(var(--phosphor-rgb), calc(var(--pixel-grain-opacity) * 0.7)) 0 0.7px, transparent 1.5px),
+        radial-gradient(circle at 37% 73%, rgba(255, 255, 255, calc(var(--pixel-grain-opacity) * 0.5)) 0 0.45px, transparent 1.1px),
+        repeating-linear-gradient(
+          115deg,
+          transparent 0 7px,
+          rgba(var(--phosphor-rgb), var(--noise-opacity)) 8px,
+          transparent 9px 17px
+        );
+      background-size:
+        var(--pixel-grain-scale) calc(var(--pixel-grain-scale) * 0.82),
+        calc(var(--pixel-grain-scale) * 1.7) calc(var(--pixel-grain-scale) * 1.22),
+        calc(var(--pixel-grain-scale) * 2.3) calc(var(--pixel-grain-scale) * 1.55),
+        31px 31px;
+      opacity: 0.42;
+      animation: raster-jitter 0.42s steps(2, end) infinite;
+    }
+
+    .mobile-break {
+      display: none;
+    }
+
+    .phosphor-ghost {
+      position: absolute;
+      inset: 12px;
+      z-index: 3;
+      max-width: var(--terminal-content-width);
+      margin: 0 auto;
+      overflow: hidden;
+      pointer-events: none;
+      color: var(--phosphor-hot);
+      opacity: 0;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      text-transform: uppercase;
+      text-shadow:
+        0 0 5px rgba(var(--phosphor-rgb), 0.7),
+        0 0 16px rgba(var(--phosphor-rgb), 0.44);
+      filter: blur(0.35px);
+      transform: translateY(-0.5px);
+      transition: opacity 520ms ease-out, filter 520ms ease-out;
+    }
+
+    .phosphor-ghost[data-active="true"] {
+      opacity: 0.055;
+      filter: blur(0.95px);
     }
 
     .screen {
       position: relative;
       z-index: 2;
-      width: 100%;
+      width: min(100%, var(--terminal-content-width));
       height: 100%;
       display: grid;
       grid-template-rows: auto minmax(0, 1fr) auto auto;
       gap: 8px;
       padding: 12px;
+      margin: 0 auto;
       overflow: hidden;
+      text-shadow:
+        0 0 calc(var(--glow) * 2px) rgba(var(--phosphor-rgb), var(--text-bloom)),
+        0 0 calc(var(--glow) * 6px) rgba(var(--phosphor-rgb), var(--raster-text-bloom)),
+        calc(var(--rgb-split) * 0.25px) 0 0 var(--shadow-blue),
+        calc(var(--rgb-split) * -0.25px) 0 0 var(--shadow-red);
     }
 
     .top-bar,
@@ -301,6 +480,17 @@
       animation: text-shadow-drift 1.6s infinite;
     }
 
+    .brand-title,
+    .logo-mark,
+    .terminal-output,
+    .terminal-input,
+    .footer-links a[data-active="true"] {
+      text-shadow:
+        0 0 calc(var(--glow) * 4px) rgba(var(--phosphor-rgb), var(--text-bloom-strong)),
+        0 0 calc(var(--glow) * 10px) rgba(var(--phosphor-rgb), var(--raster-text-bloom-strong)),
+        0 0 calc(var(--glow) * 12px) rgba(var(--phosphor-rgb), calc(var(--text-bloom-strong) * 0.42));
+    }
+
     .brand-title {
       color: var(--phosphor);
       font-weight: 700;
@@ -318,6 +508,59 @@
 
     .red {
       color: var(--red);
+      text-shadow: 0 0 2px rgba(255, 77, 34, 0.2);
+    }
+
+    .sx-label {
+      color: var(--syntax-label);
+      text-transform: uppercase;
+    }
+
+    .sx-domain,
+    .sx-heading {
+      color: var(--syntax-domain);
+      font-weight: 700;
+    }
+
+    .sx-metric {
+      color: var(--syntax-metric);
+      font-weight: 700;
+    }
+
+    .sx-id {
+      color: var(--syntax-id);
+    }
+
+    .sx-ok {
+      color: var(--syntax-ok);
+      font-weight: 700;
+    }
+
+    .sx-warn {
+      color: var(--syntax-warn);
+    }
+
+    .sx-danger {
+      color: var(--syntax-danger);
+      font-weight: 700;
+      text-shadow: 0 0 3px rgba(255, 77, 34, 0.28);
+    }
+
+    .sx-command {
+      color: var(--syntax-command);
+      font-weight: 700;
+    }
+
+    .sx-trace {
+      color: var(--syntax-trace);
+    }
+
+    .sx-border {
+      color: var(--syntax-border);
+    }
+
+    .sx-quote {
+      color: var(--syntax-quote);
     }
 
     .lines {
@@ -342,14 +585,6 @@
     .report-text {
       margin-top: auto;
       color: var(--phosphor);
-      overflow-wrap: anywhere;
-    }
-
-    .json-block {
-      max-height: 100%;
-      overflow: hidden;
-      color: var(--phosphor);
-      white-space: pre-wrap;
       overflow-wrap: anywhere;
     }
 
@@ -432,18 +667,24 @@
     }
 
     @media (max-width: 680px) {
+      html,
+      body {
+        font: 13px / 1.16 var(--mono);
+      }
+
       .app {
         padding: 4px;
       }
 
       .terminal-frame {
         inset: 4px;
-        width: calc(100vw - 8px);
       }
 
       .screen {
+        width: 100%;
         max-width: 100%;
-        padding: 10px;
+        gap: 6px;
+        padding: 8px;
       }
 
       .top-bar,
@@ -457,7 +698,21 @@
         display: none;
       }
 
+      .brand {
+        align-items: flex-start;
+      }
+
+      .brand-text {
+        white-space: normal;
+      }
+
+      .mobile-break {
+        display: block;
+      }
+
       .report {
+        width: 100%;
+        max-width: 100%;
         overflow: auto;
         scrollbar-width: none;
       }
@@ -467,12 +722,40 @@
       }
 
       .tile {
+        width: 100%;
+        max-width: 100%;
         overflow: auto;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+      }
+
+      .report-text {
+        width: 100%;
+        max-width: 100%;
+        font-size: 12px;
+        line-height: 1.18;
+        overflow-wrap: anywhere;
+      }
+
+      .lines {
+        width: 100%;
+        max-width: 100%;
       }
 
       .line {
-        grid-template-columns: minmax(0, 1fr);
+        display: block;
+        width: 100%;
+        max-width: 100%;
         gap: 0;
+      }
+
+      .value {
+        display: block;
+        width: 100%;
+        max-width: 100%;
+        white-space: normal;
+        overflow-wrap: anywhere;
+        word-break: break-word;
       }
 
       .footer-links {
@@ -496,11 +779,18 @@
     }
 
     @media (prefers-reduced-motion: reduce) {
+      .terminal-grid::after,
+      .phosphor-ghost,
       .crt-screen::after,
       h1,
       h2,
       .hot {
         animation: none;
+      }
+
+      .phosphor-ghost[data-active="true"] {
+        opacity: 0.04;
+        transition-duration: 80ms;
       }
     }
   </style>
@@ -509,6 +799,8 @@
   <main class="app">
     <section class="terminal-frame" aria-label="Open Race Coach landing page">
       <div class="crt-screen">
+        <div class="terminal-grid" aria-hidden="true"></div>
+        <div class="phosphor-ghost" id="phosphorGhost" aria-hidden="true"></div>
         <div class="screen" data-view="report">
           <header class="top-bar">
             <div class="brand">
@@ -526,22 +818,22 @@
               <div class="lines">
                 <p class="line">
                   <span class="dim">Purpose</span>
-                  <span class="value">Recorded Session -> Analysis Run -> one data-supported Coaching Instruction.</span>
+                  <span class="value">Recorded Session -> Analysis Run -><br class="mobile-break" /> one data-supported Coaching Instruction.</span>
                 </p>
                 <p class="line">
                   <span class="dim">Status</span>
-                  <span class="value red">Pre-alpha. Live AMS2/ACC simulator validation is not proven by this repo.</span>
+                  <span class="value red">Pre-alpha. Live AMS2/ACC simulator validation<br class="mobile-break" /> is not proven by this repo.</span>
                 </p>
                 <p class="line">
                   <span class="dim">Contract</span>
-                  <span class="value">Deterministic analysis owns evidence, status, Reference Lap, Corner Segment, and Reportable Delta.</span>
+                  <span class="value">Deterministic analysis owns evidence, status,<br class="mobile-break" /> Reference Lap, Corner Segment,<br class="mobile-break" /> and Reportable Delta.</span>
                 </p>
                 <p class="line">
                   <span class="dim">Workflow</span>
-                  <span class="value">Record / Validate / Analyze / optionally refine prose.</span>
+                  <span class="value">Record / Validate / Analyze /<br class="mobile-break" /> optionally refine prose.</span>
                 </p>
               </div>
-              <pre class="report-text" aria-label="Sample coaching instruction">
+              <pre class="report-text" data-syntax="report" aria-label="Sample coaching instruction">
 +------------------------------------------+
 | THE ONE THING                            |
 +------------------------------------------+
@@ -575,13 +867,13 @@
           <section class="decisions-panel" aria-labelledby="decisions-heading">
             <p class="dim">Rendered artifact</p>
             <h2 id="decisions-heading">docs/DECISIONS.md</h2>
-            <pre class="decisions-text" id="decisionsText"></pre>
+            <pre class="decisions-text" id="decisionsText" data-syntax="decisions"></pre>
           </section>
 
           <section class="module-panel" data-module="laps" aria-labelledby="laps-heading">
             <p class="dim">Post-session lap index / sample Analysis Run</p>
             <h2 id="laps-heading">LAPS</h2>
-            <pre class="module-text" aria-label="Lap comparison table">Recorded Session 01k2demo
+            <pre class="module-text" data-syntax="laps" aria-label="Lap comparison table">Recorded Session 01k2demo
 Analysis Run 2026-06-13_201806_best
 
 LAP 001  TIME 0:58.214  GAP -
@@ -611,7 +903,7 @@ Coaching Instruction: carry 3.0 m/s more minimum speed through the Corner Segmen
           <section class="module-panel" data-module="trace" aria-labelledby="trace-heading">
             <p class="dim">Static telemetry trace / not live telemetry</p>
             <h2 id="trace-heading">TRACE</h2>
-            <pre class="module-text" aria-label="ASCII telemetry traces">POST-SESSION STATIC ANALYSIS SNAPSHOT / C2 WINDOW 1185m -> 1405m
+            <pre class="module-text" data-syntax="trace" aria-label="ASCII telemetry traces">POST-SESSION STATIC ANALYSIS SNAPSHOT / C2 WINDOW 1185m -> 1405m
 
         1185m      1225m      1265m      1305m      1345m      1405m
 SPEED R  ___/^^^^^^^\______                                      45 m/s min
@@ -630,7 +922,7 @@ Deterministic analysis selects evidence. Coach Refinement may rewrite prose only
           <section class="module-panel" data-module="map" aria-labelledby="map-heading">
             <p class="dim">Corner Segment map / simple analysis sketch</p>
             <h2 id="map-heading">MAP</h2>
-            <pre class="module-text" aria-label="ASCII track map with C2 highlight">TRACK SKETCH: BRANDS HATCH INDY STYLE SAMPLE / NO GPS OR SATELLITE CLAIM
+            <pre class="module-text" data-syntax="map" aria-label="ASCII track map with C2 highlight">TRACK SKETCH: BRANDS HATCH INDY STYLE SAMPLE / NO GPS OR SATELLITE CLAIM
 
                  START
                    |
@@ -653,7 +945,7 @@ Comparison Lap set: Valid Lap rows only; invalid laps excluded before coaching.<
           <section class="module-panel" data-module="notes" aria-labelledby="notes-heading">
             <p class="dim">Engineering notes / local artifact review</p>
             <h2 id="notes-heading">NOTES</h2>
-            <pre class="module-text" aria-label="Timestamped engineering notes">2026-06-13T20:18:06-07:00  SETUP
+            <pre class="module-text" data-syntax="notes" aria-label="Timestamped engineering notes">2026-06-13T20:18:06-07:00  SETUP
   Recorded Session sample: Formula Trainer Advanced / Brands Hatch Indy style short run.
   Public page remains pre-alpha; live AMS2/ACC simulator validation is not claimed.
 
@@ -671,7 +963,7 @@ Comparison Lap set: Valid Lap rows only; invalid laps excluded before coaching.<
           <section class="module-panel" data-module="help" aria-labelledby="help-heading">
             <p class="dim">Terminal command list</p>
             <h2 id="help-heading">HELP</h2>
-            <pre class="module-text" aria-label="Terminal command help">COMMANDS
+            <pre class="module-text" data-syntax="help" aria-label="Terminal command help">COMMANDS
   REPORT       CRT report and pre-alpha project contract
   LAPS         Recorded Session lap table and Reference Lap comparison
   TRACE        Post-session ASCII traces for speed, brake, throttle, RPM/gear, delta-time
@@ -680,6 +972,9 @@ Comparison Lap set: Valid Lap rows only; invalid laps excluded before coaching.<
   DECISIONS    Render docs/DECISIONS.md
   GITHUB       Open the public repository
   SITE         Open openracecoach.com
+  PROFILE AMBER|GREEN|VGA|LCD
+  RASTER GRID|SCANLINE|PIXEL|CLEAN
+  STATUS       Report active display profile, raster mode, and current view
   CLEAR        Clear terminal output
 
 ERA NOTE
@@ -788,25 +1083,533 @@ ERA NOTE
 2026-06-13 | Use public shared-memory-derived PC2 JSON only as compatibility evidence | Adapter tests include provenance-tracked public PC2/Project CARS shared-memory-derived JSON samples from `rest-cars` and CREST so real simulator field names and values exercise AMS2 normalization, including lap distance from the CREST sample. These fixtures do not satisfy live validation because decoded JSON cannot prove raw mmap byte layout, and the CREST sample uses an older PC shared-memory version than AMS2's expected version. Alternatives rejected: fabricating raw binary fixtures; treating public JSON as equivalent to a live AMS2 `$pcars2$` capture.
 </script>
   <script>
+    const rootElement = document.documentElement;
+    const crtScreen = document.querySelector(".crt-screen");
     const screenElement = document.querySelector(".screen");
     const decisionsText = document.getElementById("decisionsText");
     const decisionsSource = document.getElementById("decisionsSource");
     const terminalForm = document.getElementById("terminalForm");
     const terminalInput = document.getElementById("terminalInput");
     const terminalOutput = document.getElementById("terminalOutput");
+    const phosphorGhost = document.getElementById("phosphorGhost");
     const viewLinks = Array.from(document.querySelectorAll("[data-view-link]"));
     const commandHistory = [];
     let historyIndex = 0;
 
-    decisionsText.textContent = decisionsSource.textContent.trim();
+    const displayProfiles = {
+      AMBER: {
+        label: "AMBER",
+        terminalFontEra: "late-1980s-system-mono",
+        phosphor: "#eac16f",
+        phosphorRgb: "234, 193, 111",
+        phosphorHot: "#fff2c7",
+        phosphorDim: "#8fa37d",
+        green: "#8bd46d",
+        red: "#ff684f",
+        syntaxLabel: "#9fb28d",
+        syntaxDomain: "#eac16f",
+        syntaxMetric: "#ffe2a3",
+        syntaxId: "#a8d5ff",
+        syntaxOk: "#9cff88",
+        syntaxWarn: "#ff775f",
+        syntaxDanger: "#ff503c",
+        syntaxCommand: "#fff2c7",
+        syntaxTrace: "#88dbff",
+        syntaxBorder: "#c69748",
+        syntaxQuote: "#d9ffce",
+        glass: "#100f0a",
+        case: "#050504",
+        frameBorder: "#2b2518",
+        screenBorder: "#24210f",
+        shadowBlue: "rgba(50, 88, 255, 0.14)",
+        shadowRed: "rgba(255, 62, 34, 0.18)",
+        glow: 0.62,
+        rgbSplit: 0.62,
+        flickerOpacity: 0.2,
+        flickerSpeed: "0.19s",
+        vignetteStrength: 0.56,
+        textBloom: 0.25,
+        textBloomStrong: 0.48,
+        reflectionOpacity: 0.09,
+        frameShineOpacity: 0.22,
+        curvatureShadowOpacity: 0.44,
+        fontScale: 0.92,
+        framePadding: "10px",
+        frameInset: "10px",
+        screenRadius: "2px",
+        terminalColumns: 132,
+        terminalRows: 46,
+      },
+      GREEN: {
+        label: "GREEN",
+        terminalFontEra: "early-1980s-system-mono",
+        phosphor: "#7cff72",
+        phosphorRgb: "124, 255, 114",
+        phosphorHot: "#eaffdf",
+        phosphorDim: "#75a779",
+        green: "#90ff58",
+        red: "#ff5a46",
+        syntaxLabel: "#75a779",
+        syntaxDomain: "#bcff9f",
+        syntaxMetric: "#f3ffd0",
+        syntaxId: "#8dd7ff",
+        syntaxOk: "#d8ffd0",
+        syntaxWarn: "#ff9c68",
+        syntaxDanger: "#ff5a46",
+        syntaxCommand: "#eaffdf",
+        syntaxTrace: "#7fdcff",
+        syntaxBorder: "#6bd56a",
+        syntaxQuote: "#baffbc",
+        glass: "#071007",
+        case: "#030604",
+        frameBorder: "#172a18",
+        screenBorder: "#143018",
+        shadowBlue: "rgba(20, 110, 255, 0.1)",
+        shadowRed: "rgba(255, 40, 22, 0.1)",
+        glow: 0.76,
+        rgbSplit: 0.32,
+        flickerOpacity: 0.24,
+        flickerSpeed: "0.18s",
+        vignetteStrength: 0.52,
+        textBloom: 0.28,
+        textBloomStrong: 0.55,
+        reflectionOpacity: 0.08,
+        frameShineOpacity: 0.18,
+        curvatureShadowOpacity: 0.47,
+        fontScale: 0.92,
+        framePadding: "10px",
+        frameInset: "10px",
+        screenRadius: "2px",
+        terminalColumns: 132,
+        terminalRows: 46,
+      },
+      VGA: {
+        label: "VGA",
+        terminalFontEra: "early-1990s-vga-system-mono",
+        phosphor: "#cfe6ff",
+        phosphorRgb: "207, 230, 255",
+        phosphorHot: "#ffffff",
+        phosphorDim: "#8aa5c7",
+        green: "#48ff85",
+        red: "#ff4f6d",
+        syntaxLabel: "#8aa5c7",
+        syntaxDomain: "#ffd36a",
+        syntaxMetric: "#ffffff",
+        syntaxId: "#69b7ff",
+        syntaxOk: "#48ff85",
+        syntaxWarn: "#ffb347",
+        syntaxDanger: "#ff4f6d",
+        syntaxCommand: "#d8ecff",
+        syntaxTrace: "#61e8ff",
+        syntaxBorder: "#7aa7ff",
+        syntaxQuote: "#b9ffcf",
+        glass: "#090d13",
+        case: "#05070b",
+        frameBorder: "#1b2431",
+        screenBorder: "#17243d",
+        shadowBlue: "rgba(32, 108, 255, 0.26)",
+        shadowRed: "rgba(255, 42, 92, 0.2)",
+        glow: 0.55,
+        rgbSplit: 1.05,
+        flickerOpacity: 0.15,
+        flickerSpeed: "0.24s",
+        vignetteStrength: 0.43,
+        textBloom: 0.18,
+        textBloomStrong: 0.36,
+        reflectionOpacity: 0.1,
+        frameShineOpacity: 0.2,
+        curvatureShadowOpacity: 0.36,
+        fontScale: 0.9,
+        framePadding: "10px",
+        frameInset: "10px",
+        screenRadius: "3px",
+        terminalColumns: 136,
+        terminalRows: 46,
+      },
+      LCD: {
+        label: "LCD",
+        terminalFontEra: "flat-system-lcd-mono",
+        phosphor: "#d9ead8",
+        phosphorRgb: "217, 234, 216",
+        phosphorHot: "#ffffff",
+        phosphorDim: "#a0b1a3",
+        green: "#7edb7c",
+        red: "#ff6b5e",
+        syntaxLabel: "#a0b1a3",
+        syntaxDomain: "#d7c784",
+        syntaxMetric: "#f4f4e8",
+        syntaxId: "#9fc5e8",
+        syntaxOk: "#93d18f",
+        syntaxWarn: "#e0a15e",
+        syntaxDanger: "#ff6b5e",
+        syntaxCommand: "#ffffff",
+        syntaxTrace: "#9ad3d8",
+        syntaxBorder: "#b7b48a",
+        syntaxQuote: "#c7e3c7",
+        glass: "#111514",
+        case: "#050606",
+        frameBorder: "#252b29",
+        screenBorder: "#202b28",
+        shadowBlue: "rgba(80, 120, 255, 0.05)",
+        shadowRed: "rgba(255, 70, 70, 0.04)",
+        glow: 0.18,
+        rgbSplit: 0.05,
+        flickerOpacity: 0.03,
+        flickerSpeed: "1.2s",
+        vignetteStrength: 0.25,
+        textBloom: 0.06,
+        textBloomStrong: 0.12,
+        reflectionOpacity: 0.05,
+        frameShineOpacity: 0.12,
+        curvatureShadowOpacity: 0.18,
+        fontScale: 0.9,
+        framePadding: "10px",
+        frameInset: "10px",
+        screenRadius: "3px",
+        terminalColumns: 136,
+        terminalRows: 46,
+      },
+    };
+
+    const rasterModes = {
+      GRID: {
+        label: "GRID",
+        scanlineOpacity: 0.045,
+        scanlineSize: "3px",
+        subpixelOpacity: 0.028,
+        rasterMaskOpacity: 0.62,
+        terminalGridOpacity: 0.026,
+        pixelGridOpacity: 0.012,
+        gridEngineeringOpacity: 0.046,
+        gridWarpOpacity: 0.055,
+        pixelGrainOpacity: 0.032,
+        pixelGrainScale: "13px",
+        blackGrainOpacity: 0.04,
+        blackGrainScale: "5px",
+        rasterOpacity: 0.19,
+        noiseOpacity: 0.04,
+        rasterTextBloom: 0.045,
+        rasterTextBloomStrong: 0.07,
+        edgeFalloff: 0.42,
+        topFalloff: 0.34,
+        jitterX: "0.13px",
+        jitterY: "0.06px",
+      },
+      SCANLINE: {
+        label: "SCANLINE",
+        scanlineOpacity: 0.195,
+        scanlineSize: "3px",
+        subpixelOpacity: 0.018,
+        rasterMaskOpacity: 0.92,
+        terminalGridOpacity: 0,
+        pixelGridOpacity: 0,
+        gridEngineeringOpacity: 0,
+        gridWarpOpacity: 0,
+        pixelGrainOpacity: 0.018,
+        pixelGrainScale: "17px",
+        blackGrainOpacity: 0.035,
+        blackGrainScale: "5px",
+        rasterOpacity: 0.035,
+        noiseOpacity: 0.03,
+        rasterTextBloom: 0.055,
+        rasterTextBloomStrong: 0.09,
+        edgeFalloff: 0.46,
+        topFalloff: 0.38,
+        jitterX: "0.08px",
+        jitterY: "0.05px",
+      },
+      PIXEL: {
+        label: "PIXEL",
+        scanlineOpacity: 0.075,
+        scanlineSize: "2px",
+        subpixelOpacity: 0.045,
+        rasterMaskOpacity: 0.78,
+        terminalGridOpacity: 0.012,
+        pixelGridOpacity: 0.042,
+        gridEngineeringOpacity: 0.014,
+        gridWarpOpacity: 0.048,
+        pixelGrainOpacity: 0.118,
+        pixelGrainScale: "9px",
+        blackGrainOpacity: 0.09,
+        blackGrainScale: "4px",
+        rasterOpacity: 0.29,
+        noiseOpacity: 0.07,
+        rasterTextBloom: 0.06,
+        rasterTextBloomStrong: 0.095,
+        edgeFalloff: 0.44,
+        topFalloff: 0.35,
+        jitterX: "0.14px",
+        jitterY: "0.07px",
+      },
+      CLEAN: {
+        label: "CLEAN",
+        scanlineOpacity: 0,
+        scanlineSize: "100vh",
+        subpixelOpacity: 0,
+        rasterMaskOpacity: 0,
+        terminalGridOpacity: 0,
+        pixelGridOpacity: 0,
+        gridEngineeringOpacity: 0,
+        gridWarpOpacity: 0,
+        pixelGrainOpacity: 0,
+        pixelGrainScale: "16px",
+        blackGrainOpacity: 0,
+        blackGrainScale: "5px",
+        rasterOpacity: 0,
+        noiseOpacity: 0,
+        rasterTextBloom: 0,
+        rasterTextBloomStrong: 0,
+        edgeFalloff: 0.22,
+        topFalloff: 0.12,
+        jitterX: "0px",
+        jitterY: "0px",
+      },
+    };
+
+    let activeDisplayProfile = "AMBER";
+    let activeRasterMode = "GRID";
+    let activeFontScale = Number(displayProfiles[activeDisplayProfile].fontScale) || 0.93;
+    let ghostTimer;
+    const fontScaleStep = 0.04;
+    const fontScaleMin = 0.74;
+    const fontScaleMax = 1.14;
+
+    const commonSyntaxRules = [
+      { className: "sx-danger", pattern: /\b(?:ERROR|INVALID|VALID NO|EXCLUDED|NOT PROVEN|NO GPS OR SATELLITE CLAIM)\b/ },
+      { className: "sx-warn", pattern: /\b(?:PRE-ALPHA|UNKNOWN|NOT LIVE|AWAITING|FAILED|REJECTED)\b/ },
+      { className: "sx-ok", pattern: /\b(?:VALID YES|READY|COMPLETE|REPORTABLE)\b/ },
+      { className: "sx-domain", pattern: /\b(?:Recorded Session|Analysis Run|Reference Lap|Comparison Lap|Corner Segment|Reportable Delta|Lap Loss Cause|Coach Report|Coach Refinement|Coaching Instruction|Valid Lap|Open Race Coach)\b/i },
+      { className: "sx-id", pattern: /\b(?:C\d+|LAP \d{3}|01k2demo:lap:\d+|\d{4}-\d{2}-\d{2}_\d{6}_[a-z]+|docs\/DECISIONS\.md|openracecoach\.com)\b/i },
+      { className: "sx-metric", pattern: /[+-]?\d+(?:\.\d+)?(?:s|m\/s|m|%|px)?|0:\d{2}\.\d{3}/ },
+    ];
+
+    const syntaxRulesByView = {
+      report: [
+        { className: "sx-heading", pattern: /\bTHE ONE THING\b/ },
+        { className: "sx-border", pattern: /\+[-+]+\+/ },
+      ],
+      laps: [
+        { className: "sx-label", pattern: /\b(?:LAP|TIME|GAP|S1|S2|S3|VALID|DELTA|REF)\b/ },
+      ],
+      trace: [
+        { className: "sx-trace", pattern: /\b(?:SPEED R|SPEED C|BRAKE R|BRAKE C|THRTL R|THRTL C|RPM\/G R|RPM\/G C|DELTA)\b/ },
+        { className: "sx-label", pattern: /\b(?:POST-SESSION STATIC ANALYSIS SNAPSHOT|C2 WINDOW)\b/ },
+      ],
+      map: [
+        { className: "sx-trace", pattern: /[*]{4,}|\[ C\d+ \]/ },
+        { className: "sx-label", pattern: /\b(?:START|TRACK SKETCH)\b/ },
+      ],
+      notes: [
+        { className: "sx-id", pattern: /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}-\d{2}:\d{2}/ },
+        { className: "sx-label", pattern: /\b(?:SETUP|CONDITIONS|DRIVER COMMENT|NEXT-RUN FOCUS)\b/ },
+        { className: "sx-quote", pattern: /"[^"]+"/ },
+      ],
+      help: [
+        { className: "sx-command", pattern: /\b(?:REPORT|LAPS|TRACE|MAP|NOTES|DECISIONS|GITHUB|SITE|PROFILE|AMBER|GREEN|VGA|LCD|RASTER|GRID|SCANLINE|PIXEL|CLEAN|STATUS|CLEAR|HELP)\b/ },
+        { className: "sx-label", pattern: /\b(?:COMMANDS|ERA NOTE)\b/ },
+      ],
+      decisions: [
+        { className: "sx-id", pattern: /\d{4}-\d{2}-\d{2}/ },
+        { className: "sx-warn", pattern: /Alternatives rejected:/ },
+        { className: "sx-command", pattern: /`[^`]+`/ },
+      ],
+    };
+
+    function toCustomPropertyName(name) {
+      return `--${name.replace(/[A-Z]/g, (match) => `-${match.toLowerCase()}`)}`;
+    }
+
+    function escapeHtml(value) {
+      return value.replace(/[&<>"']/g, (character) => (
+        {
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          "\"": "&quot;",
+          "'": "&#39;",
+        }[character]
+      ));
+    }
+
+    function highlightSyntaxLine(line, view) {
+      if (/^\+[-+]+\+$/.test(line)) {
+        return `<span class="sx-border">${escapeHtml(line)}</span>`;
+      }
+
+      const rules = [...(syntaxRulesByView[view] || []), ...commonSyntaxRules];
+      let index = 0;
+      let output = "";
+
+      while (index < line.length) {
+        let bestMatch = null;
+        let bestRule = null;
+        let bestPosition = Infinity;
+
+        rules.forEach((rule) => {
+          const flags = rule.pattern.flags.replace("g", "");
+          const matcher = new RegExp(rule.pattern.source, flags);
+          const match = matcher.exec(line.slice(index));
+          if (!match || match[0].length === 0) {
+            return;
+          }
+
+          if (match.index < bestPosition) {
+            bestMatch = match;
+            bestRule = rule;
+            bestPosition = match.index;
+          }
+        });
+
+        if (!bestMatch || !bestRule) {
+          output += escapeHtml(line.slice(index));
+          break;
+        }
+
+        output += escapeHtml(line.slice(index, index + bestPosition));
+        output += `<span class="${bestRule.className}">${escapeHtml(bestMatch[0])}</span>`;
+        index += bestPosition + bestMatch[0].length;
+      }
+
+      return output;
+    }
+
+    function renderSyntaxText(text, view) {
+      return text.split("\n").map((line) => highlightSyntaxLine(line, view)).join("\n");
+    }
+
+    function renderSyntaxNode(node, text = node.dataset.rawText || node.textContent) {
+      const rawText = text.trimEnd();
+      node.dataset.rawText = rawText;
+      node.innerHTML = renderSyntaxText(rawText, node.dataset.syntax);
+    }
+
+    function renderAllSyntax() {
+      document.querySelectorAll("[data-syntax]").forEach((node) => {
+        renderSyntaxNode(node);
+      });
+    }
+
+    function setSyntaxText(node, text) {
+      renderSyntaxNode(node, text.trim());
+    }
+
+    function updateTerminalGridMetrics(profile) {
+      const bounds = crtScreen.getBoundingClientRect();
+      const columns = Number(profile.terminalColumns) || 132;
+      const rows = Number(profile.terminalRows) || 46;
+      const cellWidth = Math.max(4.5, bounds.width / columns);
+      const cellHeight = Math.max(10, bounds.height / rows);
+
+      rootElement.style.setProperty("--terminal-cell-width", `${cellWidth.toFixed(3)}px`);
+      rootElement.style.setProperty("--terminal-cell-height", `${cellHeight.toFixed(3)}px`);
+      rootElement.style.setProperty("--terminal-content-width", `${columns}ch`);
+      rootElement.style.setProperty("--pixel-cell-width", `${(cellWidth / 2).toFixed(3)}px`);
+      rootElement.style.setProperty("--pixel-cell-height", `${(cellHeight / 2).toFixed(3)}px`);
+    }
+
+    function applyVariables(definition) {
+      Object.entries(definition).forEach(([key, value]) => {
+        if (key === "label") {
+          return;
+        }
+
+        rootElement.style.setProperty(toCustomPropertyName(key), String(value));
+      });
+    }
+
+    function applyDisplayProfile(profileName) {
+      const profile = displayProfiles[profileName];
+      if (!profile) {
+        return false;
+      }
+
+      activeDisplayProfile = profileName;
+      activeFontScale = Number(profile.fontScale) || activeFontScale;
+      applyVariables(profile);
+      rootElement.style.setProperty("--font-scale", activeFontScale.toFixed(2));
+      rootElement.dataset.displayProfile = profile.label;
+      updateTerminalGridMetrics(profile);
+      return true;
+    }
+
+    function applyRasterMode(modeName) {
+      const rasterMode = rasterModes[modeName];
+      if (!rasterMode) {
+        return false;
+      }
+
+      activeRasterMode = modeName;
+      applyVariables(rasterMode);
+      rootElement.dataset.rasterMode = rasterMode.label;
+      return true;
+    }
+
+    function getVisualStatus() {
+      return `SYSTEM PROFILE ${activeDisplayProfile} / RASTER ${activeRasterMode} / FONT ${Math.round(activeFontScale * 100)}% / VIEW ${screenElement.dataset.view.toUpperCase()}`;
+    }
+
+    function setFontScale(nextScale) {
+      const clampedScale = Math.min(fontScaleMax, Math.max(fontScaleMin, nextScale));
+      activeFontScale = Number(clampedScale.toFixed(2));
+      rootElement.style.setProperty("--font-scale", activeFontScale.toFixed(2));
+      updateTerminalGridMetrics(displayProfiles[activeDisplayProfile]);
+      writeTerminal(`FONT SCALE ${Math.round(activeFontScale * 100)}%`);
+    }
+
+    function handleFontScaleShortcut(event) {
+      if (!(event.metaKey || event.ctrlKey) || event.altKey) {
+        return;
+      }
+
+      if (event.key === "+" || event.key === "=" || event.code === "NumpadAdd") {
+        event.preventDefault();
+        setFontScale(activeFontScale + fontScaleStep);
+      }
+
+      if (event.key === "-" || event.key === "_" || event.code === "NumpadSubtract") {
+        event.preventDefault();
+        setFontScale(activeFontScale - fontScaleStep);
+      }
+    }
+
+    function flashPhosphorGhost() {
+      if (!phosphorGhost) {
+        return;
+      }
+
+      window.clearTimeout(ghostTimer);
+      phosphorGhost.textContent = screenElement.innerText.replace(/\n{3,}/g, "\n\n").slice(0, 3000);
+      phosphorGhost.dataset.active = "true";
+      ghostTimer = window.setTimeout(() => {
+        phosphorGhost.dataset.active = "false";
+        phosphorGhost.textContent = "";
+      }, window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 90 : 620);
+    }
+
+    applyDisplayProfile(activeDisplayProfile);
+    applyRasterMode(activeRasterMode);
+
+    if ("ResizeObserver" in window) {
+      const terminalGridObserver = new ResizeObserver(() => {
+        updateTerminalGridMetrics(displayProfiles[activeDisplayProfile]);
+      });
+      terminalGridObserver.observe(crtScreen);
+    } else {
+      window.addEventListener("resize", () => {
+        updateTerminalGridMetrics(displayProfiles[activeDisplayProfile]);
+      });
+    }
+
+    setSyntaxText(decisionsText, decisionsSource.textContent);
+    renderAllSyntax();
 
     fetch("./DECISIONS.md")
       .then((response) => (response.ok ? response.text() : Promise.reject(new Error("DECISIONS.md fetch failed"))))
       .then((text) => {
-        decisionsText.textContent = text.trim();
+        setSyntaxText(decisionsText, text);
       })
       .catch(() => {
-        decisionsText.textContent = decisionsSource.textContent.trim();
+        setSyntaxText(decisionsText, decisionsSource.textContent);
       });
 
     function writeTerminal(message) {
@@ -815,8 +1618,12 @@ ERA NOTE
 
     const views = new Set(["report", "laps", "trace", "map", "notes", "help", "decisions"]);
 
-    function setView(view, message) {
+    function setView(view, message, options = {}) {
       const nextView = views.has(view) ? view : "report";
+      if (screenElement.dataset.view !== nextView && options.ghost !== false) {
+        flashPhosphorGhost();
+      }
+
       screenElement.dataset.view = nextView;
       viewLinks.forEach((link) => {
         link.dataset.active = String(link.dataset.viewLink === nextView);
@@ -834,6 +1641,9 @@ ERA NOTE
 
     function runCommand(rawCommand) {
       const command = rawCommand.trim().toLowerCase().replace(/\s+/g, " ");
+      const tokens = command.split(" ");
+      const verb = tokens[0];
+      const argument = (tokens[1] || "").toUpperCase();
 
       if (!command) {
         writeTerminal("");
@@ -846,6 +1656,41 @@ ERA NOTE
       if (command === "report" || command === "crt" || command === "crt report" || command === "home") {
         setView("report", "CRT REPORT READY");
         window.location.hash = "report";
+        return;
+      }
+
+      if (command === "help" || command === "?") {
+        setView("help", "COMMANDS: REPORT / LAPS / TRACE / MAP / NOTES / HELP / DECISIONS / PROFILE / RASTER / STATUS / GITHUB / SITE / CLEAR");
+        window.location.hash = "help";
+        return;
+      }
+
+      if (command === "status" || command === "system") {
+        writeTerminal(getVisualStatus());
+        return;
+      }
+
+      if (verb === "profile") {
+        if (tokens.length !== 2 || !displayProfiles[argument]) {
+          writeTerminal(`PROFILE ERROR: ${argument || "MISSING"} / USE AMBER, GREEN, VGA, OR LCD`);
+          return;
+        }
+
+        flashPhosphorGhost();
+        applyDisplayProfile(argument);
+        writeTerminal(`PROFILE ${argument} READY`);
+        return;
+      }
+
+      if (verb === "raster") {
+        if (tokens.length !== 2 || !rasterModes[argument]) {
+          writeTerminal(`RASTER ERROR: ${argument || "MISSING"} / USE GRID, SCANLINE, PIXEL, OR CLEAN`);
+          return;
+        }
+
+        flashPhosphorGhost();
+        applyRasterMode(argument);
+        writeTerminal(`RASTER ${argument} READY`);
         return;
       }
 
@@ -871,12 +1716,6 @@ ERA NOTE
         return;
       }
 
-      if (command === "help" || command === "?") {
-        setView("help", "COMMANDS: REPORT / LAPS / TRACE / MAP / NOTES / HELP / DECISIONS / GITHUB / SITE / CLEAR");
-        window.location.hash = "help";
-        return;
-      }
-
       if (command === "clear" || command === "cls") {
         writeTerminal("");
         return;
@@ -885,7 +1724,7 @@ ERA NOTE
       writeTerminal(`UNKNOWN COMMAND: ${rawCommand.trim().toUpperCase()}`);
     }
 
-    setView(window.location.hash.slice(1), "OPEN RACE COACH TERMINAL READY");
+    setView(window.location.hash.slice(1), "OPEN RACE COACH TERMINAL READY", { ghost: false });
 
     viewLinks.forEach((link) => {
       link.addEventListener("click", (event) => {
@@ -915,19 +1754,32 @@ ERA NOTE
       }
     });
 
-    document.querySelector(".crt-screen").addEventListener("pointerdown", (event) => {
-      if (event.target instanceof HTMLAnchorElement || event.target === terminalInput) {
+    document.addEventListener("keydown", handleFontScaleShortcut);
+
+    function focusCommandLine() {
+      terminalInput.focus({ preventScroll: true });
+      const endPosition = terminalInput.value.length;
+      terminalInput.setSelectionRange(endPosition, endPosition);
+    }
+
+    document.addEventListener("pointerdown", (event) => {
+      const target = event.target;
+      if (!(target instanceof Element)) {
         return;
       }
 
-      terminalInput.focus();
+      if (target.closest("a, button, input, textarea, select, [contenteditable='true']")) {
+        return;
+      }
+
+      requestAnimationFrame(focusCommandLine);
     });
 
     window.addEventListener("hashchange", () => {
       setView(window.location.hash.slice(1));
     });
 
-    terminalInput.focus();
+    focusCommandLine();
   </script>
 </body>
 </html>

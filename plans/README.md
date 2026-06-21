@@ -12,6 +12,7 @@ Scope of this improve pass: editing features in `docs/crt_terminal_text.html`. I
 | 002 | Add explicit Coaching Tile structure editing | P1 | M | - | DONE |
 | 003 | Clarify source refresh semantics and fix source-derived formatters | P1 | M | - | DONE |
 | 004 | Harden editor panel focus, keyboard, and mobile behavior | P2 | S | - | DONE |
+| 005 | Make the CRT terminal visual system durable | P2 | M | - | DONE |
 
 Status values: TODO | IN PROGRESS | DONE | BLOCKED (with one-line reason) | REJECTED (with one-line rationale)
 
