@@ -94,7 +94,17 @@ def test_logo_and_view_markup_are_addressable_by_terminal_commands() -> None:
     anchors = [attrs for tag, attrs in parser.tags if tag == "a"]
 
     assert "┌─┐┌─┐┌─┐\n└─┘┴└─└─" in html
-    for view in ["report", "laps", "trace", "map", "notes", "help", "decisions", "source"]:
+    for view in [
+        "report",
+        "laps",
+        "trace",
+        "map",
+        "notes",
+        "pixels",
+        "help",
+        "decisions",
+        "source",
+    ]:
         assert f'data-view-link="{view}"' in html
         assert f'"{view}"' in html
 
@@ -108,6 +118,7 @@ def test_logo_and_view_markup_are_addressable_by_terminal_commands() -> None:
         "#trace",
         "#map",
         "#notes",
+        "#pixels",
         "#help",
         "#decisions",
         "#source",
@@ -123,6 +134,10 @@ def test_help_text_documents_the_terminal_feature_surface() -> None:
         "TRACE",
         "MAP",
         "NOTES",
+        "TRACKS",
+        "TRACK <BRANDS|MONZA|SPA>",
+        "TRACK <NAME> LABELS",
+        "IMAGE ORC",
         "DECISIONS",
         "SOURCE",
         "CODE",
@@ -153,10 +168,31 @@ def test_command_grammar_and_visual_states_are_defined_in_page_code() -> None:
         assert re.search(rf"\b{profile}:\s*\{{", html)
     for raster in ["GRID", "SCANLINE", "PIXEL", "CLEAN"]:
         assert re.search(rf"\b{raster}:\s*\{{", html)
-    for view_command in ["report", "laps", "trace", "map", "notes", "help", "decisions", "source"]:
+    for view_command in [
+        "report",
+        "laps",
+        "trace",
+        "map",
+        "notes",
+        "pixels",
+        "help",
+        "decisions",
+        "source",
+    ]:
         assert view_command in html
 
     required_code_paths = [
+        "const terminalPixelImages",
+        "terminalPixelImages.BRANDS_LABELS",
+        "terminalPixelImages.MONZA_LABELS",
+        "terminalPixelImages.SPA_LABELS",
+        "function getPixelMarkerMap(image)",
+        "function renderPixelImage(target, image)",
+        "function resolvePixelImageCommand(command, tokens)",
+        '"brands labels": "BRANDS_LABELS"',
+        '"monza labels": "MONZA_LABELS"',
+        '"spa labels": "SPA_LABELS"',
+        "Open Race Coach Corner Segments",
         "function applyDisplayProfile(profileName)",
         "rootElement.dataset.displayProfile = profile.label",
         "function applyRasterMode(modeName)",
@@ -174,6 +210,8 @@ def test_command_grammar_and_visual_states_are_defined_in_page_code() -> None:
 
     for code_path in required_code_paths:
         assert code_path in html
+
+    assert "CORNERS" not in html
 
 
 def test_source_and_decisions_views_have_file_url_fallback_content() -> None:

@@ -218,6 +218,62 @@ async function main() {
     const activeLink = () => document.querySelector(".footer-links a[data-active='true']")
       ?.dataset.viewLink || null;
     const cssVar = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    const pixelSignature = () => {
+      const cells = Array.from(document.querySelectorAll("#pixelRender .pixel-cell"));
+      const columns = getComputedStyle(document.getElementById("pixelRender"))
+        .gridTemplateColumns
+        .split(" ")
+        .filter(Boolean)
+        .length;
+      const lit = cells
+        .map((cell, index) => ({ cell, index }))
+        .filter(({ cell }) => cell.dataset.lit !== "0")
+        .map(({ index }) => ({
+          x: index % columns,
+          y: Math.floor(index / columns),
+        }));
+      return {
+        columns,
+        rows: columns ? Math.ceil(cells.length / columns) : 0,
+        litCount: lit.length,
+        minX: Math.min(...lit.map((point) => point.x)),
+        maxX: Math.max(...lit.map((point) => point.x)),
+        minY: Math.min(...lit.map((point) => point.y)),
+        maxY: Math.max(...lit.map((point) => point.y)),
+        topRightLit: lit.some((point) => point.x >= 47 && point.y <= 9),
+        lowerLeftLit: lit.some((point) => point.x <= 17 && point.y >= 24),
+        lowerRightLit: lit.some((point) => point.x >= 48 && point.y >= 27),
+      };
+    };
+    const pixelMarkerStyles = () => {
+      const rgbChannels = (value) => (value.match(/\\d+/g) || []).slice(0, 3).map(Number);
+      const luminance = (value) => {
+        const [red = 0, green = 0, blue = 0] = rgbChannels(value);
+        return red * 0.2126 + green * 0.7152 + blue * 0.0722;
+      };
+      const markers = Array.from(document.querySelectorAll("#pixelRender .pixel-marker"));
+      return markers.map((marker) => {
+        const style = getComputedStyle(marker);
+        const rect = marker.getBoundingClientRect();
+        return {
+          text: marker.textContent,
+          color: style.color,
+          backgroundColor: style.backgroundColor,
+          contrastDelta: luminance(style.backgroundColor) - luminance(style.color),
+          width: rect.width,
+          height: rect.height,
+        };
+      });
+    };
+    const pixelImageSignature = (name) => {
+      const image = terminalPixelImages[name];
+      return {
+        columns: image.columns,
+        height: image.height || image.rows.length,
+        path: image.path || [],
+        markers: (image.markers || []).map((marker) => [marker.number, marker.x, marker.y, marker.name]),
+      };
+    };
     const submit = async (command) => {
       const input = document.getElementById("terminalInput");
       input.value = command;
@@ -240,6 +296,12 @@ async function main() {
         scanlineOpacity: cssVar("--scanline-opacity"),
         rasterOpacity: cssVar("--raster-opacity"),
         gridOpacity: cssVar("--terminal-grid-opacity"),
+        pixelMeta: document.getElementById("pixelMeta").innerText,
+        pixelCells: document.querySelectorAll("#pixelRender .pixel-cell").length,
+        pixelMarkers: document.querySelectorAll("#pixelRender .pixel-marker").length,
+        pixelMarkerStyles: pixelMarkerStyles(),
+        litPixelCells: document.querySelectorAll("#pixelRender .pixel-cell:not([data-lit='0'])").length,
+        pixelSignature: pixelSignature(),
       };
     };
 
@@ -258,6 +320,11 @@ async function main() {
       reportCaveat: document.querySelector(".report-printout").innerText
         .includes("live AMS2/ACC validation\\n  is not proven by this repo."),
       traceCaveat: document.querySelector("[data-module='trace']").innerText.includes("not live telemetry"),
+      pixelMeta: document.getElementById("pixelMeta").innerText,
+      pixelCells: document.querySelectorAll("#pixelRender .pixel-cell").length,
+      pixelMarkers: document.querySelectorAll("#pixelRender .pixel-marker").length,
+      litPixelCells: document.querySelectorAll("#pixelRender .pixel-cell:not([data-lit='0'])").length,
+      pixelSignature: pixelSignature(),
       inputAutocomplete: document.getElementById("terminalInput").getAttribute("autocomplete"),
       overlayPointerEvents: {
         grid: getComputedStyle(document.querySelector(".terminal-grid")).pointerEvents,
@@ -265,12 +332,24 @@ async function main() {
       },
       screenTransform: getComputedStyle(document.querySelector(".screen")).transform,
       screenFilter: getComputedStyle(document.querySelector(".screen")).filter,
+      imageSignatures: {
+        BRANDS: pixelImageSignature("BRANDS"),
+        MONZA: pixelImageSignature("MONZA"),
+        SPA: pixelImageSignature("SPA"),
+      },
     };
 
     const viewCommands = [];
-    for (const command of ["laps", "trace", "map", "notes", "help", "decisions", "source", "report"]) {
+    for (const command of ["laps", "trace", "map", "notes", "pixels", "help", "decisions", "source", "report"]) {
       viewCommands.push(await submit(command));
     }
+    const imageAlias = await submit("image orc");
+    const trackBrands = await submit("track brands");
+    const trackBrandsLabels = await submit("track brands labels");
+    const trackMonza = await submit("track monza");
+    const trackMonzaLabels = await submit("track monza labels");
+    const trackSpa = await submit("track spa");
+    const trackSpaLabels = await submit("track spa labels");
 
     await submit("help");
     const profileCommands = [];
@@ -350,6 +429,13 @@ async function main() {
     return {
       initial,
       viewCommands,
+      imageAlias,
+      trackBrands,
+      trackBrandsLabels,
+      trackMonza,
+      trackMonzaLabels,
+      trackSpa,
+      trackSpaLabels,
       profileCommands,
       invalidProfile,
       profileAfterInvalid,
@@ -388,13 +474,16 @@ async function main() {
 
   assert(results.initial.view === "report", "initial view should be report", results.initial);
   assert(results.initial.profile === "AMBER", "initial profile should be AMBER", results.initial);
-  assert(results.initial.raster === "GRID", "initial raster should be GRID", results.initial);
+  assert(results.initial.raster === "SCANLINE", "initial raster should be SCANLINE", results.initial);
   assert(results.initial.character === "3", "initial character level should be 3", results.initial);
   assert(results.initial.focusedInput, "terminal input should be focused on load", results.initial);
   assert(results.initial.decisionsHasContent, "decisions render should include decision content", results.initial);
   assert(results.initial.sourceHasDocument, "source render should include page source", results.initial);
   assert(results.initial.reportCaveat, "report view should preserve live-validation caveat", results.initial);
   assert(results.initial.traceCaveat, "trace view should preserve not-live-telemetry caveat", results.initial);
+  assert(results.initial.pixelCells === 2304, "pixel renderer should create the expected track bitmap cell grid", results.initial);
+  assert(results.initial.litPixelCells > 100, "pixel renderer should include lit phosphor cells", results.initial);
+  assert(results.initial.pixelMeta.includes("BRANDS HATCH INDY"), "initial pixel image should be Brands Hatch Indy", results.initial);
   assert(results.initial.inputAutocomplete === "off", "terminal input autocomplete should be off", results.initial);
   assert(results.initial.overlayPointerEvents.grid === "none", "raster overlay must not catch input", results.initial);
   assert(results.initial.overlayPointerEvents.ghost === "none", "ghost overlay must not catch input", results.initial);
@@ -406,6 +495,86 @@ async function main() {
     assert(commandResult.view === expectedView, `${expectedView} command should switch view`, commandResult);
     assert(commandResult.hash === `#${expectedView}`, `${expectedView} command should update hash`, commandResult);
     assert(commandResult.activeLink === expectedView, `${expectedView} command should activate footer link`, commandResult);
+  }
+  assert(results.imageAlias.view === "pixels", "IMAGE ORC should switch to the pixel image view", results.imageAlias);
+  assert(results.imageAlias.hash === "#pixels", "IMAGE ORC should update hash to pixels", results.imageAlias);
+  assert(results.imageAlias.pixelCells === 644, "IMAGE ORC should render the ORC logo cell grid", results.imageAlias);
+  assert(results.imageAlias.output.some((line) => line.includes("OPEN RACE COACH LOGO PIXEL IMAGE READY")), "IMAGE ORC should print ready", results.imageAlias);
+  assert(results.trackBrands.pixelMeta.includes("BRANDS HATCH INDY"), "TRACK BRANDS should render Brands Hatch", results.trackBrands);
+  assert(results.trackBrands.pixelMeta.includes("Brands_Hatch_Indy_Circuit.svg"), "TRACK BRANDS should include source URL", results.trackBrands);
+  assert(results.trackBrands.pixelMeta.includes("Hand-authored terminal approximation"), "TRACK BRANDS should include honest provenance detail", results.trackBrands);
+  assert(!results.trackBrands.pixelMeta.includes("DISPLAY LABEL CUES"), "TRACK BRANDS should keep clean metadata", results.trackBrands);
+  assert(results.trackBrands.pixelMarkers === 0, "TRACK BRANDS should not render markers", results.trackBrands);
+  assert(results.initial.imageSignatures.BRANDS.columns === 72, "Brands data should use the improved 72-column candidate", results.initial);
+  assert(results.initial.imageSignatures.BRANDS.height === 32, "Brands data should use the improved 32-row candidate", results.initial);
+  assert(JSON.stringify(results.initial.imageSignatures.BRANDS.path.slice(0, 6)) === JSON.stringify([[31, 29], [45, 29], [51, 27], [58, 21], [60, 18], [59, 14]]), "Brands path should keep the accepted candidate opening", results.initial);
+  assert(JSON.stringify(results.initial.imageSignatures.BRANDS.path.slice(-5)) === JSON.stringify([[11, 20], [12, 23], [14, 26], [18, 28], [31, 29]]), "Brands path should keep the accepted candidate closing", results.initial);
+  assert(results.trackBrands.pixelCells === 2304, "TRACK BRANDS should use the improved Brands raster grid size", results.trackBrands);
+  assert(results.trackBrandsLabels.pixelMeta.includes("BRANDS HATCH INDY LABELED TEST"), "TRACK BRANDS LABELS should render the labeled test image", results.trackBrandsLabels);
+  assert(results.trackBrandsLabels.pixelMeta.includes("DISPLAY LABEL CUES"), "TRACK BRANDS LABELS should include marker legend", results.trackBrandsLabels);
+  assert(results.trackBrandsLabels.pixelMeta.includes("named-location display approximations"), "TRACK BRANDS LABELS should state approximation limits", results.trackBrandsLabels);
+  assert(results.trackBrandsLabels.pixelMeta.includes("Open Race Coach Corner Segments"), "TRACK BRANDS LABELS should not imply Corner Segment authority", results.trackBrandsLabels);
+  assert(results.trackBrandsLabels.pixelMarkers === 6, "TRACK BRANDS LABELS should render six numbered markers", results.trackBrandsLabels);
+  for (const label of ["Brabham Straight", "Paddock Hill", "Druids", "Graham Hill", "McLaren", "Clearways/Clark"]) {
+    assert(results.trackBrandsLabels.pixelMeta.includes(label), `TRACK BRANDS LABELS should include ${label}`, results.trackBrandsLabels);
+  }
+  assert(results.trackMonza.pixelMeta.includes("MONZA"), "TRACK MONZA should render Monza", results.trackMonza);
+  assert(results.trackMonza.pixelMeta.includes("Monza_track_map.svg"), "TRACK MONZA should include source URL", results.trackMonza);
+  assert(!results.trackMonza.pixelMeta.includes("DISPLAY LABEL CUES"), "TRACK MONZA should keep clean metadata", results.trackMonza);
+  assert(results.trackMonza.pixelMarkers === 0, "TRACK MONZA should not render markers", results.trackMonza);
+  assert(results.initial.imageSignatures.MONZA.columns === 80, "Monza data should use the improved 80-column candidate", results.initial);
+  assert(results.initial.imageSignatures.MONZA.height === 32, "Monza data should use the improved 32-row candidate", results.initial);
+  assert(JSON.stringify(results.initial.imageSignatures.MONZA.path.slice(0, 6)) === JSON.stringify([[48, 29], [33, 29], [33, 28], [29, 29], [26, 29], [23, 29]]), "Monza path should keep the accepted candidate opening", results.initial);
+  assert(JSON.stringify(results.initial.imageSignatures.MONZA.path.slice(-5)) === JSON.stringify([[67, 23], [67, 25], [64, 28], [58, 28], [48, 29]]), "Monza path should keep the accepted candidate closing", results.initial);
+  assert(results.trackMonza.pixelCells === 2560, "TRACK MONZA should use the larger Monza raster grid", results.trackMonza);
+  assert(results.trackMonza.pixelSignature.columns === 80, "TRACK MONZA should render 80 columns", results.trackMonza);
+  assert(results.trackMonza.pixelSignature.rows === 32, "TRACK MONZA should render 32 rows", results.trackMonza);
+  assert(results.trackMonza.pixelSignature.maxX - results.trackMonza.pixelSignature.minX >= 50, "TRACK MONZA should span the circuit width", results.trackMonza);
+  assert(results.trackMonza.pixelSignature.maxY - results.trackMonza.pixelSignature.minY >= 26, "TRACK MONZA should span the circuit height", results.trackMonza);
+  assert(results.trackMonzaLabels.pixelMeta.includes("MONZA LABELED TEST"), "TRACK MONZA LABELS should render the labeled test image", results.trackMonzaLabels);
+  assert(results.trackMonzaLabels.pixelMeta.includes("DISPLAY LABEL CUES"), "TRACK MONZA LABELS should include marker legend", results.trackMonzaLabels);
+  assert(results.trackMonzaLabels.pixelMeta.includes("official turn numbers"), "TRACK MONZA LABELS should disclaim official turn numbering", results.trackMonzaLabels);
+  assert(results.trackMonzaLabels.pixelMarkers === 6, "TRACK MONZA LABELS should render six numbered markers", results.trackMonzaLabels);
+  for (const label of ["Start/finish straight", "Rettifilo", "Curva Grande", "Roggia/Lesmo side", "Ascari", "Parabolica/Alboreto"]) {
+    assert(results.trackMonzaLabels.pixelMeta.includes(label), `TRACK MONZA LABELS should include ${label}`, results.trackMonzaLabels);
+  }
+  assert(results.trackSpa.pixelMeta.includes("SPA-FRANCORCHAMPS"), "TRACK SPA should render Spa", results.trackSpa);
+  assert(!results.trackSpa.pixelMeta.includes("DISPLAY LABEL CUES"), "TRACK SPA should keep the clean raster metadata", results.trackSpa);
+  assert(results.trackSpa.pixelMarkers === 0, "TRACK SPA should not render corner markers", results.trackSpa);
+  assert(results.trackSpa.pixelMeta.includes("Spa-Francorchamps_of_Belgium.svg"), "TRACK SPA should include source URL", results.trackSpa);
+  assert(results.initial.imageSignatures.SPA.columns === 80, "Spa data should use the improved 80-column candidate", results.initial);
+  assert(results.initial.imageSignatures.SPA.height === 32, "Spa data should use the improved 32-row candidate", results.initial);
+  assert(JSON.stringify(results.initial.imageSignatures.SPA.path.slice(0, 6)) === JSON.stringify([[25, 22], [17, 27], [20, 21], [27, 13], [36, 8], [52, 2]]), "Spa path should keep the accepted candidate opening", results.initial);
+  assert(JSON.stringify(results.initial.imageSignatures.SPA.path.slice(-5)) === JSON.stringify([[39, 18], [35, 20], [29, 21], [28, 20], [25, 22]]), "Spa path should keep the accepted candidate closing", results.initial);
+  assert(results.trackSpa.pixelCells === 2560, "TRACK SPA should use the wider Spa raster grid", results.trackSpa);
+  assert(results.trackSpa.pixelSignature.columns === 80, "TRACK SPA should render 80 columns", results.trackSpa);
+  assert(results.trackSpa.pixelSignature.rows === 32, "TRACK SPA should render 32 rows", results.trackSpa);
+  assert(results.trackSpa.pixelSignature.maxX - results.trackSpa.pixelSignature.minX >= 42, "TRACK SPA should span the circuit width", results.trackSpa);
+  assert(results.trackSpa.pixelSignature.maxY - results.trackSpa.pixelSignature.minY >= 26, "TRACK SPA should span the circuit height", results.trackSpa);
+  assert(results.trackSpa.pixelSignature.topRightLit, "TRACK SPA should keep the upper-right sweep", results.trackSpa);
+  assert(results.trackSpa.pixelSignature.lowerLeftLit, "TRACK SPA should keep the lower-left return", results.trackSpa);
+  assert(results.trackSpa.pixelSignature.lowerRightLit, "TRACK SPA should keep the lower-right return", results.trackSpa);
+  assert(results.trackSpaLabels.view === "pixels", "TRACK SPA LABELS should switch to the pixel image view", results.trackSpaLabels);
+  assert(results.trackSpaLabels.pixelMeta.includes("SPA-FRANCORCHAMPS LABELED TEST"), "TRACK SPA LABELS should render the labeled test image", results.trackSpaLabels);
+  assert(results.trackSpaLabels.pixelMeta.includes("MARKERS   named-location display approximations for this CRT test only"), "TRACK SPA LABELS should state marker approximation limits", results.trackSpaLabels);
+  assert(results.trackSpaLabels.pixelMeta.includes("Open Race Coach Corner Segments"), "TRACK SPA LABELS should not imply Corner Segment authority", results.trackSpaLabels);
+  assert(results.trackSpaLabels.pixelMeta.includes("official turn numbers"), "TRACK SPA LABELS should disclaim official turn numbering", results.trackSpaLabels);
+  assert(results.trackSpaLabels.pixelMeta.includes("Will Pittenger"), "TRACK SPA LABELS should include source attribution detail", results.trackSpaLabels);
+  assert(results.trackSpaLabels.pixelMeta.includes("commons.wikimedia.org/wiki/File:Spa-Francorchamps_of_Belgium.svg"), "TRACK SPA LABELS should include source URL", results.trackSpaLabels);
+  for (const label of ["La Source", "Eau Rouge/Raidillon", "Les Combes", "Bruxelles", "Pouhon", "Fagnes", "Stavelot", "Blanchimont", "Bus Stop"]) {
+    assert(results.trackSpaLabels.pixelMeta.includes(label), `TRACK SPA LABELS should include ${label}`, results.trackSpaLabels);
+  }
+  assert(results.trackSpaLabels.pixelMarkers === 9, "TRACK SPA LABELS should render nine numbered markers", results.trackSpaLabels);
+  assert(results.trackSpaLabels.pixelMarkerStyles.length === 9, "TRACK SPA LABELS should expose marker styles", results.trackSpaLabels);
+  assert(results.trackSpaLabels.pixelMarkerStyles.every((marker) => marker.color === "rgb(17, 16, 11)"), "TRACK SPA LABELS should use a readable marker numeral color", results.trackSpaLabels);
+  assert(results.trackSpaLabels.pixelMarkerStyles.every((marker) => marker.contrastDelta > 180), "TRACK SPA LABELS should use a bright readable marker background", results.trackSpaLabels);
+  assert(results.trackSpaLabels.pixelMarkerStyles.every((marker) => marker.width >= 10 && marker.height >= 8), "TRACK SPA LABELS markers should have readable badge dimensions", results.trackSpaLabels);
+  assert(results.trackSpaLabels.pixelCells === 2560, "TRACK SPA LABELS should preserve the Spa raster grid size", results.trackSpaLabels);
+  assert(results.trackSpaLabels.output.some((line) => line.includes("SPA-FRANCORCHAMPS LABELED TEST PIXEL IMAGE READY")), "TRACK SPA LABELS should print ready", results.trackSpaLabels);
+  for (const labeledResult of [results.trackBrandsLabels, results.trackMonzaLabels, results.trackSpaLabels]) {
+    assert(labeledResult.pixelMarkerStyles.every((marker) => marker.color === "rgb(17, 16, 11)"), "labeled track markers should use a readable numeral color", labeledResult);
+    assert(labeledResult.pixelMarkerStyles.every((marker) => marker.contrastDelta > 180), "labeled track markers should use a bright readable marker background", labeledResult);
+    assert(labeledResult.pixelMarkerStyles.every((marker) => marker.width >= 10 && marker.height >= 8), "labeled track markers should have readable badge dimensions", labeledResult);
   }
 
   for (const commandResult of results.profileCommands) {
@@ -540,7 +709,7 @@ async function main() {
 
   console.log(JSON.stringify({
     ok: true,
-    assertions: 94,
+    assertions: 194,
     viewports: viewportResults.map((layout) => layout.viewport),
   }, null, 2));
 }

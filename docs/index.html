@@ -626,6 +626,7 @@
     .screen[data-view="trace"] .module-panel[data-module="trace"],
     .screen[data-view="map"] .module-panel[data-module="map"],
     .screen[data-view="notes"] .module-panel[data-module="notes"],
+    .screen[data-view="pixels"] .module-panel[data-module="pixels"],
     .screen[data-view="help"] .module-panel[data-module="help"] {
       display: block;
     }
@@ -764,6 +765,72 @@
 
     .sx-quote {
       color: var(--syntax-quote);
+    }
+
+    .pixel-render {
+      --pixel-columns: 46;
+      display: grid;
+      grid-template-columns: repeat(var(--pixel-columns), 0.72ch);
+      grid-auto-rows: calc(var(--terminal-row-height) * 0.32);
+      gap: 0.12ch;
+      width: max-content;
+      max-width: 100%;
+      margin: calc(var(--terminal-row-height) * 0.75) 0;
+      color: var(--phosphor-hot);
+      overflow: hidden;
+      text-shadow: inherit;
+    }
+
+    .pixel-cell {
+      display: block;
+      width: 100%;
+      min-width: 0;
+      min-height: 0;
+      background: currentColor;
+      box-shadow:
+        0 0 calc(var(--glow) * 2px) rgba(var(--phosphor-rgb), var(--text-bloom)),
+        0 0 calc(var(--glow) * 8px) rgba(var(--phosphor-rgb), var(--raster-text-bloom));
+    }
+
+    .pixel-cell[data-lit="0"] {
+      opacity: 0.045;
+      background: rgba(var(--phosphor-rgb), 0.28);
+      box-shadow: none;
+    }
+
+    .pixel-cell[data-lit="1"] {
+      opacity: 0.34;
+    }
+
+    .pixel-cell[data-lit="2"] {
+      opacity: 0.68;
+    }
+
+    .pixel-cell[data-lit="3"] {
+      opacity: 0.98;
+    }
+
+    .pixel-marker {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: visible;
+      position: relative;
+      z-index: 2;
+      width: 2.1ch;
+      height: calc(var(--terminal-row-height) * 0.62);
+      color: #11100b;
+      background: var(--phosphor-hot);
+      border-radius: 50%;
+      font-size: clamp(0.56rem, 0.86em, 0.84rem);
+      font-weight: 900;
+      line-height: 1;
+      opacity: 1;
+      transform: translate(-32%, -28%);
+      text-shadow: none;
+      box-shadow:
+        0 0 calc(var(--glow) * 3px) rgba(var(--phosphor-rgb), 0.86),
+        0 0 calc(var(--glow) * 10px) rgba(var(--phosphor-rgb), var(--raster-text-bloom));
     }
 
     .footer-links {
@@ -936,6 +1003,12 @@
 
       .module-panel[data-module="help"] .module-text {
         white-space: pre-wrap;
+      }
+
+      .pixel-render {
+        grid-template-columns: repeat(var(--pixel-columns), 0.52ch);
+        grid-auto-rows: calc(var(--terminal-row-height) * 0.26);
+        gap: 0.08ch;
       }
     }
 
@@ -1133,6 +1206,24 @@ Comparison Lap set: Valid Lap rows only; invalid laps excluded before coaching.<
   Coach Refinement status: not requested for this static display.</pre>
               </section>
 
+              <section class="module-panel terminal-buffer" data-module="pixels" aria-labelledby="pixels-heading">
+                <p class="dim" data-arch-row data-arch-processed="false">Screen-native phosphor bitmap test</p>
+                <h2 id="pixels-heading" data-arch-row data-arch-processed="false">TRACK IMAGE RASTER</h2>
+                <p id="pixelDescription" data-arch-row data-arch-processed="false">Clean track outline rendered as terminal raster cells, not as a pasted browser image.</p>
+                <div class="pixel-render" id="pixelRender" role="img" aria-label="Pixel-rendered track outline"></div>
+                <pre class="module-text crt-text-block" id="pixelMeta" data-syntax="pixels" aria-label="Pixel renderer notes">IMAGE     BRANDS HATCH INDY
+SOURCE    Wikimedia Commons file: Brands Hatch Indy Circuit.svg
+DETAIL    Hand-authored terminal approximation from the referenced SVG preview; not an official circuit diagram.
+URL       https://commons.wikimedia.org/wiki/File:Brands_Hatch_Indy_Circuit.svg
+MODE      phosphor cell raster
+SIZE      72 x 32 cells
+PATH      same CRT screen plane as text
+COMMAND   TRACK <BRANDS|MONZA|SPA> / TRACK <NAME> LABELS / IMAGE ORC
+
+This is a visual test only. Track outlines are terminal approximations for the
+CRT display, not official circuit diagrams or simulator telemetry.</pre>
+              </section>
+
               <section class="module-panel terminal-buffer" data-module="help" aria-labelledby="help-heading">
                 <p class="dim" data-arch-row data-arch-processed="false">Terminal command list</p>
                 <h2 id="help-heading" data-arch-row data-arch-processed="false">HELP</h2>
@@ -1142,6 +1233,10 @@ Comparison Lap set: Valid Lap rows only; invalid laps excluded before coaching.<
   TRACE        Speed / brake / throttle traces
   MAP          Corner Segment sketch
   NOTES        Engineering notes and next focus
+  TRACKS       Phosphor track image test
+  TRACK &lt;BRANDS|MONZA|SPA&gt;
+  TRACK &lt;NAME&gt; LABELS
+  IMAGE ORC    Logo bitmap test
   DECISIONS    Render docs/DECISIONS.md
   SOURCE       Render docs/index.html source
   CODE         Alias for SOURCE
@@ -1173,7 +1268,7 @@ ERA NOTE
                   <label for="terminalInput">ORC&gt;</label>
                   <input class="terminal-input" id="terminalInput" name="command" autocomplete="off" autocapitalize="none" spellcheck="false" />
                 </form>
-                <p class="terminal-status terminal-flow-row">AMBER / GRID / CHAR 03 WORN / VIEW REPORT</p>
+                <p class="terminal-status terminal-flow-row">AMBER / SCANLINE / CHAR 03 WORN / VIEW REPORT</p>
 
                 <footer class="footer-bar">
                   <nav class="footer-links" aria-label="Content views">
@@ -1182,6 +1277,7 @@ ERA NOTE
                     <a class="terminal-flow-row" href="#trace" data-view-link="trace">TRACE</a>
                     <a class="terminal-flow-row" href="#map" data-view-link="map">MAP</a>
                     <a class="terminal-flow-row" href="#notes" data-view-link="notes">NOTES</a>
+                    <a class="terminal-flow-row" href="#pixels" data-view-link="pixels">TRACKS</a>
                     <a class="terminal-flow-row" href="#help" data-view-link="help">HELP</a>
                     <a class="terminal-flow-row" href="#decisions" data-view-link="decisions">DECISIONS</a>
                     <a class="terminal-flow-row" href="#source" data-view-link="source">SOURCE</a>
@@ -1277,6 +1373,9 @@ ERA NOTE
     const decisionsText = document.getElementById("decisionsText");
     const decisionsSource = document.getElementById("decisionsSource");
     const sourceText = document.getElementById("sourceText");
+    const pixelRender = document.getElementById("pixelRender");
+    const pixelDescription = document.getElementById("pixelDescription");
+    const pixelMeta = document.getElementById("pixelMeta");
     const terminalForm = document.getElementById("terminalForm");
     const terminalInput = document.getElementById("terminalInput");
     const terminalOutput = document.getElementById("terminalOutput");
@@ -1559,7 +1658,7 @@ ERA NOTE
     };
 
     let activeDisplayProfile = "AMBER";
-    let activeRasterMode = "GRID";
+    let activeRasterMode = "SCANLINE";
     let activeFontScale = Number(displayProfiles[activeDisplayProfile].fontScale) || 0.93;
     let activeCharacterLevel = 3;
     const activeAdjustmentLevels = {
@@ -1693,8 +1792,12 @@ ERA NOTE
         { className: "sx-quote", pattern: /"[^"]+"/ },
       ],
       help: [
-        { className: "sx-command", pattern: /\b(?:REPORT|LAPS|TRACE|MAP|NOTES|DECISIONS|SOURCE|CODE|GITHUB|SITE|PROFILE|AMBER|GREEN|VGA|LCD|RASTER|GRID|SCANLINE|PIXEL|CLEAN|CHARACTER|CHAR|CRT|ADJUST|ADJ|ARTIFACT|BLOOM|JITTER|TEXT|FRAME|RESET|UP|DOWN|STATUS|CLEAR|HELP)\b/ },
+        { className: "sx-command", pattern: /\b(?:REPORT|LAPS|TRACE|MAP|NOTES|TRACKS|TRACK|BRANDS|MONZA|SPA|LABELS|PIXELS|IMAGE|DECISIONS|SOURCE|CODE|GITHUB|SITE|PROFILE|AMBER|GREEN|VGA|LCD|RASTER|GRID|SCANLINE|PIXEL|CLEAN|CHARACTER|CHAR|CRT|ADJUST|ADJ|ARTIFACT|BLOOM|JITTER|TEXT|FRAME|RESET|UP|DOWN|STATUS|CLEAR|HELP)\b/ },
         { className: "sx-label", pattern: /\b(?:COMMANDS|ERA NOTE)\b/ },
+      ],
+      pixels: [
+        { className: "sx-label", pattern: /\b(?:SOURCE|DETAIL|URL|MODE|SIZE|PATH|COMMAND|MARKERS|NOT|DISPLAY LABEL CUES)\b/ },
+        { className: "sx-command", pattern: /\b(?:TRACKS|TRACK|BRANDS|MONZA|SPA|LABELS|PIXELS|IMAGE|IMAGE ORC)\b/ },
       ],
       decisions: [
         { className: "sx-id", pattern: /\d{4}-\d{2}-\d{2}/ },
@@ -1859,6 +1962,319 @@ ERA NOTE
     function setSyntaxText(node, text) {
       renderSyntaxNode(node, text.trim());
       scheduleScreenArchRefresh();
+    }
+
+    const terminalPixelImages = {
+      ORC: {
+        label: "OPEN RACE COACH LOGO",
+        description: "Logo rendered as terminal raster cells, not as a pasted browser image.",
+        source: "Embedded Open Race Coach ASCII mark",
+        command: "IMAGE ORC",
+        columns: 46,
+        rows: [
+          "0000000000000000000000000000000000000000000000",
+          "0000000000000000000000000000000000000000000000",
+          "0000333333000033333300003333330000000000000000",
+          "0000333333000033333300003333330000000000000000",
+          "0000330003300033000330003300033000000000000000",
+          "0000330003300033000330003300033000000000000000",
+          "0000330003300033000000003300000000000000000000",
+          "0000330003300033000000003300000000000000000000",
+          "0000333333000033000000003300000000000000000000",
+          "0000333333000033000000003300000000000000000000",
+          "0000000000000000000000000000000000000000000000",
+          "0011111111111111111111111111111111111111111100",
+          "0022222222222222222222222222222222222222222200",
+          "0000000000000000000000000000000000000000000000",
+        ],
+      },
+      BRANDS: {
+        label: "BRANDS HATCH INDY",
+        description: "Clean Brands Hatch Indy display approximation rendered as terminal raster cells.",
+        source: "Wikimedia Commons file: Brands Hatch Indy Circuit.svg",
+        sourceDetail: "Hand-authored terminal approximation from the referenced SVG preview; not an official circuit diagram.",
+        sourceUrl: "https://commons.wikimedia.org/wiki/File:Brands_Hatch_Indy_Circuit.svg",
+        command: "TRACK BRANDS",
+        columns: 72,
+        height: 32,
+        path: [
+          [31, 29],
+          [45, 29],
+          [51, 27],
+          [58, 21],
+          [60, 18],
+          [59, 14],
+          [57, 13],
+          [53, 13],
+          [50, 15],
+          [46, 21],
+          [42, 23],
+          [31, 23],
+          [21, 21],
+          [20, 20],
+          [19, 15],
+          [23, 4],
+          [22, 2],
+          [19, 2],
+          [16, 6],
+          [13, 15],
+          [11, 20],
+          [12, 23],
+          [14, 26],
+          [18, 28],
+          [31, 29],
+        ],
+      },
+      MONZA: {
+        label: "MONZA",
+        description: "Clean Monza display approximation rendered as terminal raster cells.",
+        source: "Wikimedia Commons file: Monza track map.svg",
+        sourceDetail: "Hand-authored terminal approximation from Will Pittenger's SVG track map; not an official circuit diagram.",
+        sourceUrl: "https://commons.wikimedia.org/wiki/File:Monza_track_map.svg",
+        command: "TRACK MONZA",
+        columns: 80,
+        height: 32,
+        path: [
+          [48, 29],
+          [33, 29],
+          [33, 28],
+          [29, 29],
+          [26, 29],
+          [23, 29],
+          [21, 28],
+          [18, 24],
+          [16, 13],
+          [15, 12],
+          [12, 7],
+          [12, 4],
+          [13, 3],
+          [20, 2],
+          [26, 10],
+          [37, 21],
+          [39, 21],
+          [42, 22],
+          [66, 22],
+          [67, 23],
+          [67, 25],
+          [64, 28],
+          [58, 28],
+          [48, 29],
+        ],
+      },
+      SPA: {
+        label: "SPA-FRANCORCHAMPS",
+        description: "Clean Spa-Francorchamps display approximation rendered as terminal raster cells.",
+        source: "Wikimedia Commons file: Spa-Francorchamps of Belgium.svg",
+        sourceDetail: "Hand-authored terminal approximation from Will Pittenger's SVG track map; not an official circuit diagram.",
+        sourceUrl: "https://commons.wikimedia.org/wiki/File:Spa-Francorchamps_of_Belgium.svg",
+        command: "TRACK SPA",
+        columns: 80,
+        height: 32,
+        path: [
+          [25, 22],
+          [17, 27],
+          [20, 21],
+          [27, 13],
+          [36, 8],
+          [52, 2],
+          [54, 3],
+          [57, 3],
+          [62, 8],
+          [61, 9],
+          [60, 9],
+          [57, 7],
+          [47, 10],
+          [46, 11],
+          [47, 15],
+          [55, 18],
+          [56, 22],
+          [60, 25],
+          [60, 26],
+          [58, 29],
+          [53, 28],
+          [46, 20],
+          [41, 18],
+          [39, 18],
+          [35, 20],
+          [29, 21],
+          [28, 20],
+          [25, 22],
+        ],
+      },
+    };
+
+    terminalPixelImages.BRANDS_LABELS = {
+      ...terminalPixelImages.BRANDS,
+      label: "BRANDS HATCH INDY LABELED TEST",
+      description: "Brands Hatch Indy with approximate named-location display markers.",
+      command: "TRACK BRANDS LABELS",
+      markers: [
+        { number: 1, x: 31, y: 29, name: "Brabham Straight", cue: "approximate display label marker" },
+        { number: 2, x: 13, y: 15, name: "Paddock Hill", cue: "approximate display label marker" },
+        { number: 3, x: 22, y: 2, name: "Druids", cue: "approximate display label marker" },
+        { number: 4, x: 46, y: 21, name: "Graham Hill", cue: "approximate display label marker" },
+        { number: 5, x: 57, y: 13, name: "McLaren", cue: "approximate display label marker" },
+        { number: 6, x: 51, y: 27, name: "Clearways/Clark", cue: "approximate display label marker" },
+      ],
+    };
+
+    terminalPixelImages.MONZA_LABELS = {
+      ...terminalPixelImages.MONZA,
+      label: "MONZA LABELED TEST",
+      description: "Monza with approximate named-location display markers.",
+      command: "TRACK MONZA LABELS",
+      markers: [
+        { number: 1, x: 48, y: 29, name: "Start/finish straight", cue: "approximate display label marker" },
+        { number: 2, x: 12, y: 4, name: "Rettifilo", cue: "approximate display label marker" },
+        { number: 3, x: 26, y: 10, name: "Curva Grande", cue: "approximate display label marker" },
+        { number: 4, x: 47, y: 22, name: "Roggia/Lesmo side", cue: "approximate display label marker" },
+        { number: 5, x: 66, y: 22, name: "Ascari", cue: "approximate display label marker" },
+        { number: 6, x: 64, y: 28, name: "Parabolica/Alboreto", cue: "approximate display label marker" },
+      ],
+    };
+
+    terminalPixelImages.SPA_LABELS = {
+      ...terminalPixelImages.SPA,
+      label: "SPA-FRANCORCHAMPS LABELED TEST",
+      description: "Spa-Francorchamps with approximate named-location display markers.",
+      command: "TRACK SPA LABELS",
+      markers: [
+        { number: 1, x: 25, y: 22, name: "La Source", cue: "approximate display label marker" },
+        { number: 2, x: 27, y: 13, name: "Eau Rouge/Raidillon", cue: "approximate display label marker" },
+        { number: 3, x: 54, y: 3, name: "Les Combes", cue: "approximate display label marker" },
+        { number: 4, x: 61, y: 9, name: "Bruxelles", cue: "approximate display label marker" },
+        { number: 5, x: 47, y: 15, name: "Pouhon", cue: "approximate display label marker" },
+        { number: 6, x: 55, y: 18, name: "Fagnes", cue: "approximate display label marker" },
+        { number: 7, x: 60, y: 25, name: "Stavelot", cue: "approximate display label marker" },
+        { number: 8, x: 53, y: 28, name: "Blanchimont", cue: "approximate display label marker" },
+        { number: 9, x: 35, y: 20, name: "Bus Stop", cue: "approximate display label marker" },
+      ],
+    };
+
+    Object.values(terminalPixelImages).forEach((image) => {
+      if (!image.markers) {
+        return;
+      }
+
+      image.annotationNote = [
+        "MARKERS   named-location display approximations for this CRT test only",
+        "NOT       simulator telemetry, Open Race Coach Corner Segments,",
+        "          official turn numbers, or an official circuit diagram",
+      ];
+    });
+
+    function makeEmptyPixelRows(columns, height) {
+      return Array.from({ length: height }, () => Array.from({ length: columns }, () => "0"));
+    }
+
+    function setPixel(grid, x, y, value = "3") {
+      if (!grid[y] || grid[y][x] === undefined) {
+        return;
+      }
+
+      grid[y][x] = String(Math.max(Number(grid[y][x]), Number(value)));
+    }
+
+    function drawPixelPoint(grid, x, y, value = "3") {
+      setPixel(grid, x, y, value);
+      setPixel(grid, x + 1, y, value);
+      setPixel(grid, x - 1, y, value);
+      setPixel(grid, x, y + 1, value);
+      setPixel(grid, x, y - 1, value);
+    }
+
+    function drawPixelLine(grid, start, end) {
+      let [x0, y0] = start;
+      const [x1, y1] = end;
+      const dx = Math.abs(x1 - x0);
+      const sx = x0 < x1 ? 1 : -1;
+      const dy = -Math.abs(y1 - y0);
+      const sy = y0 < y1 ? 1 : -1;
+      let error = dx + dy;
+
+      while (true) {
+        drawPixelPoint(grid, x0, y0, "3");
+        if (x0 === x1 && y0 === y1) {
+          break;
+        }
+
+        const doubleError = 2 * error;
+        if (doubleError >= dy) {
+          error += dy;
+          x0 += sx;
+        }
+        if (doubleError <= dx) {
+          error += dx;
+          y0 += sy;
+        }
+      }
+    }
+
+    function renderTrackRows(image) {
+      const grid = makeEmptyPixelRows(image.columns, image.height);
+      image.path.forEach((point, index) => {
+        if (index === 0) {
+          return;
+        }
+        drawPixelLine(grid, image.path[index - 1], point);
+      });
+      drawPixelPoint(grid, image.path[0][0], image.path[0][1], "2");
+      return grid.map((row) => row.join(""));
+    }
+
+    function getPixelRows(image) {
+      return image.rows || renderTrackRows(image);
+    }
+
+    function getPixelMarkerMap(image) {
+      const markerMap = new Map();
+      (image.markers || []).forEach((marker) => {
+        markerMap.set(`${marker.x},${marker.y}`, marker);
+      });
+      return markerMap;
+    }
+
+    function renderPixelImage(target, image) {
+      const rows = getPixelRows(image);
+      const markerMap = getPixelMarkerMap(image);
+      target.style.setProperty("--pixel-columns", String(image.columns));
+      target.innerHTML = rows.flatMap((row, y) => (
+        row.padEnd(image.columns, "0").slice(0, image.columns).split("").map((value, x) => {
+          const marker = markerMap.get(`${x},${y}`);
+          if (marker) {
+            return `<span class="pixel-cell pixel-marker" data-lit="3" data-marker="${escapeHtml(String(marker.number))}">${escapeHtml(String(marker.number))}</span>`;
+          }
+          return `<span class="pixel-cell" data-lit="${escapeHtml(value)}"></span>`;
+        })
+      )).join("");
+      target.setAttribute("aria-label", `Pixel-rendered ${image.label}`);
+    }
+
+    function setPixelImage(imageName) {
+      const image = terminalPixelImages[imageName] || terminalPixelImages.BRANDS;
+      renderPixelImage(pixelRender, image);
+      pixelDescription.textContent = image.description;
+      const markerLegend = (image.markers || []).map((marker) => (
+        `${String(marker.number).padStart(2, "0")} ${marker.name} - ${marker.cue}`
+      ));
+      const annotationLines = image.annotationNote || [
+        "This is a visual test only. Track outlines are terminal approximations for the",
+        "CRT display, not official circuit diagrams or simulator telemetry.",
+      ];
+      pixelMeta.textContent = [
+        `IMAGE     ${image.label}`,
+        `SOURCE    ${image.source}`,
+        ...(image.sourceDetail ? [`DETAIL    ${image.sourceDetail}`] : []),
+        ...(image.sourceUrl ? [`URL       ${image.sourceUrl}`] : []),
+        "MODE      phosphor cell raster",
+        `SIZE      ${image.columns} x ${getPixelRows(image).length} cells`,
+        "PATH      same CRT screen plane as text",
+        "COMMAND   TRACK <BRANDS|MONZA|SPA> / TRACK <NAME> LABELS / IMAGE ORC",
+        "",
+        ...annotationLines,
+        ...(markerLegend.length ? ["", "DISPLAY LABEL CUES", ...markerLegend] : []),
+      ].join("\n");
+      setSyntaxText(pixelMeta, pixelMeta.textContent);
     }
 
     function updateTerminalGridMetrics(profile) {
@@ -2177,6 +2593,7 @@ ERA NOTE
 
     setSyntaxText(decisionsText, decisionsSource.textContent);
     renderAllSyntax();
+    setPixelImage("BRANDS");
     applyStaticArchRows();
 
     fetch("./DECISIONS.md")
@@ -2258,7 +2675,7 @@ ERA NOTE
       appendTerminalLine("OPEN RACE COACH TERMINAL READY", "output");
     }
 
-    const views = new Set(["report", "laps", "trace", "map", "notes", "help", "decisions", "source"]);
+    const views = new Set(["report", "laps", "trace", "map", "notes", "pixels", "help", "decisions", "source"]);
 
     function setView(view, message, options = {}) {
       const nextView = views.has(view) ? view : "report";
@@ -2292,6 +2709,46 @@ ERA NOTE
       window.open(url, "_blank", "noopener,noreferrer");
     }
 
+    function resolvePixelImageCommand(command, tokens) {
+      const alias = command
+        .replace(/^track\s+/, "")
+        .replace(/^tracks\s+/, "")
+        .replace(/^image\s+/, "")
+        .replace(/^pixels\s+/, "")
+        .replace(/\s+/g, " ");
+      const imageAliases = {
+        "": "BRANDS",
+        tracks: "BRANDS",
+        track: "BRANDS",
+        pixels: "BRANDS",
+        image: "BRANDS",
+        brands: "BRANDS",
+        "brands hatch": "BRANDS",
+        "brands hatch labels": "BRANDS_LABELS",
+        "brands hatch indy": "BRANDS",
+        "brands hatch indy labels": "BRANDS_LABELS",
+        "brands labels": "BRANDS_LABELS",
+        bh: "BRANDS",
+        "bh labels": "BRANDS_LABELS",
+        monza: "MONZA",
+        "monza labels": "MONZA_LABELS",
+        spa: "SPA",
+        "spa labels": "SPA_LABELS",
+        "spa francorchamps": "SPA",
+        "spa francorchamps labels": "SPA_LABELS",
+        "spa-francorchamps": "SPA",
+        "spa-francorchamps labels": "SPA_LABELS",
+        orc: "ORC",
+        logo: "ORC",
+      };
+
+      if (tokens[0] === "track" || tokens[0] === "tracks" || tokens[0] === "image" || tokens[0] === "pixels") {
+        return imageAliases[alias] || null;
+      }
+
+      return imageAliases[command] || null;
+    }
+
     function runCommand(rawCommand) {
       const command = rawCommand.trim().toLowerCase().replace(/\s+/g, " ");
       const tokens = command.split(" ");
@@ -2314,7 +2771,7 @@ ERA NOTE
       }
 
       if (command === "help" || command === "?") {
-        setView("help", "COMMANDS: REPORT / LAPS / TRACE / MAP / NOTES / HELP / DECISIONS / SOURCE / PROFILE / RASTER / CHARACTER / ADJUST / STATUS / GITHUB / SITE / CLEAR");
+        setView("help", "COMMANDS: REPORT / LAPS / TRACE / MAP / NOTES / PIXELS / HELP / DECISIONS / SOURCE / PROFILE / RASTER / CHARACTER / ADJUST / STATUS / GITHUB / SITE / CLEAR");
         window.location.hash = "help";
         return;
       }
@@ -2393,6 +2850,14 @@ ERA NOTE
       if (command === "source" || command === "code" || command === "index" || command === "index.html") {
         setView("source", "DOCS/INDEX.HTML SOURCE READY");
         window.location.hash = "source";
+        return;
+      }
+
+      const pixelImageName = resolvePixelImageCommand(command, tokens);
+      if (pixelImageName) {
+        setPixelImage(pixelImageName);
+        setView("pixels", `${terminalPixelImages[pixelImageName].label} PIXEL IMAGE READY`);
+        window.location.hash = "pixels";
         return;
       }
 
