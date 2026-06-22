@@ -382,6 +382,34 @@ async function main() {
     const invalidAdjust = await submit("adjust color 5");
     const statusCommand = await submit("status");
     const systemCommand = await submit("system");
+    const helpSummaryCommand = await submit("?");
+    const lsCommand = await submit("ls");
+    const dirCommand = await submit("dir");
+    const pwdCommand = await submit("pwd");
+    const cdDocs = await submit("cd docs");
+    const catIndex = await submit("cat index.html");
+    const lessDecisions = await submit("less decisions.md");
+    const manGrep = await submit("man grep");
+    const whoamiCommand = await submit("whoami");
+    const dateCommand = await submit("date");
+    const uptimeCommand = await submit("uptime");
+    const echoCommand = await submit("echo Pit exit discipline");
+    const grepCommand = await submit("grep delta trace");
+    const historyCommand = await submit("history");
+    const manLogout = await submit("man logout");
+    const invalidCat = await submit("cat missing.txt");
+    const emptyGrep = await submit("grep");
+    const cdTracks = await submit("cd tracks");
+    const mixedCaseLs = await submit("Ls");
+    const lapAlias = await submit("lap");
+    const deltaAlias = await submit("delta");
+    const coachAlias = await submit("coach");
+    const segmentAlias = await submit("segment");
+    const compareAlias = await submit("compare");
+    const sudoCommand = await submit("sudo make me faster");
+    const exitCommand = await submit("exit");
+    const logoutCommand = await submit("logout");
+    const resetCommand = await submit("reset");
 
     window.__orcOpened = [];
     window.open = (url, target, features) => {
@@ -456,6 +484,34 @@ async function main() {
       invalidAdjust,
       statusCommand,
       systemCommand,
+      helpSummaryCommand,
+      lsCommand,
+      dirCommand,
+      pwdCommand,
+      cdDocs,
+      catIndex,
+      lessDecisions,
+      manGrep,
+      whoamiCommand,
+      dateCommand,
+      uptimeCommand,
+      echoCommand,
+      grepCommand,
+      historyCommand,
+      manLogout,
+      invalidCat,
+      emptyGrep,
+      cdTracks,
+      mixedCaseLs,
+      lapAlias,
+      deltaAlias,
+      coachAlias,
+      segmentAlias,
+      compareAlias,
+      sudoCommand,
+      exitCommand,
+      logoutCommand,
+      resetCommand,
       github,
       site,
       opened,
@@ -619,6 +675,41 @@ async function main() {
 
   assert(results.statusCommand.output.some((line) => line.includes("PROFILE LCD / RASTER CLEAN")), "STATUS should report visual state", results.statusCommand);
   assert(results.systemCommand.output.some((line) => line.includes("OPENRACECOACH.COM")), "SYSTEM should include repo/site status", results.systemCommand);
+  assert(results.helpSummaryCommand.view === "help" && results.helpSummaryCommand.hash === "#help", "HELP should switch to the command list", results.helpSummaryCommand);
+  assert(results.helpSummaryCommand.output.some((line) => line.includes("SHELL: LS/PWD/CD/CAT/LESS/MAN/HISTORY")), "runtime HELP should include shell commands", results.helpSummaryCommand);
+  assert(results.helpSummaryCommand.output.some((line) => line.includes("VISUAL/RACE: PROFILE/RASTER/CHARACTER/ADJUST/STATUS/LAP/DELTA/COACH")), "runtime HELP should include race aliases", results.helpSummaryCommand);
+  assert(results.lsCommand.output.some((line) => line.includes("views: report laps trace map notes tracks help decisions source")), "LS should list pseudo views", results.lsCommand);
+  assert(results.lsCommand.output.some((line) => line.includes("files: report notes tracks decisions.md index.html")), "LS should list pseudo files", results.lsCommand);
+  assert(results.dirCommand.output.some((line) => line.includes("views: report laps trace map notes tracks help decisions source")), "DIR should alias LS", results.dirCommand);
+  assert(results.pwdCommand.output.some((line) => line.includes("/open-race-coach")), "PWD should print the fake Open Race Coach path", results.pwdCommand);
+  assert(results.cdDocs.view === "decisions" && results.cdDocs.hash === "#decisions", "CD docs should navigate to docs content", results.cdDocs);
+  assert(results.cdDocs.output.some((line) => line.includes("DOCS READY")), "CD docs should explain available docs targets", results.cdDocs);
+  assert(results.catIndex.view === "source" && results.catIndex.hash === "#source", "CAT index.html should render source view", results.catIndex);
+  assert(results.catIndex.output.some((line) => line.includes("INDEX.HTML READY")), "CAT index.html should print a terse ready line", results.catIndex);
+  assert(results.lessDecisions.view === "decisions" && results.lessDecisions.hash === "#decisions", "LESS decisions.md should render decisions view", results.lessDecisions);
+  assert(results.manGrep.output.some((line) => line.includes("GREP <term> [target]")), "MAN grep should print focused command help", results.manGrep);
+  assert(results.whoamiCommand.output.some((line) => line.includes("local-driver@open-race-coach")), "WHOAMI should print local terminal role", results.whoamiCommand);
+  assert(results.dateCommand.output.some((line) => /^DATE \d{4}-\d{2}-\d{2}T/.test(line)), "DATE should print an ISO timestamp", results.dateCommand);
+  assert(results.uptimeCommand.output.some((line) => /^UPTIME \d+s$/.test(line)), "UPTIME should print seconds since page load", results.uptimeCommand);
+  assert(results.echoCommand.output.some((line) => line.includes("Pit exit discipline")), "ECHO should preserve user text case", results.echoCommand);
+  assert(results.grepCommand.output.some((line) => line.toUpperCase().includes("DELTA")), "GREP should return matching target text", results.grepCommand);
+  assert(results.historyCommand.output.some((line) => line.includes("grep delta trace")), "HISTORY should include recent commands", results.historyCommand);
+  assert(results.historyCommand.output.some((line) => line.includes("history")), "HISTORY should include the current history command", results.historyCommand);
+  assert(results.manLogout.output.some((line) => line.includes("LOGOUT/EXIT")), "MAN logout should document the logout command", results.manLogout);
+  assert(results.invalidCat.output.some((line) => line.includes("CAT ERROR: no such pseudo file MISSING.TXT")), "CAT should reject unknown pseudo files", results.invalidCat);
+  assert(results.emptyGrep.output.some((line) => line.includes("GREP ERROR: use grep <term> [target]")), "GREP should explain its required term", results.emptyGrep);
+  assert(results.cdTracks.view === "pixels" && results.cdTracks.hash === "#pixels", "CD tracks should navigate to track raster view", results.cdTracks);
+  assert(results.mixedCaseLs.output.some((line) => line.includes("files: report notes tracks decisions.md index.html")), "commands should be case-insensitive", results.mixedCaseLs);
+  assert(results.lapAlias.view === "laps" && results.lapAlias.hash === "#laps", "LAP should open the existing laps view", results.lapAlias);
+  assert(results.deltaAlias.view === "trace" && results.deltaAlias.hash === "#trace", "DELTA should open the existing trace view", results.deltaAlias);
+  assert(results.coachAlias.view === "report" && results.coachAlias.hash === "#report", "COACH should open the existing report view", results.coachAlias);
+  assert(results.segmentAlias.view === "map" && results.segmentAlias.hash === "#map", "SEGMENT should open the existing map view", results.segmentAlias);
+  assert(results.compareAlias.view === "trace" && results.compareAlias.hash === "#trace", "COMPARE should open the existing comparison trace view", results.compareAlias);
+  assert(results.sudoCommand.output.some((line) => line.includes("SUDO DENIED: deterministic analysis owns statuses, Reportable Delta selection")), "SUDO should reinforce deterministic analysis ownership", results.sudoCommand);
+  assert(results.exitCommand.output.some((line) => line.includes("LOCAL STATIC SESSION LEFT OPEN")), "EXIT should not navigate away", results.exitCommand);
+  assert(results.logoutCommand.output.some((line) => line.includes("LOCAL STATIC SESSION LEFT OPEN")), "LOGOUT should not navigate away", results.logoutCommand);
+  assert(results.resetCommand.output.length === 1 && results.resetCommand.output[0] === "OPEN RACE COACH TERMINAL READY", "RESET should clear terminal output", results.resetCommand);
+  assert(results.resetCommand.profile === "LCD" && results.resetCommand.raster === "CLEAN", "RESET should not silently change visual settings", results.resetCommand);
 
   assert(results.opened.length === 2, "GITHUB and SITE should call window.open twice", results.opened);
   assert(results.opened[0].url === "https://github.com/jaredkirby/open-race-coach", "GITHUB should open public repo", results.opened);
@@ -709,7 +800,7 @@ async function main() {
 
   console.log(JSON.stringify({
     ok: true,
-    assertions: 194,
+    assertions: 228,
     viewports: viewportResults.map((layout) => layout.viewport),
   }, null, 2));
 }

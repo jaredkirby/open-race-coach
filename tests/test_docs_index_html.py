@@ -155,6 +155,10 @@ def test_help_text_documents_the_terminal_feature_surface() -> None:
         "ADJUST RESET",
         "STATUS/SYSTEM Show full system / repo status",
         "CLEAR/CLS",
+        "LS/PWD/CD/CAT/LESS/MAN/HISTORY",
+        "WHOAMI/DATE/UPTIME/ECHO/GREP",
+        "RESET/EXIT/LOGOUT/SUDO",
+        "LAP/DELTA/COACH/SEGMENT/COMPARE",
     ]
 
     for command in documented_commands:
@@ -178,10 +182,32 @@ def test_command_grammar_and_visual_states_are_defined_in_page_code() -> None:
         "help",
         "decisions",
         "source",
+        "lap",
+        "delta",
+        "coach",
+        "segment",
+        "compare",
     ]:
         assert view_command in html
 
     required_code_paths = [
+        "const terminalStartedAt",
+        "let terminalCwd",
+        "const pseudoViewTargets",
+        "const commandManual",
+        "function resolvePseudoViewTarget(target)",
+        "function getPseudoTargetText(target)",
+        "function printLs()",
+        "function runCd(tokens)",
+        "function runCatLike(verb, tokens)",
+        "function runMan(tokens)",
+        "function runHistory()",
+        "function runGrep(tokens)",
+        "function runMotorsportAlias(command)",
+        "const compactHelpText",
+        "SHELL: LS/PWD/CD/CAT/LESS/MAN/HISTORY/WHOAMI/DATE/UPTIME/ECHO/GREP",
+        "VISUAL/RACE: PROFILE/RASTER/CHARACTER/ADJUST/STATUS/LAP/DELTA/COACH/SEGMENT/COMPARE",
+        'logout: "LOGOUT/EXIT',
         "const terminalPixelImages",
         "terminalPixelImages.BRANDS_LABELS",
         "terminalPixelImages.MONZA_LABELS",

@@ -1254,6 +1254,10 @@ CRT display, not official circuit diagrams or simulator telemetry.</pre>
   ADJUST RESET
   STATUS/SYSTEM Show full system / repo status
   CLEAR/CLS    Clear terminal output
+  LS/PWD/CD/CAT/LESS/MAN/HISTORY
+  WHOAMI/DATE/UPTIME/ECHO/GREP
+  RESET/EXIT/LOGOUT/SUDO
+  LAP/DELTA/COACH/SEGMENT/COMPARE
 
 ERA NOTE
   Visual fiction: restrained late-1980s /
@@ -1792,7 +1796,7 @@ ERA NOTE
         { className: "sx-quote", pattern: /"[^"]+"/ },
       ],
       help: [
-        { className: "sx-command", pattern: /\b(?:REPORT|LAPS|TRACE|MAP|NOTES|TRACKS|TRACK|BRANDS|MONZA|SPA|LABELS|PIXELS|IMAGE|DECISIONS|SOURCE|CODE|GITHUB|SITE|PROFILE|AMBER|GREEN|VGA|LCD|RASTER|GRID|SCANLINE|PIXEL|CLEAN|CHARACTER|CHAR|CRT|ADJUST|ADJ|ARTIFACT|BLOOM|JITTER|TEXT|FRAME|RESET|UP|DOWN|STATUS|CLEAR|HELP)\b/ },
+        { className: "sx-command", pattern: /\b(?:REPORT|LAPS|TRACE|MAP|NOTES|TRACKS|TRACK|BRANDS|MONZA|SPA|LABELS|PIXELS|IMAGE|DECISIONS|SOURCE|CODE|GITHUB|SITE|PROFILE|AMBER|GREEN|VGA|LCD|RASTER|GRID|SCANLINE|PIXEL|CLEAN|CHARACTER|CHAR|CRT|ADJUST|ADJ|ARTIFACT|BLOOM|JITTER|TEXT|FRAME|RESET|UP|DOWN|STATUS|CLEAR|CLS|HELP|LS|PWD|CD|CAT|LESS|MAN|HISTORY|WHOAMI|DATE|UPTIME|ECHO|GREP|EXIT|LOGOUT|SUDO|LAP|DELTA|COACH|SEGMENT|COMPARE)\b/ },
         { className: "sx-label", pattern: /\b(?:COMMANDS|ERA NOTE)\b/ },
       ],
       pixels: [
@@ -2643,6 +2647,60 @@ ERA NOTE
       });
 
     const terminalOutputLimit = 3;
+    const terminalStartedAt = Date.now();
+    let terminalCwd = "/open-race-coach";
+    const pseudoViewTargets = {
+      report: "report",
+      coach: "report",
+      coach_report: "report",
+      laps: "laps",
+      lap: "laps",
+      trace: "trace",
+      delta: "trace",
+      compare: "trace",
+      comparison: "trace",
+      map: "map",
+      segment: "map",
+      corner_segments: "map",
+      notes: "notes",
+      tracks: "pixels",
+      pixels: "pixels",
+      help: "help",
+      decisions: "decisions",
+      "decisions.md": "decisions",
+      source: "source",
+      code: "source",
+      "index.html": "source",
+    };
+
+    const commandManual = {
+      ls: "LS: lists pseudo views and files.",
+      pwd: "PWD: prints the local Open Race Coach terminal path.",
+      cd: "CD <view|docs|tracks>: changes the pseudo path and opens a matching view.",
+      cat: "CAT <report|notes|tracks|decisions.md|index.html>: shows an existing page surface.",
+      less: "LESS <target>: same targets as CAT; no pager state is kept.",
+      man: "MAN <command>: prints focused help for one command.",
+      history: "HISTORY: prints the last three commands.",
+      grep: "GREP <term> [target]: searches visible page text, source, or docs.",
+      sudo: "SUDO: refused; deterministic analysis owns evidence and Reportable Delta selection.",
+      reset: "RESET: clears terminal output only; visual settings are unchanged.",
+      whoami: "WHOAMI: prints the local terminal role.",
+      date: "DATE: prints the browser clock in ISO 8601 form.",
+      uptime: "UPTIME: prints seconds since this static terminal loaded.",
+      echo: "ECHO <text>: prints text back without changing views.",
+      exit: "EXIT/LOGOUT: closes no window; this is a local static session.",
+      logout: "LOGOUT/EXIT: closes no window; this is a local static session.",
+      lap: "LAP: opens the existing Lap table and Reference Lap surface.",
+      delta: "DELTA: opens the existing Reportable Delta trace surface.",
+      coach: "COACH: opens the existing Coach Report surface.",
+      segment: "SEGMENT: opens the existing Corner Segment sketch.",
+      compare: "COMPARE: opens the existing Reference Lap / Comparison Lap trace surface.",
+    };
+    const compactHelpText = [
+      "COMMANDS: REPORT/LAPS/TRACE/MAP/NOTES/TRACKS/HELP/DECISIONS/SOURCE",
+      "SHELL: LS/PWD/CD/CAT/LESS/MAN/HISTORY/WHOAMI/DATE/UPTIME/ECHO/GREP",
+      "VISUAL/RACE: PROFILE/RASTER/CHARACTER/ADJUST/STATUS/LAP/DELTA/COACH/SEGMENT/COMPARE",
+    ].join("\n");
 
     function appendTerminalLine(message, entryKind = "output") {
       const lines = String(message).split("\n");
@@ -2676,6 +2734,158 @@ ERA NOTE
     }
 
     const views = new Set(["report", "laps", "trace", "map", "notes", "pixels", "help", "decisions", "source"]);
+
+    function resolvePseudoViewTarget(target) {
+      const normalized = target
+        .replace(/^\.?\//, "")
+        .replace(/^docs\//, "")
+        .replace(/^views\//, "")
+        .replace(/\s+/g, "_");
+      return pseudoViewTargets[normalized] || null;
+    }
+
+    function getViewElement(view) {
+      if (view === "report") {
+        return document.querySelector(".report");
+      }
+      if (view === "decisions") {
+        return document.getElementById("decisionsText");
+      }
+      if (view === "source") {
+        return document.getElementById("sourceText");
+      }
+      return document.querySelector(`[data-module="${view}"]`);
+    }
+
+    function getPseudoTargetText(target) {
+      const normalizedTarget = target || screenElement.dataset.view || "report";
+      if (normalizedTarget === "all") {
+        return Array.from(views)
+          .map((view) => `${view}: ${getPseudoTargetText(view)}`)
+          .join("\n");
+      }
+
+      const view = resolvePseudoViewTarget(normalizedTarget) || normalizedTarget;
+      if (!views.has(view)) {
+        return "";
+      }
+
+      return getViewElement(view)?.innerText || "";
+    }
+
+    function printLs() {
+      writeTerminal(
+        "views: report laps trace map notes tracks help decisions source\n" +
+        "files: report notes tracks decisions.md index.html\n" +
+        "motorsport: lap delta coach segment compare"
+      );
+    }
+
+    function runCd(tokens) {
+      const target = tokens.slice(1).join(" ") || "/";
+      const normalizedTarget = target.replace(/^\/+|\/+$/g, "");
+
+      if (normalizedTarget === "" || normalizedTarget === "." || normalizedTarget === "open-race-coach") {
+        terminalCwd = "/open-race-coach";
+        writeTerminal(`PWD ${terminalCwd}`);
+        return;
+      }
+
+      if (normalizedTarget === "docs") {
+        terminalCwd = "/open-race-coach/docs";
+        setView("decisions", "DOCS READY: cat decisions.md / cat index.html");
+        window.location.hash = "decisions";
+        return;
+      }
+
+      if (normalizedTarget === "views") {
+        terminalCwd = "/open-race-coach/views";
+        writeTerminal("VIEWS: report laps trace map notes tracks help decisions source");
+        return;
+      }
+
+      const view = resolvePseudoViewTarget(normalizedTarget);
+      if (!view) {
+        writeTerminal("CD ERROR: use cd view, cd docs, cd tracks, or cd <view>");
+        return;
+      }
+
+      terminalCwd = view === "pixels" ? "/open-race-coach/tracks" : `/open-race-coach/views/${view}`;
+      setView(view, `PWD ${terminalCwd}`);
+      window.location.hash = view;
+    }
+
+    function runCatLike(verb, tokens) {
+      const target = tokens.slice(1).join(" ");
+      if (!target) {
+        writeTerminal(`${verb.toUpperCase()} ERROR: target required`);
+        return;
+      }
+
+      const view = resolvePseudoViewTarget(target);
+      if (!view) {
+        writeTerminal(`${verb.toUpperCase()} ERROR: no such pseudo file ${target.toUpperCase()}`);
+        return;
+      }
+
+      setView(view, `${target.toUpperCase()} READY`);
+      window.location.hash = view;
+    }
+
+    function runMan(tokens) {
+      const subject = tokens[1] || "";
+      if (!subject) {
+        writeTerminal("MAN: ls pwd cd cat less man history grep\nMOTORSPORT: lap delta coach segment compare\nVISUAL: profile raster character adjust status");
+        return;
+      }
+
+      writeTerminal(commandManual[subject] || `MAN: no focused entry for ${subject.toUpperCase()}`);
+    }
+
+    function runHistory() {
+      const recent = commandHistory.slice(-3);
+      if (!recent.length) {
+        writeTerminal("HISTORY EMPTY");
+        return;
+      }
+
+      writeTerminal(recent.map((entry, index) => `${index + 1}  ${entry}`).join("\n"));
+    }
+
+    function runGrep(tokens) {
+      const term = tokens[1] || "";
+      const target = tokens.slice(2).join(" ") || screenElement.dataset.view || "report";
+      if (!term) {
+        writeTerminal("GREP ERROR: use grep <term> [target]");
+        return;
+      }
+
+      const haystack = getPseudoTargetText(target);
+      if (!haystack) {
+        writeTerminal(`GREP ERROR: no such target ${target.toUpperCase()}`);
+        return;
+      }
+
+      const matches = haystack
+        .split(/\n+/)
+        .map((line) => line.trim())
+        .filter((line) => line.toLowerCase().includes(term))
+        .slice(0, 3);
+      writeTerminal(matches.length ? matches.join("\n") : `NO MATCHES: ${term.toUpperCase()} IN ${target.toUpperCase()}`);
+    }
+
+    function runMotorsportAlias(command) {
+      const aliasViews = {
+        lap: ["laps", "LAP VIEW READY: Reference Lap and Comparison Laps"],
+        delta: ["trace", "REPORTABLE DELTA TRACE READY"],
+        coach: ["report", "COACH REPORT READY"],
+        segment: ["map", "CORNER SEGMENT SKETCH READY"],
+        compare: ["trace", "REFERENCE LAP / COMPARISON LAP TRACE READY"],
+      };
+      const [view, message] = aliasViews[command];
+      setView(view, message);
+      window.location.hash = view;
+    }
 
     function setView(view, message, options = {}) {
       const nextView = views.has(view) ? view : "report";
@@ -2771,8 +2981,83 @@ ERA NOTE
       }
 
       if (command === "help" || command === "?") {
-        setView("help", "COMMANDS: REPORT / LAPS / TRACE / MAP / NOTES / PIXELS / HELP / DECISIONS / SOURCE / PROFILE / RASTER / CHARACTER / ADJUST / STATUS / GITHUB / SITE / CLEAR");
+        setView("help", compactHelpText);
         window.location.hash = "help";
+        return;
+      }
+
+      if (command === "ls" || command === "dir") {
+        printLs();
+        return;
+      }
+
+      if (command === "pwd") {
+        writeTerminal(terminalCwd);
+        return;
+      }
+
+      if (verb === "cd") {
+        runCd(tokens);
+        return;
+      }
+
+      if (verb === "cat" || verb === "less") {
+        runCatLike(verb, tokens);
+        return;
+      }
+
+      if (verb === "man") {
+        runMan(tokens);
+        return;
+      }
+
+      if (command === "history") {
+        runHistory();
+        return;
+      }
+
+      if (command === "whoami") {
+        writeTerminal("local-driver@open-race-coach");
+        return;
+      }
+
+      if (command === "date") {
+        writeTerminal(`DATE ${new Date().toISOString()}`);
+        return;
+      }
+
+      if (command === "uptime") {
+        writeTerminal(`UPTIME ${Math.max(1, Math.round((Date.now() - terminalStartedAt) / 1000))}s`);
+        return;
+      }
+
+      if (verb === "echo") {
+        writeTerminal(rawCommand.trim().slice(4).trim() || " ");
+        return;
+      }
+
+      if (verb === "grep") {
+        runGrep(tokens);
+        return;
+      }
+
+      if (command === "reset") {
+        resetTerminalOutput();
+        return;
+      }
+
+      if (command === "exit" || command === "logout") {
+        writeTerminal("LOCAL STATIC SESSION LEFT OPEN; CLOSE THE TAB WHEN DONE.");
+        return;
+      }
+
+      if (verb === "sudo") {
+        writeTerminal("SUDO DENIED: deterministic analysis owns statuses, Reportable Delta selection, and evidence.");
+        return;
+      }
+
+      if (["lap", "delta", "coach", "segment", "compare"].includes(command)) {
+        runMotorsportAlias(command);
         return;
       }
 
