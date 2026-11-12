@@ -231,6 +231,9 @@ async function main() {
   chromeStderr = "";
   chrome = spawn(chromePath, [
     "--headless=new",
+    // Hosted Ubuntu blocks the namespaces needed by Chrome for Testing.
+    ...(process.platform === "linux" && process.env.GITHUB_ACTIONS === "true"
+      && process.env.ORC_CHROME_NO_SANDBOX === "1" ? ["--no-sandbox"] : []),
     "--disable-gpu",
     "--no-first-run",
     "--no-default-browser-check",

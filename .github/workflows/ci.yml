@@ -53,6 +53,9 @@ jobs:
 
       - name: Browser test
         run: node tests/docs_index_browser_test.mjs
+        env:
+          # Isolated hosted runner; only the repository's local test page is loaded.
+          ORC_CHROME_NO_SANDBOX: "1"
 
       - name: Test
         run: uv run pytest
