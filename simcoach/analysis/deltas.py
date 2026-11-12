@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 from collections import Counter
 from dataclasses import dataclass
 from pathlib import Path
@@ -10,11 +9,17 @@ from typing import Any, Literal
 
 import numpy as np
 import pandas as pd
-import yaml
 
 from simcoach.analysis.confidence import AnalysisThresholds, robust_noise, sample_stddev
 from simcoach.analysis.segmentation import GRID_EDGES
 from simcoach.utils.llm_logger import get_logger
+from simcoach.validation import (
+    assert_supported_complete_session as assert_supported_complete_session,
+)
+from simcoach.validation import (
+    read_session_artifacts,
+    read_validated_session_artifacts,
+)
 
 Cause = Literal["brake_point", "min_speed", "throttle_reapplication", "coast_duration"]
 CAUSE_ORDER: tuple[Cause, ...] = (
@@ -31,34 +36,6 @@ class ReferenceLap:
     lap_record: dict[str, Any]
     session_dir: Path
     ticks: pd.DataFrame
-
-
-def read_session_artifacts(
-    session_dir: Path,
-) -> tuple[dict[str, Any], pd.DataFrame, list[dict[str, Any]]]:
-    session_yaml_path = session_dir / "session.yaml"
-    ticks_path = session_dir / "ticks.parquet"
-    laps_path = session_dir / "laps.jsonl"
-    if not session_yaml_path.exists() or not ticks_path.exists() or not laps_path.exists():
-        raise FileNotFoundError(
-            "Recorded Session is missing session.yaml, ticks.parquet, or laps.jsonl"
-        )
-    session = yaml.safe_load(session_yaml_path.read_text(encoding="utf-8"))
-    ticks = pd.read_parquet(ticks_path)
-    laps = [
-        json.loads(line)
-        for line in laps_path.read_text(encoding="utf-8").splitlines()
-        if line.strip()
-    ]
-    return session, ticks, laps
-
-
-def assert_supported_complete_session(session: dict[str, Any]) -> None:
-    if session.get("complete") is not True:
-        raise ValueError("Recorded Session is incomplete")
-    for key in ("session_schema_version", "tick_schema_version", "lap_schema_version"):
-        if session.get(key) != 1:
-            raise ValueError(f"unsupported {key}: {session.get(key)!r}")
 
 
 def select_reference_lap(
@@ -79,16 +56,14 @@ def select_reference_lap(
 
 
 def comparison_laps(
-    target_session_dir: Path,
     target_ticks: pd.DataFrame,
     target_laps: list[dict[str, Any]],
     reference: ReferenceLap,
 ) -> list[dict[str, Any]]:
     comparisons = [lap for lap in target_laps if lap.get("valid") is True]
-    if reference.session_dir.resolve() == target_session_dir.resolve():
-        comparisons = [
-            lap for lap in comparisons if lap["lap_id"] != reference.lap_record["lap_id"]
-        ]
+    comparisons = [
+        lap for lap in comparisons if lap["lap_id"] != reference.lap_record["lap_id"]
+    ]
     return comparisons
 
 
@@ -128,6 +103,7 @@ def analyze_deltas(
     target_ticks: pd.DataFrame,
     corner_segments: list[dict[str, Any]],
     *,
+    reference_resampled: dict[str, np.ndarray] | None = None,
     thresholds: AnalysisThresholds | None = None,
     lap_dist_m_source: str,
 ) -> dict[str, Any]:
@@ -149,11 +125,15 @@ def analyze_deltas(
             [],
         )
 
-    reference_resampled = resample_lap(reference.ticks, reference.lap_record)
+    if reference_resampled is None:
+        reference_resampled = resample_lap(reference.ticks, reference.lap_record)
     reference_metrics = {
         segment["corner_segment_id"]: segment_metrics(reference_resampled, segment)
         for segment in corner_segments
     }
+    comparison_resampled = [
+        resample_lap(target_ticks, lap) for lap in comparison_records
+    ]
     corner_summaries: list[dict[str, Any]] = []
     reportable_candidates: list[dict[str, Any]] = []
 
@@ -165,8 +145,7 @@ def analyze_deltas(
         losses: list[float] = []
         assigned_causes: list[Cause | Literal["unclassified"]] = []
         comparison_metrics: list[dict[str, float | None]] = []
-        for lap in comparison_records:
-            resampled = resample_lap(target_ticks, lap)
+        for resampled in comparison_resampled:
             loss = segment_time(resampled, start, end) - segment_time(
                 reference_resampled, start, end
             )
@@ -543,15 +522,15 @@ def _select_personal_reference(
     sessions_root: Path | None,
 ) -> ReferenceLap | None:
     root = sessions_root or session_dir.parent
-    candidates: list[ReferenceLap] = []
-    seen_ids: dict[str, Path] = {}
-    target_id = session["recorded_session_id"]
+    target_lap = _fastest_valid_lap(laps)
+    candidates = [ReferenceLap(target_lap, session_dir, ticks)] if target_lap else []
+    target_id = str(session["recorded_session_id"])
+    seen_ids: dict[str, Path] = {target_id: session_dir}
     for candidate_dir in sorted(path for path in root.iterdir() if path.is_dir()):
         try:
-            candidate_session, candidate_ticks, candidate_laps = read_session_artifacts(
-                candidate_dir
+            candidate_session, candidate_ticks, candidate_laps = (
+                read_validated_session_artifacts(candidate_dir)
             )
-            assert_supported_complete_session(candidate_session)
         except Exception as exc:
             LOGGER.info(
                 "[SKIP] personal_reference_candidate path=%s reason=%s",
@@ -559,28 +538,22 @@ def _select_personal_reference(
                 exc,
             )
             continue
-        if candidate_session["recorded_session_id"] != target_id:
-            prior = seen_ids.get(candidate_session["recorded_session_id"])
-            if prior is not None:
-                LOGGER.info(
-                    "[SKIP] duplicate_recorded_session_id id=%s path=%s prior=%s",
-                    candidate_session["recorded_session_id"],
-                    candidate_dir,
-                    prior,
-                )
-                continue
-            seen_ids[candidate_session["recorded_session_id"]] = candidate_dir
+        candidate_id = str(candidate_session["recorded_session_id"])
+        prior = seen_ids.get(candidate_id)
+        if prior is not None:
+            LOGGER.info(
+                "[SKIP] duplicate_recorded_session_id id=%s path=%s prior=%s",
+                candidate_id,
+                candidate_dir,
+                prior,
+            )
+            continue
+        seen_ids[candidate_id] = candidate_dir
         if not _matches_personal_reference_target(session, candidate_session):
             continue
         lap = _fastest_valid_lap(candidate_laps)
         if lap:
             candidates.append(ReferenceLap(lap, candidate_dir, candidate_ticks))
-    if not any(
-        candidate.session_dir.resolve() == session_dir.resolve() for candidate in candidates
-    ):
-        lap = _fastest_valid_lap(laps)
-        if lap:
-            candidates.append(ReferenceLap(lap, session_dir, ticks))
     if not candidates:
         return None
     return min(
@@ -600,7 +573,7 @@ def _personal_reference_sort_key(candidate: ReferenceLap) -> tuple[float, str, s
 
 
 def _reference_session_sort_metadata(session_dir: Path) -> dict[str, str]:
-    session = yaml.safe_load((session_dir / "session.yaml").read_text(encoding="utf-8"))
+    session, _ticks, _laps = read_session_artifacts(session_dir)
     return {
         "started_at": str(session.get("started_at", "")),
         "recorded_session_id": str(session.get("recorded_session_id", "")),

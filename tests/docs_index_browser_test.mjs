@@ -3,14 +3,19 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { spawn, spawnSync } from "node:child_process";
+import { pathToFileURL } from "node:url";
 
 const repoRoot = resolve(import.meta.dirname, "..");
-const pageUrl = `file://${resolve(repoRoot, "docs/index.html")}`;
-const userDataDir = await mkdtemp(join(tmpdir(), "orc-index-chrome-"));
-const chromePath = findChrome();
+const pageUrl = pathToFileURL(resolve(repoRoot, "docs/index.html")).href;
 
 let chrome;
 let client;
+let chromePath;
+let userDataDir;
+let chromeExit;
+let chromeSpawnError;
+let chromeStdout = "";
+let chromeStderr = "";
 
 class CdpClient {
   constructor(webSocketUrl) {
@@ -55,6 +60,10 @@ class CdpClient {
 }
 
 function findExecutable(command) {
+  if (process.platform === "win32") {
+    const result = spawnSync("where.exe", [command], { encoding: "utf8" });
+    return result.status === 0 ? result.stdout.trim().split(/\r?\n/)[0] : null;
+  }
   const result = spawnSync("sh", ["-lc", `command -v ${command}`], {
     encoding: "utf8",
   });
@@ -64,6 +73,9 @@ function findExecutable(command) {
 function findChrome() {
   const candidates = [
     process.env.ORC_CHROME_PATH,
+    ...[process.env.PROGRAMFILES, process.env["PROGRAMFILES(X86)"], process.env.LOCALAPPDATA]
+      .filter(Boolean)
+      .map((root) => join(root, "Google", "Chrome", "Application", "chrome.exe")),
     "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
     "/Applications/Chromium.app/Contents/MacOS/Chromium",
     findExecutable("google-chrome"),
@@ -82,7 +94,33 @@ function findChrome() {
   return chrome;
 }
 
+function chromeDiagnostics() {
+  const details = [`Chrome executable: ${chromePath || "unknown"}`];
+  if (chromeSpawnError) {
+    details.push(`Chrome spawn error: ${chromeSpawnError.stack || chromeSpawnError.message}`);
+  }
+  if (chromeExit) {
+    details.push(`Chrome exited: code=${chromeExit.code ?? "null"} signal=${chromeExit.signal || "none"}`);
+  }
+  if (chromeStdout.trim()) {
+    details.push(`Chrome stdout:\n${chromeStdout.trim()}`);
+  }
+  if (chromeStderr.trim()) {
+    details.push(`Chrome stderr:\n${chromeStderr.trim()}`);
+  }
+  return details.join("\n");
+}
+
+function throwIfChromeStopped(context) {
+  if (chromeSpawnError || chromeExit) {
+    throw new Error(context);
+  }
+}
+
+let assertionCount = 0;
+
 function assert(condition, message, details = undefined) {
+  assertionCount += 1;
   if (!condition) {
     const error = new Error(message);
     error.details = details;
@@ -97,6 +135,7 @@ async function sleep(ms) {
 async function waitForFile(path, timeoutMs = 8000) {
   const startedAt = Date.now();
   while (Date.now() - startedAt < timeoutMs) {
+    throwIfChromeStopped(`Chrome did not create ${path}`);
     try {
       return readFileSync(path, "utf8");
     } catch {
@@ -109,6 +148,7 @@ async function waitForFile(path, timeoutMs = 8000) {
 async function waitForPageTarget(port, timeoutMs = 8000) {
   const startedAt = Date.now();
   while (Date.now() - startedAt < timeoutMs) {
+    throwIfChromeStopped("Chrome stopped before exposing a page target");
     try {
       const response = await fetch(`http://127.0.0.1:${port}/json/list`);
       const targets = await response.json();
@@ -150,6 +190,7 @@ async function setViewport(width, height) {
 async function waitForReady() {
   const startedAt = Date.now();
   while (Date.now() - startedAt < 8000) {
+    throwIfChromeStopped("Chrome stopped before the page became ready");
     const ready = await evaluate(`
       Boolean(document.getElementById("terminalInput")) && document.readyState === "complete"
     `);
@@ -182,6 +223,12 @@ async function terminateChrome() {
 }
 
 async function main() {
+  userDataDir = await mkdtemp(join(tmpdir(), "orc-index-chrome-"));
+  chromePath = findChrome();
+  chromeExit = null;
+  chromeSpawnError = null;
+  chromeStdout = "";
+  chromeStderr = "";
   chrome = spawn(chromePath, [
     "--headless=new",
     "--disable-gpu",
@@ -190,12 +237,19 @@ async function main() {
     "--remote-debugging-port=0",
     `--user-data-dir=${userDataDir}`,
     pageUrl,
-  ], { stdio: "ignore" });
+  ], { stdio: ["ignore", "pipe", "pipe"] });
 
+  chrome.stdout.on("data", (chunk) => {
+    chromeStdout += String(chunk);
+  });
+  chrome.stderr.on("data", (chunk) => {
+    chromeStderr += String(chunk);
+  });
+  chrome.on("error", (error) => {
+    chromeSpawnError = error;
+  });
   chrome.on("exit", (code, signal) => {
-    if (code !== null && code !== 0 && !client) {
-      throw new Error(`Chrome exited before tests started: ${code} ${signal || ""}`);
-    }
+    chromeExit = { code, signal };
   });
 
   const portFile = await waitForFile(join(userDataDir, "DevToolsActivePort"));
@@ -800,13 +854,17 @@ async function main() {
 
   console.log(JSON.stringify({
     ok: true,
-    assertions: 228,
+    assertions: assertionCount,
     viewports: viewportResults.map((layout) => layout.viewport),
   }, null, 2));
 }
 
 try {
   await main();
+} catch (error) {
+  const message = error instanceof Error ? (error.stack || error.message) : String(error);
+  console.error(`${message}\n${chromeDiagnostics()}`);
+  process.exitCode = 1;
 } finally {
   if (client) {
     client.close();
@@ -814,5 +872,7 @@ try {
   if (chrome) {
     await terminateChrome();
   }
-  await rm(userDataDir, { recursive: true, force: true });
+  if (userDataDir) {
+    await rm(userDataDir, { recursive: true, force: true });
+  }
 }

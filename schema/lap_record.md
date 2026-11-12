@@ -20,4 +20,6 @@ Each line is one JSON object.
 
 Invalid reasons: `sim_invalidated`, `bad_lap_progress`, `missing_tick_range`, `non_running_vehicle_state`, `teleport_or_reset`, `metadata_boundary`, `unknown_invalidity`.
 
+For recorder-derived eligibility, capture must observe the Lap at or before `0.01` Lap Progress and must then observe either the next-lap transition or `1.0` Lap Progress. A first or final fragment without that evidence uses `invalid_reason=metadata_boundary`.
+
 Invalid laps remain stored for audit but are never Reference Laps, Comparison Laps, noise inputs, consistency inputs, or personal-best candidates.

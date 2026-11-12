@@ -20,6 +20,9 @@ from simcoach.utils.llm_logger import get_logger
 LOGGER = get_logger(__name__)
 DEFAULT_OPENAI_MODEL = "gpt-5.4-mini"
 DEFAULT_REASONING_EFFORT = "low"
+SUPPORTED_ANALYSIS_SCHEMA_VERSION = 1
+SUPPORTED_CORNER_SEGMENTS_SCHEMA_VERSION = 1
+SUPPORTED_SELECTED_DELTA_SCHEMA_VERSION = 1
 
 
 class CoachRefinementError(RuntimeError):
@@ -29,8 +32,8 @@ class CoachRefinementError(RuntimeError):
 def start_chatgpt_refinement(session_dir: Path, analysis_run: Path) -> None:
     LOGGER.info("[START] start_chatgpt_refinement | analysis_run=%s", analysis_run)
     session, _ticks, laps = read_session_artifacts(session_dir)
-    analysis, selected_delta = load_analysis_context(analysis_run)
-    validate_analysis_run_ownership(session, analysis)
+    analysis, selected_delta, corner_segments = load_analysis_context(analysis_run)
+    validate_deterministic_context(session, analysis, selected_delta, corner_segments)
     ensure_refinement_allowed(analysis, mode="chatgpt")
 
     prompt = build_coach_prompt(session, analysis, selected_delta)
@@ -57,8 +60,8 @@ def import_chatgpt_response(session_dir: Path, analysis_run: Path, response_path
         "[START] import_chatgpt_response | analysis_run=%s response=%s", analysis_run, response_path
     )
     session, _ticks, laps = read_session_artifacts(session_dir)
-    analysis, selected_delta = load_analysis_context(analysis_run)
-    validate_analysis_run_ownership(session, analysis)
+    analysis, selected_delta, corner_segments = load_analysis_context(analysis_run)
+    validate_deterministic_context(session, analysis, selected_delta, corner_segments)
     if analysis.get("coach_refinement_mode") != "chatgpt" or analysis.get(
         "coach_refinement_status"
     ) not in {"awaiting_response", "invalid_response"}:
@@ -104,8 +107,8 @@ def refine_with_openai_api(
 ) -> None:
     LOGGER.info("[START] refine_with_openai_api | analysis_run=%s", analysis_run)
     session, _ticks, laps = read_session_artifacts(session_dir)
-    analysis, selected_delta = load_analysis_context(analysis_run)
-    validate_analysis_run_ownership(session, analysis)
+    analysis, selected_delta, corner_segments = load_analysis_context(analysis_run)
+    validate_deterministic_context(session, analysis, selected_delta, corner_segments)
     ensure_refinement_allowed(analysis, mode="api")
 
     model = os.environ.get("SIMCOACH_OPENAI_MODEL", DEFAULT_OPENAI_MODEL)
@@ -191,14 +194,15 @@ def call_openai_responses_api(
     return _extract_text_from_response_dump(dumped)
 
 
-def load_analysis_context(analysis_run: Path) -> tuple[dict[str, Any], dict[str, Any]]:
+def load_analysis_context(
+    analysis_run: Path,
+) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
     analysis = yaml.safe_load((analysis_run / "analysis.yaml").read_text(encoding="utf-8"))
     selected_delta = json.loads((analysis_run / "selected_delta.json").read_text(encoding="utf-8"))
-    if analysis.get("run_status") != "complete":
-        raise CoachRefinementError(
-            "Coach Refinement requires a complete deterministic Analysis Run"
-        )
-    return analysis, selected_delta
+    corner_segments = json.loads(
+        (analysis_run / "corner_segments.json").read_text(encoding="utf-8")
+    )
+    return analysis, selected_delta, corner_segments
 
 
 def ensure_refinement_allowed(analysis: dict[str, Any], *, mode: Literal["api", "chatgpt"]) -> None:
@@ -215,9 +219,137 @@ def ensure_refinement_allowed(analysis: dict[str, Any], *, mode: Literal["api", 
     raise CoachRefinementError("API refinement is not allowed for this Analysis Run state")
 
 
-def validate_analysis_run_ownership(session: dict[str, Any], analysis: dict[str, Any]) -> None:
+def validate_deterministic_context(
+    session: dict[str, Any],
+    analysis: dict[str, Any],
+    selected_delta: dict[str, Any],
+    corner_segments: dict[str, Any],
+) -> None:
+    if analysis.get("analysis_schema_version") != SUPPORTED_ANALYSIS_SCHEMA_VERSION:
+        raise CoachRefinementError(
+            "Coach Refinement does not support analysis_schema_version "
+            f"{analysis.get('analysis_schema_version')!r}"
+        )
+    if analysis.get("run_status") != "complete":
+        raise CoachRefinementError(
+            "Coach Refinement requires a complete deterministic Analysis Run"
+        )
     if analysis.get("recorded_session_id") != session.get("recorded_session_id"):
         raise CoachRefinementError("Analysis Run recorded_session_id does not match session.yaml")
+
+    analysis_corner_segments_version = analysis.get("corner_segments_schema_version")
+    artifact_corner_segments_version = corner_segments.get("corner_segments_schema_version")
+    if analysis_corner_segments_version != SUPPORTED_CORNER_SEGMENTS_SCHEMA_VERSION:
+        raise CoachRefinementError(
+            "Coach Refinement does not support corner_segments_schema_version "
+            f"{analysis_corner_segments_version!r} in analysis.yaml"
+        )
+    if artifact_corner_segments_version != SUPPORTED_CORNER_SEGMENTS_SCHEMA_VERSION:
+        raise CoachRefinementError(
+            "Coach Refinement does not support corner_segments_schema_version "
+            f"{artifact_corner_segments_version!r} in corner_segments.json"
+        )
+    if analysis_corner_segments_version != artifact_corner_segments_version:
+        raise CoachRefinementError(
+            "corner_segments_schema_version does not match between analysis.yaml "
+            "and corner_segments.json"
+        )
+
+    analysis_selected_delta_version = analysis.get("selected_delta_schema_version")
+    artifact_selected_delta_version = selected_delta.get("selected_delta_schema_version")
+    if analysis_selected_delta_version != SUPPORTED_SELECTED_DELTA_SCHEMA_VERSION:
+        raise CoachRefinementError(
+            "Coach Refinement does not support selected_delta_schema_version "
+            f"{analysis_selected_delta_version!r} in analysis.yaml"
+        )
+    if artifact_selected_delta_version != SUPPORTED_SELECTED_DELTA_SCHEMA_VERSION:
+        raise CoachRefinementError(
+            "Coach Refinement does not support selected_delta_schema_version "
+            f"{artifact_selected_delta_version!r} in selected_delta.json"
+        )
+    if analysis_selected_delta_version != artifact_selected_delta_version:
+        raise CoachRefinementError(
+            "selected_delta_schema_version does not match between analysis.yaml "
+            "and selected_delta.json"
+        )
+
+    artifact_session_id = selected_delta.get("recorded_session_id")
+    if artifact_session_id is not None and artifact_session_id != analysis.get(
+        "recorded_session_id"
+    ):
+        raise CoachRefinementError(
+            "recorded_session_id does not match between analysis.yaml and selected_delta.json"
+        )
+    if analysis.get("analysis_status") != selected_delta.get("analysis_status"):
+        raise CoachRefinementError(
+            "analysis_status does not match between analysis.yaml and selected_delta.json"
+        )
+    if analysis.get("reference_lap_id") != selected_delta.get("reference_lap_id"):
+        raise CoachRefinementError(
+            "reference_lap_id does not match between analysis.yaml and selected_delta.json"
+        )
+    if corner_segments.get("recorded_session_id") != analysis.get("recorded_session_id"):
+        raise CoachRefinementError(
+            "recorded_session_id does not match between analysis.yaml and corner_segments.json"
+        )
+    if corner_segments.get("reference_lap_id") != analysis.get("reference_lap_id"):
+        raise CoachRefinementError(
+            "reference_lap_id does not match between analysis.yaml and corner_segments.json"
+        )
+
+    segments = corner_segments.get("segments")
+    if not isinstance(segments, list):
+        raise CoachRefinementError("corner_segments.json segments must be an array")
+    segment_ids = [
+        segment.get("corner_segment_id")
+        for segment in segments
+        if isinstance(segment, dict)
+    ]
+    if len(segment_ids) != len(segments) or len(set(segment_ids)) != len(segment_ids):
+        raise CoachRefinementError("corner_segments.json contains invalid or duplicate segment IDs")
+
+    if selected_delta.get("analysis_status") == "reportable":
+        selected = selected_delta.get("selected_delta")
+        if not isinstance(selected, dict):
+            raise CoachRefinementError("reportable selected_delta must contain an object")
+        matches = [
+            segment
+            for segment in segments
+            if segment.get("corner_segment_id") == selected.get("corner_segment_id")
+        ]
+        if len(matches) != 1:
+            raise CoachRefinementError(
+                "selected Corner Segment does not match corner_segments.json"
+            )
+        validate_selected_segment_range(selected, matches[0])
+    elif selected_delta.get("selected_delta") is not None:
+        raise CoachRefinementError("non-reportable selected_delta must be null")
+
+
+def validate_selected_segment_range(
+    selected: dict[str, Any],
+    segment: dict[str, Any],
+) -> None:
+    selected_range = selected.get("segment_range")
+    if not isinstance(selected_range, dict):
+        raise CoachRefinementError("selected Reportable Delta lacks segment_range")
+    for key in (
+        "start_lap_dist_pct",
+        "end_lap_dist_pct",
+        "start_lap_dist_m",
+        "end_lap_dist_m",
+    ):
+        expected = segment.get(key)
+        if key.endswith("_pct") and isinstance(expected, float):
+            expected = round(expected, 6)
+        if selected_range.get(key) != expected:
+            raise CoachRefinementError(
+                f"selected Reportable Delta {key} does not match corner_segments.json"
+            )
+    if selected_range.get("lap_dist_m_source") != selected.get("lap_dist_m_source"):
+        raise CoachRefinementError(
+            "selected Reportable Delta lap_dist_m_source is internally inconsistent"
+        )
 
 
 def parse_json_response(text: str) -> dict[str, Any]:

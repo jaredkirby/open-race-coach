@@ -12,16 +12,15 @@ from typing import Any, Literal
 from simcoach.analysis.confidence import AnalysisThresholds
 from simcoach.analysis.deltas import (
     analyze_deltas,
-    assert_supported_complete_session,
     comparison_laps,
     non_reportable_selected_delta,
-    read_session_artifacts,
     resample_lap,
     select_reference_lap,
 )
 from simcoach.analysis.segmentation import SegmentThresholds, derive_corner_segments
 from simcoach.ingest.session import atomic_write_text, atomic_write_yaml
 from simcoach.utils.llm_logger import get_logger
+from simcoach.validation import read_validated_session_artifacts
 
 LOGGER = get_logger(__name__)
 ANALYZER_VERSION = "0.1.0"
@@ -38,8 +37,7 @@ def analyze_session(
         session_dir,
         reference_mode,
     )
-    session, ticks, laps = read_session_artifacts(session_dir)
-    assert_supported_complete_session(session)
+    session, ticks, laps = read_validated_session_artifacts(session_dir)
 
     created_at = datetime.now().astimezone()
     run_dir = make_analysis_run_dir(session_dir, created_at, reference_mode)
@@ -81,12 +79,13 @@ def analyze_session(
             )
             corner_segments["recorded_session_id"] = session["recorded_session_id"]
             corner_segments["reference_lap_id"] = reference.lap_record["lap_id"]
-            comparisons = comparison_laps(session_dir, ticks, laps, reference)
+            comparisons = comparison_laps(ticks, laps, reference)
             selected_delta = analyze_deltas(
                 reference,
                 comparisons,
                 ticks,
                 corner_segments["segments"],
+                reference_resampled=reference_resampled,
                 thresholds=thresholds,
                 lap_dist_m_source=session["lap_dist_m_source"],
             )

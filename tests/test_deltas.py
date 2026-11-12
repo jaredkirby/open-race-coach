@@ -1,11 +1,22 @@
 from __future__ import annotations
 
+from pathlib import Path
+
+import pandas as pd
+
+import simcoach.analysis.deltas as deltas_module
 from simcoach.analysis.confidence import AnalysisThresholds, robust_noise, sample_stddev
 from simcoach.analysis.deltas import (
+    ReferenceLap,
+    analyze_deltas,
     assign_cause,
     cause_metric,
     corner_summaries_for_status,
+    resample_lap,
 )
+from simcoach.analysis.segmentation import derive_corner_segments
+from simcoach.ingest.session import derive_lap_records
+from tests.test_analysis import build_synthetic_reportable_ticks
 
 
 def test_robust_noise_uses_mad_scaled_sigma() -> None:
@@ -103,6 +114,39 @@ def test_no_single_dominant_status_keeps_reportable_candidates_by_loss() -> None
     result = corner_summaries_for_status("no_single_dominant_issue", summaries)
 
     assert [item["corner_segment_id"] for item in result] == ["C3", "C1"]
+
+
+def test_analysis_resamples_each_lap_once(monkeypatch) -> None:
+    ticks = pd.DataFrame(
+        [tick.as_record() for tick in build_synthetic_reportable_ticks()]
+    )
+    laps = derive_lap_records(ticks, "01test")
+    reference = ReferenceLap(laps[0], Path("session"), ticks)
+    comparison_records = laps[1:]
+    reference_resampled = resample_lap(ticks, laps[0])
+    segments = derive_corner_segments(
+        reference_resampled,
+        lap_dist_m_source="sim",
+    )["segments"]
+    call_count = 0
+
+    def counting_resample(frame, lap):
+        nonlocal call_count
+        call_count += 1
+        return resample_lap(frame, lap)
+
+    monkeypatch.setattr(deltas_module, "resample_lap", counting_resample)
+
+    analyze_deltas(
+        reference,
+        comparison_records,
+        ticks,
+        segments,
+        reference_resampled=reference_resampled,
+        lap_dist_m_source="sim",
+    )
+
+    assert call_count == len(comparison_records)
 
 
 def summary(corner_id: str, classification: str, loss: float) -> dict[str, object]:

@@ -5,7 +5,7 @@
 └─┘┴└─└─
 ```
 
-Open Race Coach is a local-first post-session sim-racing telemetry coach. It records simulator sessions, validates them into durable artifacts, and runs deterministic analysis to produce up to one `Coaching Instruction` per `Analysis Run`.
+Open Race Coach is a local-first post-session sim-racing telemetry coach. It records simulator telemetry into durable `Recorded Session` artifacts, validates them, and runs deterministic analysis to produce up to one `Coaching Instruction` per `Analysis Run`.
 
 Public home: https://openracecoach.com
 
@@ -25,12 +25,27 @@ If you need this for everyday analysis today, read this as "in-progress" rather 
 uv sync
 ```
 
-Commands used in this repository:
+The full test suite includes a headless browser check for `docs/index.html`. It requires Node.js 22 or newer and Chrome or Chromium. Set `ORC_CHROME_PATH` when the browser is not discoverable from the normal install locations. A static-only run can skip that check explicitly, but it is not the full suite:
+
+```bash
+ORC_SKIP_DOCS_INDEX_BROWSER_TEST=1 uv run pytest
+```
+
+Live simulator recording and raw shared-memory fixture capture require Windows, a configured simulator, and its shared-memory interface. This repository's public fixtures and unit tests do not prove Live Simulator Validation.
+
+Use the [Live Simulator Validation runbook](docs/live-simulator-validation.md) when collecting evidence from AMS2 or ACC.
+
+Windows agent: start with [Windows rig handoff](docs/windows-agent-handoff.md) for checkout, PowerShell setup, file search, verification, and the first live AMS2 test. ACC remains a separate validation task.
+
+Installed commands used in this repository:
 
 - `uv run ruff check .` (style and static checks)
 - `uv run pytest` (test suite)
-- `uv run python scripts/validate_session.py data/sessions/<session_dir>` (validate finalized artifacts)
-- `uv run python scripts/analyze.py data/sessions/<session_dir>` (run deterministic analysis)
+- `uv run record --sim ams2 --out data/sessions` (record a simulator session)
+- `uv run validate-session data/sessions/<session_dir>` (validate finalized artifacts)
+- `uv run analyze data/sessions/<session_dir>` (run deterministic analysis)
+
+The `scripts/record.py`, `scripts/validate_session.py`, and `scripts/analyze.py` paths remain thin backwards-compatible wrappers. Prefer the installed commands for new usage.
 
 ## Typical workflow
 
@@ -45,30 +60,30 @@ You can inspect all produced files on disk; canonical outputs are under each `Re
 
 ### AMS2
 
-In Automobilista 2, set shared memory to Project CARS 2 mode, start a session, then run:
+Live AMS2 capture requires Windows. In Automobilista 2, set shared memory to Project CARS 2 mode, start a session, then run:
 
 ```bash
-uv run python scripts/record.py --sim ams2 --out data/sessions
+uv run record --sim ams2 --out data/sessions
 ```
 
 Stop with `Ctrl+C` when the run is done.
 
 ### ACC
 
-Start an Assetto Corsa Competizione session, then run:
+Live ACC capture requires Windows. Start an Assetto Corsa Competizione session, then run:
 
 ```bash
-uv run python scripts/record.py --sim acc --out data/sessions
+uv run record --sim acc --out data/sessions
 ```
 
 ### Shared-memory fixture capture (for adapter tests)
 
 ```bash
-uv run python scripts/capture_acc_fixture.py --out tests/fixtures/acc --count 5
-uv run python scripts/capture_ams2_fixture.py --out tests/fixtures/ams2 --count 5
+uv run python scripts/capture_acc_fixture.py --count 5
+uv run python scripts/capture_ams2_fixture.py --count 5
 ```
 
-Each capture writes page-level `.bin` dumps plus `.json` metadata sidecars.
+Each capture writes page-level `.bin` dumps plus `.json` metadata sidecars under ignored `.scratch/fixtures/{acc,ams2}/` by default. Raw pages and sidecars can contain simulator, session, or machine-specific data. Review hashes, struct sizes, scenario labels, provenance, and privacy before sharing anything. Promote only a small reviewed `.bin` plus sidecar set to `tests/fixtures/` with an explicit `--out` path; do not publish unreviewed captures. No automated redaction tool is provided.
 
 ## Validate
 
@@ -81,17 +96,17 @@ uv run python scripts/validate_ams2.py
 Then validate any finished `Recorded Session` before analysis:
 
 ```bash
-uv run python scripts/validate_session.py data/sessions/<session_dir>
+uv run validate-session data/sessions/<session_dir>
 ```
 
-`validate_session.py` is where `session.yaml` completeness, artifact versions, and tick/lap invariants are checked as a hard gate.
+`simcoach.validation` is the shared hard gate used by both `validate-session` and deterministic analysis. It checks `session.yaml` completeness, artifact versions, and tick/lap invariants.
 
 ## Analyze
 
 Run deterministic analysis:
 
 ```bash
-uv run python scripts/analyze.py data/sessions/<session_dir>
+uv run analyze data/sessions/<session_dir>
 ```
 
 This writes a new `Analysis Run` under:
@@ -107,7 +122,7 @@ Expected deterministic files:
 - `selected_delta.json`
 - `coach_report.md` (human-readable summary)
 
-`session.yaml` is also copied at session level for convenience, but each `Analysis Run` is the durable canonical source.
+The `Analysis Run` directory is the durable canonical source for deterministic analysis outputs. The session-level `coach_report.md` is only a convenience copy of the latest completed Coach Report render. `session.yaml` remains the Recorded Session metadata artifact; it is not a copied Analysis Run artifact.
 
 ## Coach Refinement (LLM layer only)
 
@@ -116,7 +131,7 @@ Deterministic analysis is separated from prose rewrites.
 ### API mode (requires billing)
 
 ```bash
-uv run python scripts/analyze.py data/sessions/<session_dir> --coach --coach-mode api
+uv run analyze data/sessions/<session_dir> --coach --coach-mode api
 ```
 
 Requires `OPENAI_API_KEY`.
@@ -124,8 +139,8 @@ Requires `OPENAI_API_KEY`.
 ### Manual ChatGPT mode
 
 ```bash
-uv run python scripts/analyze.py data/sessions/<session_dir> --coach --coach-mode chatgpt
-uv run python scripts/analyze.py data/sessions/<session_dir> --analysis-run <analysis_run_dir> --chatgpt-response <response.json>
+uv run analyze data/sessions/<session_dir> --coach --coach-mode chatgpt
+uv run analyze data/sessions/<session_dir> --analysis-run <analysis_run_dir> --chatgpt-response <response.json>
 ```
 
 ChatGPT responses must be JSON-only (plain JSON or one fenced JSON block).
@@ -153,12 +168,12 @@ Each schema file is the contract for its artifact and should be kept aligned wit
 - `Coach Report`: deterministic report from analysis.
 - `Coach Refinement`: optional prose-only rewrite layer.
 
-Completed `Analysis Run` outputs are immutable.
+Completed deterministic `Analysis Run` evidence is immutable: deterministic statuses, the Reference Lap, Corner Segments, Reportable Delta, and telemetry-derived values cannot be rewritten. Coach Refinement may add `coach_prompt.md`, add `coach_response.json`, update Coach Report prose, and update refinement metadata; it must not reinterpret or select different evidence. A pending manual refinement completes once. Use a new deterministic `Analysis Run` for a different Reference Lap or threshold policy.
 
 ## Decisions and design history
 
-- Source of truth for domain behavior: [CONTEXT.md](/Users/jaredkirby/projects/new-work/open-race-coach/CONTEXT.md)
-- Accepted decisions and explicit rejections: [docs/DECISIONS.md](/Users/jaredkirby/projects/new-work/open-race-coach/docs/DECISIONS.md)
+- Source of truth for domain behavior: [CONTEXT.md](CONTEXT.md)
+- Accepted decisions and explicit rejections: [docs/DECISIONS.md](docs/DECISIONS.md)
 
 ## Contributing
 

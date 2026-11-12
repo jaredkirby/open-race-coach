@@ -250,9 +250,13 @@ class ACCAdapter(SimAdapter):
         if sys.platform != "win32":
             raise RuntimeError("ACC shared-memory capture requires Windows")
         LOGGER.info("[START] acc.connect")
-        self._physics_mmap = _open_page(PHYSICS_PAGE, ACCPhysics)
-        self._graphics_mmap = _open_page(GRAPHICS_PAGE, ACCGraphics)
-        self._static_mmap = _open_page(STATIC_PAGE, ACCStatic)
+        try:
+            self._physics_mmap = _open_page(PHYSICS_PAGE, ACCPhysics)
+            self._graphics_mmap = _open_page(GRAPHICS_PAGE, ACCGraphics)
+            self._static_mmap = _open_page(STATIC_PAGE, ACCStatic)
+        except Exception:
+            self.disconnect()
+            raise
         self._capture_started_at = time.monotonic()
         LOGGER.info(
             "[END] acc.connect | physics=%s graphics=%s static=%s",

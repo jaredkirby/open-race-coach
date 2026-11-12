@@ -4,6 +4,8 @@ This runbook is for the first AMS2 Minimal Clean-Lap Live Simulator Validation. 
 
 This runbook does not validate ACC, realistic stint behavior, Coach Refinement, or whether a Coaching Instruction is useful.
 
+Start with [Windows rig handoff](windows-agent-handoff.md) for repository discovery and PowerShell preparation. Commands below run from the repository root. Stop after any nonzero exit code; PowerShell does not automatically stop on native command failures.
+
 ## Scenario
 
 - Simulator: AMS2
@@ -38,7 +40,7 @@ On the Windows rig:
 4. Install dependencies from the repository root:
 
 ```bash
-uv sync
+uv sync --frozen --python 3.11
 ```
 
 If `uv sync` fails, stop. The rig is not ready for validation.
@@ -69,7 +71,7 @@ If this gate fails, do not record a canonical session. Record the failure in the
 After the shared-memory validator passes, capture raw AMS2 fixture candidates:
 
 ```bash
-uv run python scripts/capture_ams2_fixture.py --out tests/fixtures/ams2 --count 5
+uv run python scripts/capture_ams2_fixture.py --out .scratch/fixtures/ams2 --count 5
 ```
 
 Review before committing any capture:
@@ -84,17 +86,19 @@ Review before committing any capture:
 - Snapshot labels and sanity fields describe the intended scenario.
 - No obvious private or machine-specific junk is present beyond intended simulator metadata.
 
-Commit only a small representative set after review. Keep unreviewed captures local.
+Raw pages can contain driver and participant names. Keep captures in ignored storage. After privacy and provenance review, explicitly copy only a small approved binary/sidecar pair into `tests/fixtures/ams2/`; preserve hashes and record any redaction. Do not treat the sidecar's `sequence_stable` flag as proof of a coherent live sample: the current capture checks even sequence parity, not a before/after sequence match.
 
 ## Gate 4: Canonical Recorded Session
 
 Restart or reset the AMS2 practice context if needed so the canonical capture is clean. Then run:
 
 ```bash
-uv run python scripts/record.py --sim ams2 --out data/sessions
+uv run record --sim ams2 --out data/sessions
 ```
 
 Drive 2 to 3 clean timed laps. Stop recording with `Ctrl+C` after the final lap has completed.
+
+Keep recording until the lap number increments after the final clean lap. Starting mid-lap or stopping before that transition leaves boundary fragments; these remain stored and should be ineligible. Current eligibility requires the first sample at or before 1% Lap Progress and an observed next-lap transition or 100% sample. Check these decisions against the actual capture. Two to three clean laps can prove capture trust but are below the normal minimum of one Reference Lap plus four Comparison Laps for reportability. An optional later test can record six clean timed laps; do not force a reportable result.
 
 Do not intentionally invalidate a lap during this gate. Do not enter pits, pause, replay, restart, change track, change car, or change session type.
 
@@ -105,7 +109,7 @@ If recording fails or finalizes as incomplete, stop. Record the session path and
 Run:
 
 ```bash
-uv run python scripts/validate_session.py data/sessions/<session_dir>
+uv run validate-session "data/sessions/REPLACE_WITH_CAPTURE_DIRECTORY"
 ```
 
 This gate must pass for first validation. If it fails, do not run coaching or judge product quality from the session.
@@ -115,7 +119,7 @@ This gate must pass for first validation. If it fails, do not run coaching or ju
 Run:
 
 ```bash
-uv run python scripts/analyze.py data/sessions/<session_dir>
+uv run analyze "data/sessions/REPLACE_WITH_CAPTURE_DIRECTORY"
 ```
 
 Review the created `analysis/<timestamp>_best/analysis.yaml`, `selected_delta.json`, `corner_segments.json`, and `coach_report.md`.
@@ -177,12 +181,12 @@ Driving target: 2 to 3 clean timed laps
 ## Commands
 
 ```bash
-uv sync
+uv sync --frozen --python 3.11
 uv run python scripts/validate_ams2.py
-uv run python scripts/capture_ams2_fixture.py --out tests/fixtures/ams2 --count 5
-uv run python scripts/record.py --sim ams2 --out data/sessions
-uv run python scripts/validate_session.py data/sessions/<session_dir>
-uv run python scripts/analyze.py data/sessions/<session_dir>
+uv run python scripts/capture_ams2_fixture.py --out .scratch/fixtures/ams2 --count 5
+uv run record --sim ams2 --out data/sessions
+uv run validate-session "data/sessions/REPLACE_WITH_CAPTURE_DIRECTORY"
+uv run analyze "data/sessions/REPLACE_WITH_CAPTURE_DIRECTORY"
 ```
 
 ## Fixture Candidates

@@ -36,7 +36,7 @@ def test_analysis_run_produces_inspectable_outputs() -> None:
     SESSION_DIR.mkdir(parents=True)
 
     info = session_info()
-    session_id = "inspectable-actual-session"
+    session_id = "01m1jr5xxrvybwmfnrhacr3yxq"
     started_at = datetime.fromisoformat("2026-06-12T10:00:00-07:00")
     paths = paths_for(SESSION_DIR)
     ticks = build_reportable_concrete_fixture_ticks()

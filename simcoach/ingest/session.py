@@ -20,6 +20,8 @@ from simcoach.adapters.base import NormalizedTick, SessionInfo
 from simcoach.utils.llm_logger import get_logger
 
 LOGGER = get_logger(__name__)
+MAX_OBSERVED_LAP_START_PROGRESS = 0.01
+COMPLETE_LAP_PROGRESS = 1.0
 
 FailureReason = Literal[
     "metadata_unavailable",
@@ -90,8 +92,27 @@ def atomic_write_jsonl(path: Path, rows: Iterable[dict[str, Any]]) -> None:
 
 
 def write_ticks_parquet(path: Path, ticks: list[NormalizedTick]) -> pd.DataFrame:
-    path.parent.mkdir(parents=True, exist_ok=True)
     frame = pd.DataFrame([tick.as_record() for tick in ticks])
+    validate_tick_invariants(frame)
+    frame = frame.astype(
+        {
+            "t": "float64",
+            "lap": "int32",
+            "lap_dist_pct": "float32",
+            "lap_dist_m": "float32",
+            "speed": "float32",
+            "throttle": "float32",
+            "brake": "float32",
+            "steering": "float32",
+            "gear": "int8",
+            "rpm": "float32",
+            "pos_x": "float32",
+            "pos_y": "float32",
+            "pos_z": "float32",
+        }
+    )
+    validate_tick_invariants(frame)
+    path.parent.mkdir(parents=True, exist_ok=True)
     temp_path = path.parent / f".{path.name}.{os.getpid()}.tmp"
     try:
         frame.to_parquet(temp_path, index=False)
@@ -190,7 +211,6 @@ def finalize_recorded_session(
 
     try:
         frame = write_ticks_parquet(paths.ticks_parquet, ticks)
-        validate_tick_invariants(frame)
         laps = derive_lap_records(
             frame,
             session_id,
@@ -208,11 +228,15 @@ def finalize_recorded_session(
         if any_lap_uses_unknown_vehicle_state(frame, laps):
             session_yaml["validity_method"] = "unknown_plus_inferred"
         atomic_write_yaml(paths.session_yaml, session_yaml)
-        LOGGER.info("[END] finalize_recorded_session | complete=true laps=%s", len(laps))
+        LOGGER.info(
+            "[END] finalize_recorded_session | complete=%s laps=%s",
+            session_yaml["complete"],
+            len(laps),
+        )
         return session_yaml
     except Exception as exc:
         LOGGER.exception("[ERROR] finalize_recorded_session | path=%s error=%s", paths.root, exc)
-        failure_reason: FailureReason = (
+        failure_reason: FailureReason = terminal_failure_reason or (
             "recording_interrupted" if interrupted else "artifact_write_failed"
         )
         session_yaml = initial_session_yaml(
@@ -250,8 +274,47 @@ def validate_tick_invariants(frame: pd.DataFrame) -> None:
     missing = required - set(frame.columns)
     if missing:
         raise ValueError(f"ticks.parquet missing columns: {sorted(missing)}")
+    non_nullable = required - {"lap_dist_m"}
+    for column in sorted(non_nullable):
+        if frame[column].isna().any():
+            raise ValueError(f"{column} must not contain null values")
+
+    numeric = required - {"vehicle_state"}
+    for column in sorted(numeric):
+        present = frame[column].dropna()
+        if present.empty and column == "lap_dist_m":
+            continue
+        if not pd.api.types.is_numeric_dtype(present.dtype):
+            raise ValueError(f"{column} must be numeric")
+        if not present.map(math.isfinite).all():
+            raise ValueError(f"{column} must contain only finite values")
+
+    for column in ("lap", "gear"):
+        if not pd.api.types.is_integer_dtype(frame[column].dtype):
+            raise ValueError(f"{column} must use an integer dtype")
+    if frame["lap"].lt(1).any():
+        raise ValueError("lap must be 1-indexed")
+    if frame["lap"].gt(2_147_483_647).any():
+        raise ValueError("lap exceeds the int32 schema range")
+    if frame["gear"].lt(-1).any():
+        raise ValueError("gear must be -1, 0, or a forward gear")
+    if frame["gear"].gt(127).any():
+        raise ValueError("gear exceeds the int8 schema range")
+    for column in ("throttle", "brake"):
+        if (frame[column].lt(0.0) | frame[column].gt(1.0)).any():
+            raise ValueError(f"{column} outside 0.0..1.0")
+    if (frame["steering"].lt(-1.0) | frame["steering"].gt(1.0)).any():
+        raise ValueError("steering outside -1.0..1.0")
+    allowed_states = {"running", "pit", "paused", "menu", "replay", "unknown"}
+    unsupported_states = set(frame["vehicle_state"]) - allowed_states
+    if unsupported_states:
+        raise ValueError(f"unsupported vehicle_state: {sorted(unsupported_states)}")
     if not frame["t"].is_monotonic_increasing or frame["t"].duplicated().any():
         raise ValueError("ticks.parquet `t` must be strictly monotonic")
+    if frame["t"].lt(0.0).any():
+        raise ValueError("ticks.parquet `t` must start at or after zero")
+    if not frame["lap"].is_monotonic_increasing:
+        raise ValueError("lap must be monotonic")
     bad_pct = frame["lap_dist_pct"].lt(0.0) | frame["lap_dist_pct"].gt(1.0)
     if bad_pct.any():
         raise ValueError("lap_dist_pct outside 0.0..1.0")
@@ -265,7 +328,8 @@ def derive_lap_records(
 ) -> list[dict[str, Any]]:
     sim_invalidated_laps = sim_invalidated_laps or set()
     laps: list[dict[str, Any]] = []
-    for lap, group in frame.groupby("lap", sort=True):
+    lap_groups = list(frame.groupby("lap", sort=True))
+    for group_index, (lap, group) in enumerate(lap_groups):
         if group.empty:
             continue
         start_idx = int(group.index.min())
@@ -273,6 +337,11 @@ def derive_lap_records(
         invalid_reason = infer_invalid_reason(group)
         if invalid_reason is None and int(lap) in sim_invalidated_laps:
             invalid_reason = "sim_invalidated"
+        if invalid_reason is None and not lap_has_observed_boundaries(
+            group,
+            followed_by_next_lap=group_index < len(lap_groups) - 1,
+        ):
+            invalid_reason = "metadata_boundary"
         lap_time_s = float(group["t"].iloc[-1] - group["t"].iloc[0])
         laps.append(
             {
@@ -291,6 +360,20 @@ def derive_lap_records(
         "[STATE] laps | count=%s valid=%s", len(laps), sum(1 for lap in laps if lap["valid"])
     )
     return laps
+
+
+def lap_has_observed_boundaries(
+    group: pd.DataFrame,
+    *,
+    followed_by_next_lap: bool,
+) -> bool:
+    """Return whether capture observed enough of the lap for analysis eligibility."""
+    if group.empty:
+        return False
+    progress = group["lap_dist_pct"].astype(float)
+    observed_start = float(progress.iloc[0]) <= MAX_OBSERVED_LAP_START_PROGRESS
+    observed_finish = followed_by_next_lap or float(progress.iloc[-1]) >= COMPLETE_LAP_PROGRESS
+    return observed_start and observed_finish
 
 
 def infer_invalid_reason(group: pd.DataFrame) -> str | None:

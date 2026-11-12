@@ -7,7 +7,12 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from simcoach.adapters.base import NormalizedTick, SessionInfo, SimAdapter
-from simcoach.ingest.session import create_recorded_session, finalize_recorded_session
+from simcoach.ingest.session import (
+    atomic_write_yaml,
+    create_recorded_session,
+    finalize_recorded_session,
+    utc_local_now,
+)
 from simcoach.utils.llm_logger import get_logger
 
 LOGGER = get_logger(__name__)
@@ -32,8 +37,14 @@ class Recorder:
         LOGGER.info(
             "[START] recorder.run | sim=%s out=%s", self.adapter.sim_name, self.config.out_dir
         )
-        self.adapter.connect()
-        completed_paths: list[Path] = []
+        try:
+            self.adapter.connect()
+        except Exception:
+            try:
+                self.adapter.disconnect()
+            except Exception:
+                LOGGER.exception("[ERROR] recorder.run | connect cleanup failed")
+            raise
         ticks: list[NormalizedTick] = []
         sim_invalidated_laps: set[int] = set()
         interrupted = False
@@ -43,6 +54,8 @@ class Recorder:
         started_at = None
         paths = None
         stop_error: Exception | None = None
+        disconnect_error: Exception | None = None
+        current_session_finalized = False
         active_lap: int | None = None
         active_lap_start_t: float | None = None
         try:
@@ -76,7 +89,7 @@ class Recorder:
                             "[BRANCH] recorded_session_boundary reason=%s",
                             boundary_reason,
                         )
-                        finalize_recorded_session(
+                        final_yaml = finalize_recorded_session(
                             paths,
                             session_id,
                             info,
@@ -85,7 +98,18 @@ class Recorder:
                             interrupted=False,
                             sim_invalidated_laps=sim_invalidated_laps,
                         )
-                        completed_paths.append(paths.root)
+                        if final_yaml.get("complete") is not True:
+                            current_session_finalized = True
+                            final_yaml["complete"] = False
+                            final_yaml["failure_reason"] = (
+                                "session_boundary_finalization_failed"
+                            )
+                            final_yaml.setdefault("ended_at", utc_local_now().isoformat())
+                            atomic_write_yaml(paths.session_yaml, final_yaml)
+                            raise RuntimeError(
+                                "Recorded Session Boundary finalization failed: "
+                                f"{paths.root}"
+                            )
                         ticks = []
                         sim_invalidated_laps = set()
                         active_lap = None
@@ -152,28 +176,52 @@ class Recorder:
             LOGGER.info("[BRANCH] recorder.run | keyboard_interrupt")
         except Exception as exc:
             stop_error = exc
+            if terminal_failure_reason is None:
+                terminal_failure_reason = "unknown_failure"
             LOGGER.exception("[ERROR] recorder.run | stopping after error=%s", exc)
         finally:
-            self.adapter.disconnect()
+            try:
+                self.adapter.disconnect()
+            except Exception as exc:
+                disconnect_error = exc
+                LOGGER.exception("[ERROR] recorder.run | disconnect failed error=%s", exc)
 
         if info is None or started_at is None or paths is None:
+            if stop_error is not None:
+                raise stop_error
+            if disconnect_error is not None:
+                raise disconnect_error
             raise RuntimeError("Recording never started; required metadata was unavailable")
 
-        finalize_recorded_session(
-            paths,
-            session_id,
-            info,
-            started_at,
-            ticks,
-            interrupted=interrupted,
-            terminal_failure_reason=terminal_failure_reason,
-            sim_invalidated_laps=sim_invalidated_laps,
-        )
-        completed_paths.append(paths.root)
+        finalization_error: RuntimeError | None = None
+        if not current_session_finalized:
+            final_yaml = finalize_recorded_session(
+                paths,
+                session_id,
+                info,
+                started_at,
+                ticks,
+                interrupted=interrupted,
+                terminal_failure_reason=terminal_failure_reason,
+                sim_invalidated_laps=sim_invalidated_laps,
+            )
+            if terminal_failure_reason is None and final_yaml.get("complete") is not True:
+                finalization_error = RuntimeError(
+                    "Recorded Session finalization failed: "
+                    f"{final_yaml.get('failure_reason', 'unknown_failure')}"
+                )
+            if terminal_failure_reason is not None and final_yaml.get("complete") is True:
+                finalization_error = RuntimeError(
+                    "Recorded Session finalization failed closed-state check"
+                )
         LOGGER.info("[END] recorder.run | path=%s ticks=%s", paths.root, len(ticks))
         if stop_error is not None:
             raise stop_error
-        return completed_paths[-1]
+        if finalization_error is not None:
+            raise finalization_error
+        if disconnect_error is not None:
+            raise disconnect_error
+        return paths.root
 
     def _wait_for_stable_metadata(self) -> SessionInfo:
         LOGGER.info("[START] recorder.wait_for_stable_metadata")

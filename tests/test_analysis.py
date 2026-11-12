@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import math
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -10,6 +11,8 @@ import pandas as pd
 import pytest
 import yaml
 
+import simcoach.analysis.deltas as deltas_module
+import simcoach.analysis.run as run_module
 from simcoach.adapters.base import NormalizedTick
 from simcoach.analysis.run import analyze_session, render_coach_report
 from simcoach.ingest.session import (
@@ -61,7 +64,32 @@ def test_analyze_session_writes_complete_deterministic_artifacts(tmp_path: Path)
     assert (paths.root / "coach_report.md").read_text() == report
 
 
-def test_failed_analysis_run_writes_diagnostic_yaml_only(tmp_path: Path) -> None:
+def test_analyze_session_resamples_each_eligible_lap_once(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    info = session_info()
+    session_id, started_at, paths = create_recorded_session(tmp_path, info)
+    finalize_recorded_session(
+        paths, session_id, info, started_at, build_synthetic_reportable_ticks()
+    )
+    original_resample = deltas_module.resample_lap
+    call_count = 0
+
+    def counting_resample(ticks: pd.DataFrame, lap: dict[str, object]):
+        nonlocal call_count
+        call_count += 1
+        return original_resample(ticks, lap)
+
+    monkeypatch.setattr(run_module, "resample_lap", counting_resample)
+    monkeypatch.setattr(deltas_module, "resample_lap", counting_resample)
+
+    analyze_session(paths.root)
+
+    assert call_count == 6
+
+
+def test_invalid_target_refuses_before_analysis_run(tmp_path: Path) -> None:
     info = session_info()
     session_id, started_at, paths = create_recorded_session(tmp_path, info)
     atomic_write_yaml(
@@ -113,23 +141,10 @@ def test_failed_analysis_run_writes_diagnostic_yaml_only(tmp_path: Path) -> None
         ],
     )
 
-    try:
+    with pytest.raises(ValueError, match="ticks.parquet missing columns"):
         analyze_session(paths.root)
-    except KeyError:
-        pass
-    else:
-        raise AssertionError("malformed ticks should fail deterministic analysis")
 
-    run_dirs = list((paths.root / "analysis").iterdir())
-    assert len(run_dirs) == 1
-    run_dir = run_dirs[0]
-    analysis_yaml = yaml.safe_load((run_dir / "analysis.yaml").read_text())
-    assert analysis_yaml["run_status"] == "failed"
-    assert analysis_yaml["run_error"] == "invalid_artifact_contract"
-    assert analysis_yaml["analysis_status"] is None
-    assert not (run_dir / "corner_segments.json").exists()
-    assert not (run_dir / "selected_delta.json").exists()
-    assert not (run_dir / "coach_report.md").exists()
+    assert not (paths.root / "analysis").exists()
 
 
 def test_incomplete_and_unsupported_targets_refuse_before_analysis_run(
@@ -199,14 +214,13 @@ def test_personal_reference_skips_unsupported_and_duplicate_candidates(
     sessions_root = tmp_path / "sessions"
     sessions_root.mkdir()
     original = create_finalized_session(sessions_root, "a_original")
-    duplicate = create_finalized_session(sessions_root, "z_duplicate")
     unsupported = create_finalized_session(sessions_root, "m_unsupported")
     target = create_finalized_session(tmp_path / "external", "target")
 
     original_id = yaml.safe_load((original / "session.yaml").read_text())["recorded_session_id"]
+    duplicate = sessions_root / f"z_duplicate_{original_id}"
+    shutil.copytree(original, duplicate)
     patch_first_lap_time(original, 80.0)
-    patch_first_lap_time(duplicate, 70.0)
-    patch_session_yaml(duplicate, recorded_session_id=original_id)
     patch_first_lap_time(unsupported, 10.0)
     patch_session_yaml(unsupported, session_schema_version=99)
     patch_first_lap_time(target, 90.0)
@@ -215,6 +229,39 @@ def test_personal_reference_skips_unsupported_and_duplicate_candidates(
 
     analysis_yaml = yaml.safe_load((run_dir / "analysis.yaml").read_text())
     assert analysis_yaml["reference_lap_source_path"] == str(original)
+
+
+def test_personal_reference_skips_invalid_historical_candidate(tmp_path: Path) -> None:
+    sessions_root = tmp_path / "sessions"
+    sessions_root.mkdir()
+    invalid = create_finalized_session(sessions_root, "invalid")
+    target = create_finalized_session(tmp_path / "external", "target")
+    patch_first_lap_time(target, 90.0)
+    rows = [json.loads(line) for line in (invalid / "laps.jsonl").read_text().splitlines()]
+    rows[0]["lap_time_s"] = 1.0
+    atomic_write_jsonl(invalid / "laps.jsonl", rows)
+
+    run_dir = analyze_session(target, reference_mode="personal", sessions_root=sessions_root)
+
+    analysis_yaml = yaml.safe_load((run_dir / "analysis.yaml").read_text())
+    assert analysis_yaml["reference_lap_source_path"] == str(target)
+
+
+def test_personal_reference_uses_target_identity_over_copied_target(tmp_path: Path) -> None:
+    sessions_root = tmp_path / "sessions"
+    sessions_root.mkdir()
+    target = create_finalized_session(tmp_path / "external", "target")
+    target_session = yaml.safe_load((target / "session.yaml").read_text())
+    duplicate = sessions_root / f"copied_target_{target_session['recorded_session_id']}"
+    shutil.copytree(target, duplicate)
+    patch_first_lap_time(duplicate, 1.0)
+
+    run_dir = analyze_session(target, reference_mode="personal", sessions_root=sessions_root)
+
+    analysis_yaml = yaml.safe_load((run_dir / "analysis.yaml").read_text())
+    selected_delta = json.loads((run_dir / "selected_delta.json").read_text())
+    assert analysis_yaml["reference_lap_source_path"] == str(target)
+    assert selected_delta["comparison_lap_count"] == 5
 
 
 def test_unavailable_lap_distance_report_uses_percentage_not_meters() -> None:
@@ -307,7 +354,7 @@ def create_finalized_session(out_dir: Path, name: str) -> Path:
         started_at,
         build_synthetic_reportable_ticks(),
     )
-    renamed = out_dir / name
+    renamed = out_dir / f"{name}_{session_id}"
     paths.root.rename(renamed)
     return renamed
 
@@ -325,9 +372,19 @@ def patch_first_lap_time(session_dir: Path, lap_time_s: float) -> None:
 def patch_lap_times(session_dir: Path, lap_times: dict[int, float]) -> None:
     path = paths_for(session_dir).laps_jsonl
     rows = [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
+    ticks = pd.read_parquet(paths_for(session_dir).ticks_parquet)
+    next_start = 0.0
     for row in rows:
+        start, end = row["tick_range"]
+        duration = lap_times.get(row["lap"], float(row["lap_time_s"]))
+        ticks.loc[start:end - 1, "t"] = [
+            next_start + duration * index / (end - start - 1)
+            for index in range(end - start)
+        ]
+        next_start += duration + 1.0
         if row["lap"] in lap_times:
             row["lap_time_s"] = lap_times[row["lap"]]
+    ticks.to_parquet(paths_for(session_dir).ticks_parquet, index=False)
     atomic_write_jsonl(path, rows)
 
 
@@ -335,7 +392,9 @@ def build_synthetic_reportable_ticks() -> list[NormalizedTick]:
     ticks: list[NormalizedTick] = []
     rows_per_lap = 240
     base_t = 0.0
-    for lap in range(1, 7):
+    # Seven captured lap numbers yield one Reference Lap, five Comparison Laps,
+    # and one final boundary fragment that is retained but ineligible.
+    for lap in range(1, 8):
         is_reference = lap == 1
         lap_duration = 90.0 if is_reference else 90.18
         for index in range(rows_per_lap):

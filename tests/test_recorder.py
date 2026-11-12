@@ -85,11 +85,7 @@ def test_recorder_finalizes_complete_session_when_tick_stream_ends(tmp_path: Pat
     info = session_info()
     adapter = FakeAdapter(
         session_infos=[info, info, info, info, info],
-        ticks=[
-            tick(lap=1, pct=0.0, t=0.0),
-            tick(lap=1, pct=0.5, t=0.5),
-            tick(lap=1, pct=0.95, t=1.0),
-        ],
+        ticks=[tick(lap=1, pct=index / 20, t=index / 60) for index in range(20)],
     )
 
     session_dir = Recorder(
@@ -107,6 +103,9 @@ def test_recorder_finalizes_complete_session_when_tick_stream_ends(tmp_path: Pat
     assert final_yaml["failure_reason"] is None
     assert (session_dir / "ticks.parquet").exists()
     assert (session_dir / "laps.jsonl").exists()
+    laps = [json.loads(line) for line in (session_dir / "laps.jsonl").read_text().splitlines()]
+    assert laps[0]["valid"] is False
+    assert laps[0]["invalid_reason"] == "metadata_boundary"
     assert adapter.disconnected is True
 
 
@@ -165,6 +164,81 @@ def test_recorder_prints_provisional_lap_time_on_lap_boundary(
     assert "lap 1 provisional_time=1.200s" in output
 
 
+def test_recorder_stops_after_boundary_finalization_failure(tmp_path: Path) -> None:
+    info_a = session_info()
+    info_b = {**info_a, "car_raw": "Formula Trainer", "car": "formula_trainer"}
+    invalid_tick_values = tick(lap=1, pct=0.0, t=0.0).as_record()
+    invalid_tick_values["throttle"] = 1.1
+    adapter = FakeAdapter(
+        session_infos=[info_a, info_a, info_a, info_b],
+        ticks=[NormalizedTick(**invalid_tick_values)],
+    )
+
+    with pytest.raises(RuntimeError, match="Recorded Session Boundary finalization failed"):
+        Recorder(
+            adapter,
+            RecorderConfig(out_dir=tmp_path, metadata_stable_s=0.0, tick_rate_hz=1000),
+        ).run()
+
+    session_dirs = list(tmp_path.iterdir())
+    assert len(session_dirs) == 1
+    final_yaml = yaml.safe_load((session_dirs[0] / "session.yaml").read_text())
+    assert final_yaml["failure_reason"] == "session_boundary_finalization_failed"
+    assert adapter.disconnected is True
+
+
+def test_recorder_marks_unexpected_capture_error_incomplete(tmp_path: Path) -> None:
+    info = session_info()
+    adapter = FakeAdapter(
+        session_infos=[info, info, info],
+        ticks=[tick(lap=1, pct=0.0, t=0.0), RuntimeError("tick read failed")],
+    )
+
+    with pytest.raises(RuntimeError, match="tick read failed"):
+        Recorder(
+            adapter,
+            RecorderConfig(out_dir=tmp_path, metadata_stable_s=0.0, tick_rate_hz=1000),
+        ).run()
+
+    session_dir = next(tmp_path.iterdir())
+    final_yaml = yaml.safe_load((session_dir / "session.yaml").read_text())
+    assert final_yaml["complete"] is False
+    assert final_yaml["failure_reason"] == "unknown_failure"
+
+
+def test_disconnect_error_does_not_preempt_finalization(tmp_path: Path) -> None:
+    info = session_info()
+    adapter = FakeAdapter(
+        session_infos=[info, info, info],
+        ticks=[tick(lap=1, pct=0.0, t=0.0), KeyboardInterrupt()],
+        disconnect_error=RuntimeError("disconnect failed"),
+    )
+
+    with pytest.raises(RuntimeError, match="disconnect failed"):
+        Recorder(
+            adapter,
+            RecorderConfig(out_dir=tmp_path, metadata_stable_s=0.0, tick_rate_hz=1000),
+        ).run()
+
+    session_dir = next(tmp_path.iterdir())
+    final_yaml = yaml.safe_load((session_dir / "session.yaml").read_text())
+    assert final_yaml["complete"] is True
+    assert final_yaml["ended_at"] is not None
+
+
+def test_recorder_cleans_up_after_connect_failure(tmp_path: Path) -> None:
+    adapter = FakeAdapter(
+        session_infos=[],
+        ticks=[],
+        connect_error=RuntimeError("connect failed"),
+    )
+
+    with pytest.raises(RuntimeError, match="connect failed"):
+        Recorder(adapter, RecorderConfig(out_dir=tmp_path)).run()
+
+    assert adapter.disconnected is True
+
+
 class FakeAdapter(SimAdapter):
     sim_name = "fake"
     adapter_version = "test"
@@ -174,13 +248,18 @@ class FakeAdapter(SimAdapter):
         *,
         session_infos: list[SessionInfo | None],
         ticks: list[NormalizedTick | BaseException],
+        connect_error: Exception | None = None,
+        disconnect_error: Exception | None = None,
     ) -> None:
         self.session_infos = session_infos
         self.ticks = ticks
         self.disconnected = False
+        self.connect_error = connect_error
+        self.disconnect_error = disconnect_error
 
     def connect(self) -> None:
-        pass
+        if self.connect_error is not None:
+            raise self.connect_error
 
     def read_session_info(self) -> SessionInfo | None:
         if self.session_infos:
@@ -197,6 +276,8 @@ class FakeAdapter(SimAdapter):
 
     def disconnect(self) -> None:
         self.disconnected = True
+        if self.disconnect_error is not None:
+            raise self.disconnect_error
 
 
 def tick(*, lap: int, pct: float, t: float) -> NormalizedTick:

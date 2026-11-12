@@ -11,6 +11,13 @@ Expected v0 fixture types:
 
 Do not fabricate binary fixture dumps. Until live captures exist, adapter tests should use small in-memory `ctypes` fixtures, synthetic traces, or clearly labeled shared-memory-derived public samples.
 
-Use `uv run python scripts/capture_ams2_fixture.py --out tests/fixtures/ams2 --count 5` on Windows after `scripts/validate_ams2.py` passes to create raw AMS2 `.bin` fixture candidates with JSON sidecars. Use `uv run python scripts/capture_acc_fixture.py --out tests/fixtures/acc --count 5` on Windows with ACC running to create raw physics/graphics/static `.bin` page fixture candidates with JSON sidecars. Commit only captures that have been reviewed for provenance and are useful as stable regression evidence.
+On Windows, capture candidates into ignored scratch storage first:
+
+```bash
+uv run python scripts/capture_ams2_fixture.py --count 5
+uv run python scripts/capture_acc_fixture.py --count 5
+```
+
+The default destinations are `.scratch/fixtures/ams2/` and `.scratch/fixtures/acc/`. Raw shared-memory pages can contain driver and multiplayer participant names plus simulator, session, or machine-specific data. Review the bytes and sidecars for privacy, provenance, hashes, struct sizes, and stable regression value before promoting a minimal set into `tests/fixtures/`. Promotion is manual and must use an explicit `--out` path; the repository does not provide an automated redaction tool. Do not commit unreviewed captures.
 
 When raw sidecars are committed under `tests/fixtures/ams2/` or `tests/fixtures/acc/`, `tests/test_raw_fixtures.py` parses the corresponding `.bin` files in CI. The tests intentionally skip while no live captures exist.

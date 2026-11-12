@@ -11,6 +11,7 @@ import mmap
 import os
 import sys
 import time
+from collections.abc import Sequence
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -23,14 +24,29 @@ from simcoach.adapters.ams2 import (
     important_offsets,
 )
 
+DEFAULT_OUTPUT_DIR = Path(".scratch/fixtures/ams2")
 
-def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--out", type=Path, default=Path("tests/fixtures/ams2"))
+
+def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description="Capture raw AMS2/PC2 shared-memory bytes for fixture review.",
+        epilog=(
+            "Raw captures default to ignored .scratch storage. Treat .bin files and sidecars "
+            "as potentially sensitive: review simulator, session, and machine-specific data "
+            "before manually promoting a small, useful, provenance-reviewed pair with --out. "
+            "Do not publish an unreviewed capture or rely on an automated redaction step."
+        ),
+    )
+    parser.add_argument(
+        "--out",
+        type=Path,
+        default=DEFAULT_OUTPUT_DIR,
+        help="output directory (default: %(default)s; ignored scratch storage)",
+    )
     parser.add_argument("--prefix", default="ams2_pc2")
     parser.add_argument("--count", type=int, default=1)
     parser.add_argument("--interval-s", type=float, default=0.25)
-    return parser.parse_args()
+    return parser.parse_args(argv)
 
 
 def main() -> int:

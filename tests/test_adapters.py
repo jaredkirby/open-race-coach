@@ -8,6 +8,7 @@ from pathlib import Path
 import pytest
 
 import simcoach.adapters.ac as ac_adapter
+import simcoach.adapters.acc as acc_adapter
 from simcoach.adapters.acc import (
     ACC_LIVE,
     ACC_PRACTICE,
@@ -253,6 +254,34 @@ def test_acc_snapshots_to_normalized_tick_and_session_info() -> None:
     assert info["lap_dist_m_source"] == "unavailable"
     assert info["validity_method"] == "sim_flag_plus_inferred"
     assert info["lap_invalidated"] is False
+
+
+def test_acc_connect_closes_pages_after_partial_failure(monkeypatch: pytest.MonkeyPatch) -> None:
+    class FakePage:
+        def __init__(self) -> None:
+            self.closed = False
+
+        def close(self) -> None:
+            self.closed = True
+
+    physics_page = FakePage()
+
+    def open_page(name: str, _struct_type: type[ctypes.Structure]) -> FakePage:
+        if name == acc_adapter.PHYSICS_PAGE:
+            return physics_page
+        raise OSError("mapping unavailable")
+
+    monkeypatch.setattr(acc_adapter.sys, "platform", "win32")
+    monkeypatch.setattr(acc_adapter, "_open_page", open_page)
+    adapter = ACCAdapter()
+
+    with pytest.raises(OSError, match="mapping unavailable"):
+        adapter.connect()
+
+    assert physics_page.closed is True
+    assert adapter._physics_mmap is None
+    assert adapter._graphics_mmap is None
+    assert adapter._static_mmap is None
 
 
 def make_snapshot() -> SharedMemory:

@@ -21,6 +21,8 @@ from tests.test_session import session_info
 
 def test_chatgpt_prompt_and_response_import(tmp_path: Path) -> None:
     session_dir, run_dir = analyzed_session(tmp_path)
+    original_selected_delta = (run_dir / "selected_delta.json").read_bytes()
+    original_corner_segments = (run_dir / "corner_segments.json").read_bytes()
 
     start_chatgpt_refinement(session_dir, run_dir)
     analysis = yaml.safe_load((run_dir / "analysis.yaml").read_text())
@@ -57,6 +59,8 @@ def test_chatgpt_prompt_and_response_import(tmp_path: Path) -> None:
     assert "Minimum speed was 42.0 m/s" in report
     assert "10.8 km/h" in report
     assert (session_dir / "coach_report.md").read_text() == report
+    assert (run_dir / "selected_delta.json").read_bytes() == original_selected_delta
+    assert (run_dir / "corner_segments.json").read_bytes() == original_corner_segments
 
 
 def test_invalid_chatgpt_response_sets_invalid_state_without_response_artifact(
@@ -122,6 +126,8 @@ def test_chatgpt_response_rejects_unexpected_keys_without_response_artifact(
 
 def test_openai_api_refinement_uses_mocked_responses_client(tmp_path: Path) -> None:
     session_dir, run_dir = analyzed_session(tmp_path)
+    original_selected_delta = (run_dir / "selected_delta.json").read_bytes()
+    original_corner_segments = (run_dir / "corner_segments.json").read_bytes()
     fake_client = FakeOpenAIClient(
         json.dumps(
             {
@@ -144,6 +150,8 @@ def test_openai_api_refinement_uses_mocked_responses_client(tmp_path: Path) -> N
     assert fake_client.responses.kwargs["model"] == "gpt-5.4-mini"
     assert fake_client.responses.kwargs["reasoning"] == {"effort": "low"}
     assert fake_client.responses.kwargs["text"]["format"]["type"] == "json_schema"
+    assert (run_dir / "selected_delta.json").read_bytes() == original_selected_delta
+    assert (run_dir / "corner_segments.json").read_bytes() == original_corner_segments
 
 
 def test_openai_api_failure_preserves_deterministic_artifacts_and_allows_retry(
@@ -224,6 +232,151 @@ def test_refinement_refuses_mismatched_recorded_session_without_mutation(
     assert (other_session_dir / "coach_report.md").read_text() == other_session_report
 
 
+@pytest.mark.parametrize("mode", ["chatgpt", "api"])
+def test_refinement_rejects_unsupported_analysis_schema_before_mutation(
+    tmp_path: Path, mode: str
+) -> None:
+    session_dir, run_dir = analyzed_session(tmp_path)
+    patch_analysis_yaml(run_dir, analysis_schema_version=2)
+    original_analysis = (run_dir / "analysis.yaml").read_bytes()
+    original_report = (run_dir / "coach_report.md").read_bytes()
+    fake_client = FakeOpenAIClient("should not be used")
+
+    with pytest.raises(CoachRefinementError, match="analysis_schema_version 2"):
+        run_refinement(mode, session_dir, run_dir, fake_client)
+
+    assert (run_dir / "analysis.yaml").read_bytes() == original_analysis
+    assert (run_dir / "coach_report.md").read_bytes() == original_report
+    assert not (run_dir / "coach_prompt.md").exists()
+    assert not (run_dir / "coach_response.json").exists()
+    assert fake_client.responses.kwargs == {}
+
+
+@pytest.mark.parametrize("mode", ["chatgpt", "api"])
+@pytest.mark.parametrize("artifact", ["analysis.yaml", "selected_delta.json"])
+def test_refinement_rejects_unsupported_selected_delta_schema_before_mutation(
+    tmp_path: Path, mode: str, artifact: str
+) -> None:
+    session_dir, run_dir = analyzed_session(tmp_path)
+    if artifact == "analysis.yaml":
+        patch_analysis_yaml(run_dir, selected_delta_schema_version=2)
+    else:
+        patch_selected_delta(run_dir, selected_delta_schema_version=2)
+    original_analysis = (run_dir / "analysis.yaml").read_bytes()
+    original_report = (run_dir / "coach_report.md").read_bytes()
+    fake_client = FakeOpenAIClient("should not be used")
+
+    with pytest.raises(CoachRefinementError, match="selected_delta_schema_version 2"):
+        run_refinement(mode, session_dir, run_dir, fake_client)
+
+    assert (run_dir / "analysis.yaml").read_bytes() == original_analysis
+    assert (run_dir / "coach_report.md").read_bytes() == original_report
+    assert not (run_dir / "coach_prompt.md").exists()
+    assert not (run_dir / "coach_response.json").exists()
+    assert fake_client.responses.kwargs == {}
+
+
+@pytest.mark.parametrize("mode", ["chatgpt", "api"])
+def test_refinement_rejects_unsupported_corner_segments_schema_before_mutation(
+    tmp_path: Path,
+    mode: str,
+) -> None:
+    session_dir, run_dir = analyzed_session(tmp_path)
+    patch_corner_segments(run_dir, corner_segments_schema_version=2)
+    original_analysis = (run_dir / "analysis.yaml").read_bytes()
+    original_report = (run_dir / "coach_report.md").read_bytes()
+    fake_client = FakeOpenAIClient("should not be used")
+
+    with pytest.raises(CoachRefinementError, match="corner_segments_schema_version 2"):
+        run_refinement(mode, session_dir, run_dir, fake_client)
+
+    assert (run_dir / "analysis.yaml").read_bytes() == original_analysis
+    assert (run_dir / "coach_report.md").read_bytes() == original_report
+    assert not (run_dir / "coach_prompt.md").exists()
+    assert not (run_dir / "coach_response.json").exists()
+    assert fake_client.responses.kwargs == {}
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [
+        ("recorded_session_id", "different-recorded-session"),
+        ("analysis_status", "consistent"),
+        ("reference_lap_id", "different-reference:lap:1"),
+    ],
+)
+def test_refinement_rejects_inconsistent_deterministic_artifacts_before_mutation(
+    tmp_path: Path, field: str, value: str
+) -> None:
+    session_dir, run_dir = analyzed_session(tmp_path)
+    patch_selected_delta(run_dir, **{field: value})
+    original_analysis = (run_dir / "analysis.yaml").read_bytes()
+    original_report = (run_dir / "coach_report.md").read_bytes()
+
+    with pytest.raises(CoachRefinementError, match=f"{field} does not match"):
+        start_chatgpt_refinement(session_dir, run_dir)
+
+    assert (run_dir / "analysis.yaml").read_bytes() == original_analysis
+    assert (run_dir / "coach_report.md").read_bytes() == original_report
+    assert not (run_dir / "coach_prompt.md").exists()
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [
+        ("recorded_session_id", "different-recorded-session"),
+        ("reference_lap_id", "different-reference:lap:1"),
+    ],
+)
+def test_refinement_rejects_inconsistent_corner_segments_before_mutation(
+    tmp_path: Path,
+    field: str,
+    value: str,
+) -> None:
+    session_dir, run_dir = analyzed_session(tmp_path)
+    patch_corner_segments(run_dir, **{field: value})
+    original_analysis = (run_dir / "analysis.yaml").read_bytes()
+    original_report = (run_dir / "coach_report.md").read_bytes()
+
+    with pytest.raises(CoachRefinementError, match=f"{field} does not match"):
+        start_chatgpt_refinement(session_dir, run_dir)
+
+    assert (run_dir / "analysis.yaml").read_bytes() == original_analysis
+    assert (run_dir / "coach_report.md").read_bytes() == original_report
+    assert not (run_dir / "coach_prompt.md").exists()
+
+
+def test_refinement_rejects_selected_corner_range_drift_before_mutation(
+    tmp_path: Path,
+) -> None:
+    session_dir, run_dir = analyzed_session(tmp_path)
+    path = run_dir / "selected_delta.json"
+    selected_delta = json.loads(path.read_text())
+    selected_delta["selected_delta"]["segment_range"]["start_lap_dist_pct"] += 0.1
+    path.write_text(json.dumps(selected_delta), encoding="utf-8")
+    original_analysis = (run_dir / "analysis.yaml").read_bytes()
+    original_report = (run_dir / "coach_report.md").read_bytes()
+
+    with pytest.raises(CoachRefinementError, match="start_lap_dist_pct does not match"):
+        start_chatgpt_refinement(session_dir, run_dir)
+
+    assert (run_dir / "analysis.yaml").read_bytes() == original_analysis
+    assert (run_dir / "coach_report.md").read_bytes() == original_report
+    assert not (run_dir / "coach_prompt.md").exists()
+
+
+def test_refinement_rejects_incomplete_analysis_run_before_mutation(tmp_path: Path) -> None:
+    session_dir, run_dir = analyzed_session(tmp_path)
+    patch_analysis_yaml(run_dir, run_status="failed")
+    original_analysis = (run_dir / "analysis.yaml").read_bytes()
+
+    with pytest.raises(CoachRefinementError, match="complete deterministic Analysis Run"):
+        start_chatgpt_refinement(session_dir, run_dir)
+
+    assert (run_dir / "analysis.yaml").read_bytes() == original_analysis
+    assert not (run_dir / "coach_prompt.md").exists()
+
+
 def test_refinement_mode_cannot_switch_after_api_failure(tmp_path: Path) -> None:
     session_dir, run_dir = analyzed_session(tmp_path)
     bad_client = FakeOpenAIClient(
@@ -284,6 +437,39 @@ def analyzed_session(tmp_path: Path) -> tuple[Path, Path]:
     assert selected_delta["analysis_status"] == "reportable"
     assert selected_delta["selected_delta"]["corner_segment_id"] == "C2"
     return paths.root, run_dir
+
+
+def patch_analysis_yaml(run_dir: Path, **updates: object) -> None:
+    path = run_dir / "analysis.yaml"
+    analysis = yaml.safe_load(path.read_text())
+    analysis.update(updates)
+    path.write_text(yaml.safe_dump(analysis, sort_keys=False), encoding="utf-8")
+
+
+def patch_selected_delta(run_dir: Path, **updates: object) -> None:
+    path = run_dir / "selected_delta.json"
+    selected_delta = json.loads(path.read_text())
+    selected_delta.update(updates)
+    path.write_text(json.dumps(selected_delta), encoding="utf-8")
+
+
+def patch_corner_segments(run_dir: Path, **updates: object) -> None:
+    path = run_dir / "corner_segments.json"
+    corner_segments = json.loads(path.read_text())
+    corner_segments.update(updates)
+    path.write_text(json.dumps(corner_segments), encoding="utf-8")
+
+
+def run_refinement(
+    mode: str,
+    session_dir: Path,
+    run_dir: Path,
+    fake_client: FakeOpenAIClient,
+) -> None:
+    if mode == "chatgpt":
+        start_chatgpt_refinement(session_dir, run_dir)
+    else:
+        refine_with_openai_api(session_dir, run_dir, client=fake_client)
 
 
 class FakeResponse:

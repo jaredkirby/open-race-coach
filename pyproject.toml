@@ -11,12 +11,17 @@ license = "MIT"
 requires-python = ">=3.11"
 dependencies = [
   "numpy>=2.0",
-  "openai>=1.0",
+  "openai>=2.41.1",
   "pandas>=2.2",
   "pyarrow>=16.0",
   "pyyaml>=6.0",
   "ulid-py>=1.1",
 ]
+
+[project.scripts]
+record = "simcoach.cli.record:main"
+validate-session = "simcoach.cli.validate_session:main"
+analyze = "simcoach.cli.analyze:main"
 
 [dependency-groups]
 dev = [
