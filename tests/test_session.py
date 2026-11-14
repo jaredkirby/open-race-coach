@@ -218,6 +218,14 @@ def test_validate_tick_invariants_rejects_non_integer_lap_and_gear() -> None:
         validate_tick_invariants(frame)
 
 
+@pytest.mark.parametrize("delta", [0.0, -0.001])
+def test_validate_tick_invariants_rejects_duplicate_or_reversed_time(delta: float) -> None:
+    frame = pd.DataFrame([tick.as_record() for tick in build_ticks()])
+    frame.loc[1, "t"] = frame.loc[0, "t"] + delta
+    with pytest.raises(ValueError, match="must be strictly monotonic"):
+        validate_tick_invariants(frame)
+
+
 def test_validate_tick_invariants_rejects_lap_reversal() -> None:
     frame = pd.DataFrame([tick.as_record() for tick in build_ticks()])
     frame.loc[25, "lap"] = 1

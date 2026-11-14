@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import ctypes
+import io
 import json
 from dataclasses import fields
 from pathlib import Path
@@ -9,6 +10,7 @@ import pytest
 
 import simcoach.adapters.ac as ac_adapter
 import simcoach.adapters.acc as acc_adapter
+import simcoach.adapters.ams2 as ams2_adapter
 from simcoach.adapters.acc import (
     ACC_LIVE,
     ACC_PRACTICE,
@@ -36,6 +38,29 @@ from simcoach.adapters.base import NormalizedTick, SimAdapter
 
 REST_CARS_FIXTURE = Path(__file__).parent / "fixtures" / "pcars2" / "rest-cars_example.json"
 CREST_FIXTURE = Path(__file__).parent / "fixtures" / "pcars2" / "crest_example.json"
+
+
+@pytest.mark.parametrize("origin", [0.0, 1000.0])
+def test_ams2_capture_time_advances_when_coarse_clock_is_frozen(
+    monkeypatch: pytest.MonkeyPatch, origin: float,
+) -> None:
+    page = io.BytesIO(bytes(make_snapshot()))
+    counter = iter([origin, origin + 0.001, origin + 0.002])
+    monkeypatch.setattr(ams2_adapter.sys, "platform", "win32")
+    monkeypatch.setattr(ams2_adapter.mmap, "mmap", lambda *args, **kwargs: page)
+    monkeypatch.setattr(ams2_adapter.time, "monotonic", lambda: 17.0)
+    monkeypatch.setattr(ams2_adapter.time, "perf_counter", lambda: next(counter))
+    adapter = AMS2Adapter()
+    adapter.connect()
+    try:
+        first = adapter.read_tick()
+        second = adapter.read_tick()
+        assert first is not None and second is not None
+        assert first.t == pytest.approx(0.001)
+        assert second.t == pytest.approx(0.002)
+        assert second.t > first.t
+    finally:
+        adapter.disconnect()
 
 
 def test_ams2_struct_key_offsets() -> None:

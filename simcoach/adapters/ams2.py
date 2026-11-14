@@ -302,7 +302,9 @@ class AMS2Adapter(SimAdapter):
             tagname=SHARED_MEMORY_NAME,
             access=mmap.ACCESS_READ,
         )
-        self._capture_started_at = time.monotonic()
+        # Python 3.11 on Windows can back monotonic() with a 15.6 ms clock.
+        # Capture Time needs the high-resolution monotonic performance counter.
+        self._capture_started_at = time.perf_counter()
         LOGGER.info("[END] ams2.connect | size=%s", ctypes.sizeof(SharedMemory))
 
     def disconnect(self) -> None:
@@ -316,7 +318,9 @@ class AMS2Adapter(SimAdapter):
         snapshot = self._read_snapshot()
         if snapshot is None:
             return None
-        capture_t = time.monotonic() - (self._capture_started_at or time.monotonic())
+        if self._capture_started_at is None:
+            raise RuntimeError("AMS2 capture clock is not initialized")
+        capture_t = time.perf_counter() - self._capture_started_at
         return self.tick_from_snapshot(snapshot, capture_t)
 
     def read_session_info(self) -> SessionInfo | None:
