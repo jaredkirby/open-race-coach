@@ -375,7 +375,10 @@ async function main() {
         .includes("Live Simulator Validation"),
       sourceHasDocument: document.getElementById("sourceText").innerText.includes("<!doctype html"),
       reportCaveat: document.querySelector(".report-printout").innerText
-        .includes("live AMS2/ACC validation\\n  is not proven by this repo."),
+        .includes("ACC and coaching quality unproven."),
+      scopedStatus: document.body.innerText.includes("scoped AMS2 live pass.")
+        && document.body.innerText.includes("ACC and coaching quality unproven.")
+        && document.body.innerText.includes("Durable team and radio are planned."),
       traceCaveat: document.querySelector("[data-module='trace']").innerText.includes("not live telemetry"),
       pixelMeta: document.getElementById("pixelMeta").innerText,
       pixelCells: document.querySelectorAll("#pixelRender .pixel-cell").length,
@@ -593,6 +596,7 @@ async function main() {
   assert(results.initial.decisionsHasContent, "decisions render should include decision content", results.initial);
   assert(results.initial.sourceHasDocument, "source render should include page source", results.initial);
   assert(results.initial.reportCaveat, "report view should preserve live-validation caveat", results.initial);
+  assert(results.initial.scopedStatus, "status should distinguish scoped evidence from unproven and planned capabilities", results.initial);
   assert(results.initial.traceCaveat, "trace view should preserve not-live-telemetry caveat", results.initial);
   assert(results.initial.pixelCells === 2304, "pixel renderer should create the expected track bitmap cell grid", results.initial);
   assert(results.initial.litPixelCells > 100, "pixel renderer should include lit phosphor cells", results.initial);
@@ -812,7 +816,7 @@ async function main() {
         inputInsideScrollport: inputRect.left >= scrollport.left && inputRect.right <= scrollport.right + 1,
         reportVisible: report.bottom > scrollport.top && report.top < scrollport.bottom,
         statusInsideScrollport: status.left >= scrollport.left && status.right <= scrollport.right + 1,
-        caveatVisible: document.querySelector(".report-printout").innerText.includes("is not proven by this repo."),
+        caveatVisible: document.querySelector(".report-printout").innerText.includes("ACC and coaching quality unproven."),
       };
     `);
     const screenshot = await client.send("Page.captureScreenshot", { format: "png" });

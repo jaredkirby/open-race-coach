@@ -4,6 +4,8 @@ This runbook is for the first AMS2 Minimal Clean-Lap Live Simulator Validation. 
 
 This runbook does not validate ACC, realistic stint behavior, Coach Refinement, or whether a Coaching Instruction is useful.
 
+The [2026-11-14 evidence summary](validation/ams2-2026-11-14.md) records a passing first AMS2 run on one rig, later failures, and targeted recovery checks. For that accepted configuration, use fresh readiness checks and ordinary driving; repeat a physical gate only when a changed configuration or new uncertainty requires it. New rigs still need the relevant live gates. A later failure remains a failure even when the first acceptance passed.
+
 Start with [Windows rig handoff](windows-agent-handoff.md) for repository discovery and PowerShell preparation. Commands below run from the repository root. Stop after any nonzero exit code; PowerShell does not automatically stop on native command failures.
 
 ## Scenario
@@ -15,6 +17,21 @@ Start with [Windows rig handoff](windows-agent-handoff.md) for repository discov
 - Driving target: 2 to 3 clean timed laps with no intentional pause, pit entry, replay, restart, setup/context change, or deliberate invalidation
 
 Use the deliberate invalidation only during the shared-memory validator gate, not during the canonical Recorded Session.
+
+### Pre-stint fuel check
+
+Before sending the driver out, verify fuel in the simulator setup and confirm
+the loaded amount after entering the cockpit. Budget for the outlap, planned
+timed laps, return to the pits, and a two-lap reserve. Use measured consumption
+from this car and track or the simulator's fuel estimate. When consumption is
+unknown, use a conservative fuel load and observe consumption before extending
+the stint. Record the chosen load and its basis in the evidence packet.
+
+Monitor fuel during the stint and call the driver in while the return margin
+remains. Treat fuel exhaustion as a setup incident in the review. Preserve the
+affected capture and avoid attributing its slowdown to driver consistency
+without supporting evidence. A finalized recording does not cover driving
+after its recorded end time.
 
 ## Pass Criteria
 
@@ -42,6 +59,11 @@ On the Windows rig:
 ```bash
 uv sync --frozen --python 3.11
 ```
+
+Keep [continuous telemetry](continuous-telemetry.md) running throughout the
+rig visit. Verify its current heartbeat and fuel reading before release.
+Leave it active through pits, driver breaks, and completion of individual
+recordings. The seat-time clock can stop when the driver leaves the rig.
 
 If `uv sync` fails, stop. The rig is not ready for validation.
 

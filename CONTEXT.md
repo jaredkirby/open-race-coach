@@ -1,8 +1,26 @@
 # Open Race Coach
 
-Open Race Coach is a local-first post-session coaching tool for sim racing. It turns recorded driving telemetry into one data-supported coaching instruction for the next session.
+Open Race Coach is a local-first sim-racing project evolving toward a personal race chief that owns rig readiness, driving-time protection, practice coordination and feedback. Its implemented post-session coaching core turns recorded telemetry into at most one data-supported Coaching Instruction per Analysis Run.
+
+[Race-chief direction](docs/race-chief-direction.md) separates accepted product requirements from proposed implementation. Durable specialist deployment and in-car radio are not implemented. Existing Recorded Session and analysis contracts remain authoritative.
 
 ## Language
+
+**Race Chief**:
+The principal agent responsible for the driver's goals, team coordination, priorities, decisions and follow-through. This is the accepted product role; an autonomous durable deployment is future work.
+_Avoid_: Making the driver manage specialist chats or reconcile conflicting instructions.
+
+**Driver Visit**:
+An explicitly bounded period when the driver is using the rig. Simulator activity alone does not establish physical presence. Driving, pit movement, rest, waiting and unknown time must remain distinguishable; the current clock does not yet separate rest from avoidable waiting.
+_Avoid_: Treating all non-driving time as wasted time or a running simulator as proof of occupancy.
+
+**Live Reaction**:
+A proposed brief acknowledgment of a sufficiently supported event, delivered while still relevant and appropriate to the driver's workload. It is distinct from a causal diagnosis and from a Coaching Instruction.
+_Avoid_: Calling a slowdown a spin without evidence, or presenting a latency target as measured performance.
+
+**Radio Transmission**:
+A proposed driver-facing audio message with evidence, priority, validity and expiry, rendered through a real audio-processing chain. Generated, queued, played and acknowledged are distinct states; playback does not prove understanding.
+_Avoid_: Treating chat output as delivered audio or allowing independent specialists to speak over one another.
 
 **Recorded Session**:
 The immutable analysis unit captured by Open Race Coach. A Recorded Session is homogeneous for sim, track, car, session type, adapter version, and artifact schema versions; pit stops, pauses, slow laps, invalid laps, and multiple stints may remain inside it as long as that context does not change.

@@ -8,3 +8,6 @@ codex-session-*.html
 data/
 logs/
 *.pyc
+.env
+.env.*
+!.env.example

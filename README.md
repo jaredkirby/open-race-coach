@@ -5,17 +5,19 @@
 └─┘┴└─└─
 ```
 
-Open Race Coach is a local-first post-session sim-racing telemetry coach. It records simulator telemetry into durable `Recorded Session` artifacts, validates them, and runs deterministic analysis to produce up to one `Coaching Instruction` per `Analysis Run`.
+Open Race Coach is a local-first sim-racing project evolving toward a personal race chief: preparing the rig, protecting driving time, coordinating practice and strategy, and providing timely, evidence-backed feedback. Its implemented coaching core records telemetry into durable `Recorded Session` artifacts, validates them, and runs deterministic analysis to produce up to one `Coaching Instruction` per `Analysis Run`.
 
 Public home: https://openracecoach.com
 
 ## What this repo is (and is not)
 
-Current status: `Pre-alpha public-development seed` on `main`.
+Current status: `Pre-alpha`; first scoped AMS2 Live Simulator Validation completed on 2026-11-14.
 
-- Implemented: AMS2 and ACC ingest scaffolding, deterministic analysis, and Coach Refinement plumbing.
-- Not yet complete: broad live-rig usage expectations.
-- Not yet proven on live rigs: AMS2/ACC live simulator validation. Public fixtures and unit tests are compatibility evidence only; they are not proof of real simulator trust.
+- Implemented: AMS2 and ACC ingest, deterministic analysis, Coach Refinement plumbing, a private continuous AMS2 archive, and a driver clock with output reviews.
+- Verified on one Windows rig: AMS2 shared-memory gates and the record → validate → analyze path for Formula Trainer Advanced at Brands Hatch Indy. See the [validation results and limitations](docs/validation/ams2-2026-11-14.md), including later failures and recovery. This does not establish broad simulator reliability or coaching effectiveness.
+- Not yet live-validated: ACC. Public fixtures and unit tests remain compatibility evidence only.
+- Product direction, not deployed functionality: a chief with durable specialists, automated readiness/maintenance, in-car radio, and fast event reactions. See [race-chief direction](docs/race-chief-direction.md) for decisions, proposed architecture, and the next milestones.
+- Coach Refinement was not run during this live validation. Raw captures and failed artifacts remain private; no raw live fixtures were promoted.
 
 If you need this for everyday analysis today, read this as "in-progress" rather than "ready for use."
 
@@ -33,7 +35,15 @@ ORC_SKIP_DOCS_INDEX_BROWSER_TEST=1 uv run pytest
 
 Live simulator recording and raw shared-memory fixture capture require Windows, a configured simulator, and its shared-memory interface. This repository's public fixtures and unit tests do not prove Live Simulator Validation.
 
-Use the [Live Simulator Validation runbook](docs/live-simulator-validation.md) when collecting evidence from AMS2 or ACC.
+Use the [Live Simulator Validation runbook](docs/live-simulator-validation.md) for a new AMS2 rig or a targeted revalidation. ACC requires separate simulator-specific evidence. An accepted rig should not repeat physical validation exercises on every visit without a new uncertainty.
+
+For AMS2 product tests, [run the driver clock](docs/driver-clock.md) alongside the
+simulator to measure driving and waiting time and preserve reviewed outputs.
+
+[Continuous AMS2 telemetry](docs/continuous-telemetry.md) preserves the full
+supported shared-memory page across pit stops, menus and simulator restarts.
+Keep it running throughout the rig visit so fuel and failed attempts remain
+available for review after individual recordings end.
 
 Windows agent: start with [Windows rig handoff](docs/windows-agent-handoff.md) for checkout, PowerShell setup, file search, verification, and the first live AMS2 test. ACC remains a separate validation task.
 
@@ -154,6 +164,7 @@ ChatGPT responses must be JSON-only (plain JSON or one fenced JSON block).
 - `schema/corner_segments.md`
 - `schema/selected_delta.md`
 - `schema/coach_response.md`
+- `schema/telemetry_archive.md` (independent private raw archive)
 
 Each schema file is the contract for its artifact and should be kept aligned with implementation.
 
@@ -174,6 +185,9 @@ Completed deterministic `Analysis Run` evidence is immutable: deterministic stat
 
 - Source of truth for domain behavior: [CONTEXT.md](CONTEXT.md)
 - Accepted decisions and explicit rejections: [docs/DECISIONS.md](docs/DECISIONS.md)
+- Current product direction and proposed milestones: [docs/race-chief-direction.md](docs/race-chief-direction.md)
+- Scoped live results, failures, and remaining validation: [docs/validation/ams2-2026-11-14.md](docs/validation/ams2-2026-11-14.md)
+- Historical bootstrap scope: [docs/SPEC_v0.1.md](docs/SPEC_v0.1.md)
 
 ## Contributing
 

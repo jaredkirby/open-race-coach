@@ -70,11 +70,12 @@ def test_landing_page_preserves_open_race_coach_honesty_contract() -> None:
 
     required_phrases = [
         "OPEN RACE COACH",
-        "LOCAL-FIRST POST-SESSION SIM-RACING COACH",
+        "LOCAL-FIRST SIM-RACING RACE CHIEF",
         "Recorded Session -> Analysis Run -> one",
         "data-supported Coaching Instruction.",
-        "PRE-ALPHA / live AMS2/ACC validation",
-        "is not proven by this repo.",
+        "PRE-ALPHA / scoped AMS2 live pass.",
+        "ACC and coaching quality unproven.",
+        "Durable team and radio are planned.",
         "Deterministic analysis owns evidence:",
         "Reference Lap, Comparison Laps,",
         "Corner Segment, Reportable Delta,",

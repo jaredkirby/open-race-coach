@@ -2,7 +2,7 @@
 
 You are working in the Open Race Coach repository.
 
-Open Race Coach is a local-first post-session sim-racing telemetry coach. It records simulator telemetry into durable local artifacts, runs deterministic analysis, and emits at most one data-supported Coaching Instruction for the next session.
+Open Race Coach is a local-first sim-racing project evolving toward a personal race chief. Its implemented post-session coaching core records telemetry into durable local artifacts, runs deterministic analysis, and emits at most one data-supported Coaching Instruction per Analysis Run. Read `docs/race-chief-direction.md` to distinguish accepted direction, proposed architecture and implemented behavior.
 
 ## Operating Style
 
@@ -18,6 +18,8 @@ Read these files before significant changes:
 
 - `CONTEXT.md` for domain language and terms agents must use consistently.
 - `docs/DECISIONS.md` for accepted design decisions and rejected alternatives.
+- `docs/race-chief-direction.md` for the current product direction and unresolved implementation choices.
+- `docs/validation/ams2-2026-11-14.md` for scoped live results and remaining reliability gaps.
 - `schema/*.md` for durable artifact contracts.
 - `README.md` for supported workflows and user-facing commands.
 - Relevant tests under `tests/` before changing behavior.
@@ -33,6 +35,10 @@ Deterministic analysis owns statuses, selected deltas, evidence, and reportabili
 Manual ChatGPT mode and OpenAI API mode are separate workflows. Do not mix their state machines, artifacts, or retry semantics.
 
 Live AMS2 and ACC validation require Windows plus configured simulators. Public fixtures and unit tests are not proof of live simulator validation.
+
+Protect driving time: prepare automated and replay checks before requesting physical validation. Reuse accepted live evidence within its scope; rerun affected checks when configuration changes or new uncertainty warrants them. Preserve failed artifacts and output reviews. Keep raw telemetry and private rig details out of shared docs.
+
+The historical v0 spec's post-session limits describe that bootstrap release. Live radio, fast event reactions and durable specialists are now product direction, not existing implementation. A Live Reaction must not bypass deterministic ownership of Coaching Instructions. Runtime, subscription and audio capabilities need current documentation and local verification before being claimed.
 
 ## Implementation Rules
 
@@ -83,3 +89,5 @@ uv run python scripts/analyze.py data/sessions/<session_dir>
 Before editing, inspect the worktree and do not overwrite unrelated dirty files. Stage and commit only files you changed intentionally.
 
 Generated or live-capture artifacts should not be added casually. If adding fixtures, include provenance and make clear whether they are raw simulator bytes, public sample data, or synthetic test data.
+
+This repository is public. Before committing or proposing publication, review the exact staged diff and new files for credentials, participant names, private machine paths, raw telemetry, copied chat/log content and unsupported claims. Do not use broad staging for a mixed worktree. Ignored files are not a security boundary; do not force-add private artifacts. Keep detailed personal operating notes and exploratory vendor/account research local; publish concise requirements, reproducible findings and clearly labeled proposals. Reverify any provider entitlement, pricing or terms claim before publishing it. Report review limits honestly; a pattern scan is not proof that a change is safe or correct.

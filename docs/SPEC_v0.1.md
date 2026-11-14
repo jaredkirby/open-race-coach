@@ -1,11 +1,13 @@
 # Open Race Coach — Project Bootstrap Spec v0.1
 
-**Status:** Draft for dev-agent execution
+**Status:** Historical bootstrap specification; retained for v0 artifact and analysis behavior.
 **Owner:** Jared Kirby
 **Repo:** fresh (this spec is the founding document — commit it as `docs/SPEC_v0.1.md`)
 **Date:** 2026-06-12
 **Public domain:** https://openracecoach.com
 **Internal Python package:** `simcoach` remains the import namespace for v0.
+
+**Scope update (2026-11-14):** [Race-chief direction](race-chief-direction.md) now defines the broader product: rig readiness, durable specialist responsibilities, strategy/setup support and in-car reactions/radio. Those capabilities are planned, not implemented. This spec's post-session-only and no-live-audio exclusions remain historical v0 boundaries, not a prohibition on the new direction. Its artifact and deterministic-analysis contracts remain in force unless explicitly revised. See [scoped AMS2 live results](validation/ams2-2026-11-14.md); the dated evidence note below describes the earlier state, not current validation status.
 
 **Current evidence note (2026-06-13):** local Phase 0–3 scaffolding, deterministic tests, coach-mode plumbing, and self-contained AMS2/ACC adapter code exist in the worktree. The code has been exercised with synthetic fixtures and two public Project CARS/Project CARS 2 shared-memory-derived JSON samples, including one CREST sample with real `mCurrentLapDistance`, participant, car-state, timing, event, and track-length values. That is useful compatibility evidence for overlapping PC2/AMS2 field names and adapter normalization, but it is **not** a substitute for raw `$pcars2$` mmap bytes or a live Windows AMS2 capture. v0 is not done until the Definition of Done in §10 is satisfied with real simulator sessions.
 
@@ -387,6 +389,8 @@ Configuration:
 **Acceptance:** full record → analyze → coach loop on a real ACC session with no analysis/coach code modified.
 
 ### Out of scope for v0 (hard NOs — do not build, do not stub beyond an empty file)
+
+These exclusions apply to the historical bootstrap release. The 2026-11-14 direction explicitly brings rig operations, setup/strategy and live radio into future product scope; it does not claim they are implemented or supersede artifact-integrity and supported-authentication requirements.
 
 - Live/in-session overlays or audio
 - Track database, corner-name database, or any per-track config files

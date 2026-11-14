@@ -2,6 +2,14 @@
 
 Task: prepare the Windows simulator rig, then perform the first AMS2 Minimal Clean-Lap Live Simulator Validation. This is a telemetry trust test. Live AMS2 and ACC validation is not established by the Mac tests or public fixtures.
 
+## Returning to the accepted rig
+
+Read the [2026-11-14 results](validation/ams2-2026-11-14.md) before restarting acceptance. First AMS2 validation passed for the documented configuration; ACC remains unvalidated. Preserve that evidence and the later failed attempts. Do not repeat pedal/cut exercises simply because a new agent or chat is taking over.
+
+For a normal return: check current simulator/context, archive heartbeat and coverage, storage, loaded fuel and planned return margin; start a fresh driver clock when the driver returns; arm recording before release. Keep the independent archive active through recording boundaries and driver breaks under the standing preference. Stop the driver clock when the driver leaves. No supported automatic fuel warning or in-car audio exists yet; chat output is not proof of an audible call.
+
+Use [race-chief direction](race-chief-direction.md) for the next product milestones. The full sequence below remains the first-acceptance procedure for new rigs or the source of targeted checks after relevant changes.
+
 Repository: https://github.com/jaredkirby/open-race-coach
 Branch: `main`. Record the exact pulled commit in your evidence packet.
 
