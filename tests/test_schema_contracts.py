@@ -14,6 +14,7 @@ def test_every_v0_durable_artifact_has_exactly_one_schema_doc() -> None:
         "selected_delta.md",
         "session_yaml.md",
         "tick.md",
+        "telemetry_archive.md",
     }
 
 
