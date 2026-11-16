@@ -4,9 +4,11 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { spawn, spawnSync } from "node:child_process";
 import { pathToFileURL } from "node:url";
+import { checkTelemetryViewer } from "./telemetry_viewer_browser.mjs";
 
 const repoRoot = resolve(import.meta.dirname, "..");
 const pageUrl = pathToFileURL(resolve(repoRoot, "docs/index.html")).href;
+const viewerOnly = process.argv.includes("--viewer-only");
 
 let chrome;
 let client;
@@ -239,7 +241,7 @@ async function main() {
     "--no-default-browser-check",
     "--remote-debugging-port=0",
     `--user-data-dir=${userDataDir}`,
-    pageUrl,
+    viewerOnly ? "about:blank" : pageUrl,
   ], { stdio: ["ignore", "pipe", "pipe"] });
 
   chrome.stdout.on("data", (chunk) => {
@@ -260,6 +262,11 @@ async function main() {
   client = new CdpClient(await waitForPageTarget(port));
   await client.send("Page.enable");
   await client.send("Runtime.enable");
+  if (viewerOnly) {
+    await checkTelemetryViewer({ client, setViewport, runInPage, assert });
+    console.log(JSON.stringify({ ok: true, assertions: assertionCount }));
+    return;
+  }
   await setViewport(1440, 900);
   await waitForReady();
 
@@ -854,6 +861,8 @@ async function main() {
   assert(reducedMotion.reduced, "reduced-motion media query should be emulated", reducedMotion);
   assert(reducedMotion.ghostActive === "false", "reduced-motion ghost should decay quickly", reducedMotion);
   assert(reducedMotion.ghostTextLength === 0, "reduced-motion ghost text should be cleared quickly", reducedMotion);
+
+  await checkTelemetryViewer({ client, setViewport, runInPage, assert });
 
   console.log(JSON.stringify({
     ok: true,

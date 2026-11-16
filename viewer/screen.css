@@ -1,0 +1,140 @@
+/* Displays inherit the website's terminal font and phosphor plane. */
+#orc-telemetry-viewer .terminal-scrollport { padding:0 2px 1em; }
+#orc-telemetry-viewer .telemetry-buffer { min-width:0; }
+#orc-telemetry-viewer .orc-context { display:flex;align-items:baseline;flex-wrap:wrap;gap:0 2ch;margin:0 0 1em; }
+#orc-telemetry-viewer h3 { margin:0;font:inherit;text-transform:uppercase;color:var(--phosphor); }
+#orc-telemetry-viewer .orc-track { color:var(--phosphor-hot);font-weight:700; }
+#orc-telemetry-viewer .orc-subtitle,#orc-telemetry-viewer .orc-footnote { color:var(--screen-text-dim); }
+#orc-telemetry-viewer .orc-controls { display:flex;align-items:center;flex-wrap:wrap;gap:1em 3ch;margin-bottom:1em; }
+#orc-telemetry-viewer .orc-field { display:flex;align-items:center;gap:1ch; }
+#orc-telemetry-viewer select { font:inherit;color:var(--phosphor-hot);background:var(--glass);border:0;border-bottom:1px solid var(--syntax-border);padding:0;max-width:100%;text-shadow:inherit;border-radius:0; }
+#orc-telemetry-viewer button { font:inherit;color:inherit;background:transparent;border:0;padding:0;text-shadow:inherit; }
+#orc-telemetry-viewer .orc-legend { display:flex;gap:2ch;flex-wrap:wrap; }
+#orc-telemetry-viewer .orc-legend span { display:inline-flex;align-items:center;gap:1ch; }
+#orc-telemetry-viewer .orc-swatch { width:2ch;border-top:2px solid var(--syntax-trace); }
+#orc-telemetry-viewer .orc-swatch-ref { border-top:2px dashed var(--phosphor-hot); }
+#orc-telemetry-viewer .orc-workspace { display:grid;grid-template-columns:minmax(0,1fr) 31ch;gap:3ch;margin:1em 0; }
+#orc-telemetry-viewer .orc-traces,#orc-telemetry-viewer .orc-aside { min-width:0; }
+#orc-telemetry-viewer .orc-trace { margin:0 0 1em; }
+#orc-telemetry-viewer .orc-caption { display:flex;justify-content:space-between;gap:1ch;flex-wrap:wrap; }
+#orc-telemetry-viewer .orc-values { display:flex;gap:2ch; }
+#orc-telemetry-viewer .orc-ref { color:var(--phosphor-hot); }
+#orc-telemetry-viewer .orc-lap { color:var(--syntax-trace); }
+#orc-telemetry-viewer canvas { width:100%;display:block;touch-action:pan-y;filter:drop-shadow(0 0 calc(var(--glow) * 2.2px) rgba(var(--phosphor-rgb),var(--text-bloom))); }
+#orc-telemetry-viewer .orc-chart { height:150px; }
+#orc-telemetry-viewer .orc-trace:first-child .orc-chart { height:220px; }
+#orc-telemetry-viewer .orc-map { height:270px; }
+#orc-telemetry-viewer .orc-axis { display:flex;justify-content:space-between;padding:0 10px 0 64px;color:var(--screen-text-dim); }
+#orc-telemetry-viewer .orc-scrub { display:flex;align-items:center;gap:1ch;flex-wrap:wrap; }
+#orc-telemetry-viewer .orc-scrub input { flex:1;min-width:80px;accent-color:var(--phosphor); }
+#orc-telemetry-viewer .orc-scrub output { width:6ch;text-align:right; }
+#orc-telemetry-viewer table { width:100%;border-collapse:collapse;margin:1em 0; }
+#orc-telemetry-viewer th { color:var(--screen-text-dim);font-weight:400; }
+#orc-telemetry-viewer td,#orc-telemetry-viewer th { text-align:left;vertical-align:top;padding:0.25em 0.25ch; }
+#orc-telemetry-viewer td:nth-child(2),#orc-telemetry-viewer th:nth-child(2) { text-align:right; }
+#orc-telemetry-viewer td:last-child,#orc-telemetry-viewer th:last-child { text-align:right; }
+#orc-telemetry-viewer .orc-row-selected { color:var(--syntax-trace); }
+#orc-telemetry-viewer td button { text-decoration:underline;text-underline-offset:.15em; }
+#orc-telemetry-viewer .orc-invalid { color:var(--syntax-warn); }
+#orc-telemetry-viewer .orc-report { margin:1em 0; }
+#orc-telemetry-viewer .orc-result { color:var(--phosphor-hot); }
+#orc-telemetry-viewer details { margin:1em 0; }
+#orc-telemetry-viewer .orc-source { white-space:pre-wrap;overflow-wrap:anywhere; }
+#orc-telemetry-viewer .terminal-output:empty { display:none; }
+#orc-telemetry-viewer .terminal-output { max-height:none; }
+#orc-telemetry-viewer .terminal-console { margin-top:1em; }
+#orc-telemetry-viewer [data-role="selection"]:empty { display:none; }
+#orc-telemetry-viewer .terminal-help { display:none;white-space:pre-wrap;overflow-wrap:anywhere; }
+#orc-telemetry-viewer .screen[data-view="help"] .telemetry-buffer { display:none; }
+#orc-telemetry-viewer .screen[data-view="help"] .terminal-help { display:block; }
+#orc-telemetry-viewer .screen[data-view="report"] :is(.orc-workspace,.orc-controls) { display:none; }
+#orc-telemetry-viewer .screen[data-view="laps"] :is(.orc-traces,.orc-aside>section:first-child) { display:none; }
+#orc-telemetry-viewer .screen[data-view="map"] :is(.orc-traces,.orc-aside>section:last-child) { display:none; }
+#orc-telemetry-viewer .screen:is([data-view="laps"],[data-view="map"]) .orc-workspace { display:block; }
+#orc-telemetry-viewer .screen[data-view="map"] .orc-map { height:min(55vh,520px);min-height:260px; }
+#orc-telemetry-viewer .session-summary { margin:0 0 1em;white-space:pre-wrap;overflow-wrap:anywhere; }
+@media(max-width:1050px) {
+  #orc-telemetry-viewer .orc-workspace { grid-template-columns:1fr; }
+  #orc-telemetry-viewer .orc-aside { display:grid;grid-template-columns:1fr 1fr;gap:3ch; }
+  #orc-telemetry-viewer .screen:is([data-view="laps"],[data-view="map"]) .orc-aside { display:block; }
+}
+@media(max-width:600px) {
+  #orc-telemetry-viewer .orc-aside { display:block; }
+  #orc-telemetry-viewer .orc-map { height:250px; }
+  #orc-telemetry-viewer .orc-values { gap:1ch; }
+  #orc-telemetry-viewer .orc-trace:first-child .orc-chart { height:180px; }
+  #orc-telemetry-viewer .orc-chart { height:130px; }
+}
+
+/* One bounded display plane. Views replace content; no nested scrollback. */
+#orc-telemetry-viewer, #orc-telemetry-viewer body { overflow:hidden; }
+#orc-telemetry-viewer .screen { width:100%; }
+#orc-telemetry-viewer .terminal-scrollport { display:grid;grid-template-rows:auto minmax(0,1fr) auto;gap:.5em;overflow:hidden;padding:0; }
+#orc-telemetry-viewer .top-bar { margin:0; }
+#orc-telemetry-viewer .telemetry-buffer { display:flex;flex-direction:column;min-height:0;overflow:hidden; }
+#orc-telemetry-viewer .session-summary,
+#orc-telemetry-viewer .orc-report,
+#orc-telemetry-viewer details,
+#orc-telemetry-viewer [data-role="selection"],
+#orc-telemetry-viewer .terminal-help { display:none !important; }
+#orc-telemetry-viewer .orc-context { flex:none;margin:0 0 .35em; }
+#orc-telemetry-viewer .orc-controls { flex:none;gap:.25em 2ch;margin:0 0 .35em; }
+#orc-telemetry-viewer .orc-workspace { display:block;flex:1;min-height:0;margin:0; }
+#orc-telemetry-viewer .orc-traces { display:grid;height:100%;min-height:0;grid-template-rows:repeat(3,minmax(0,1fr)) auto auto;gap:.3em; }
+#orc-telemetry-viewer[data-time-delta="true"] .orc-traces { grid-template-rows:repeat(4,minmax(0,1fr)) auto auto; }
+#orc-telemetry-viewer .orc-trace[hidden] { display:none; }
+#orc-telemetry-viewer .orc-trace { display:grid;grid-template-rows:auto minmax(0,1fr);min-height:0;margin:0; }
+#orc-telemetry-viewer .orc-chart,
+#orc-telemetry-viewer .orc-trace:first-child .orc-chart { height:100%;min-height:0; }
+#orc-telemetry-viewer .orc-aside { display:none;height:100%; }
+#orc-telemetry-viewer .screen[data-view="main"] .orc-workspace { display:grid;grid-template-columns:minmax(0,1fr) 26ch;grid-template-rows:minmax(0,1fr);gap:2ch; }
+#orc-telemetry-viewer .screen[data-view="main"] .orc-aside { display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto;gap:.4em;min-height:0; }
+#orc-telemetry-viewer .screen[data-view="main"] .orc-aside>section:first-child { display:grid;height:100%;min-height:0;grid-template-rows:auto minmax(0,1fr) auto; }
+#orc-telemetry-viewer .screen[data-view="main"] .orc-aside>section:last-child { display:block;min-width:0; }
+#orc-telemetry-viewer .screen[data-view="main"] table { width:auto;max-width:100%; }
+#orc-telemetry-viewer .screen[data-view="main"] :is(th,td) { padding:.1em 0;white-space:nowrap; }
+#orc-telemetry-viewer .screen[data-view="main"] :is(th,td) + :is(th,td) { padding-inline-start:1.25ch; }
+#orc-telemetry-viewer .screen[data-view="main"] .orc-map { height:100%;min-height:0; }
+#orc-telemetry-viewer button.orc-zoom-reset { display:none; }
+#orc-telemetry-viewer .screen[data-view="main"] button.orc-zoom-reset { display:inline-block;text-decoration:underline;text-underline-offset:.15em;cursor:pointer; }
+#orc-telemetry-viewer .screen[data-view="main"] button.orc-zoom-reset:disabled { opacity:.48;cursor:default; }
+#orc-telemetry-viewer .screen[data-view="main"] .orc-chart { touch-action:none;cursor:crosshair; }
+#orc-telemetry-viewer .screen:is([data-view="map"],[data-view="laps"]) .orc-aside { display:block; }
+#orc-telemetry-viewer .screen[data-view="map"] .orc-aside>section:first-child { display:grid;height:100%;grid-template-rows:auto minmax(0,1fr) auto; }
+#orc-telemetry-viewer .screen[data-view="map"] .orc-map { height:100%;min-height:0; }
+/* Drawing-buffer dimensions must not contribute intrinsic size to the grid. */
+#orc-telemetry-viewer canvas { contain:size;min-width:0;min-height:0; }
+#orc-telemetry-viewer .orc-footnote { margin:.25em 0; }
+#orc-telemetry-viewer table { margin:.3em 0; }
+#orc-telemetry-viewer .orc-lap-delta,#orc-telemetry-viewer th:nth-child(3) { text-align:right;white-space:nowrap; }
+#orc-telemetry-viewer .terminal-console { margin:0;min-width:0; }
+#orc-telemetry-viewer .terminal-output { max-height:3.6em; }
+#orc-telemetry-viewer .terminal-status { margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+#orc-telemetry-viewer .footer-bar { margin:0; }
+#orc-telemetry-viewer .footer-links { display:flex;flex-wrap:wrap;gap:0 2ch; }
+#orc-telemetry-viewer button.bezel-toggle { margin-inline-start:auto;color:var(--screen-text-hot);cursor:pointer; }
+#orc-telemetry-viewer button.bezel-toggle[aria-pressed="false"] { color:var(--screen-text-dim); }
+#orc-telemetry-viewer button.bezel-toggle:focus-visible { outline:1px solid var(--phosphor-hot);outline-offset:2px; }
+#orc-telemetry-viewer[data-bezel="off"] .terminal-frame { inset:0;padding:0;border:0;border-radius:0;background:none;box-shadow:none;filter:none;transform:none; }
+#orc-telemetry-viewer[data-bezel="off"] .terminal-frame::before,
+#orc-telemetry-viewer[data-bezel="off"] .terminal-frame::after { content:none; }
+#orc-telemetry-viewer[data-bezel="off"] .crt-screen { border:0;border-radius:0; }
+#orc-telemetry-viewer .terminal-page { display:none;min-height:0;grid-template-rows:minmax(0,1fr) auto; }
+#orc-telemetry-viewer .terminal-page pre { margin:0;white-space:pre;font:inherit;overflow:hidden; }
+#orc-telemetry-viewer .terminal-page nav { display:flex;gap:2ch;align-items:center; }
+#orc-telemetry-viewer .terminal-page button { cursor:pointer; }
+#orc-telemetry-viewer .terminal-page button:disabled { opacity:.4;cursor:default; }
+#orc-telemetry-viewer .screen:is([data-view="help"],[data-view="report"],[data-view="source"]) .telemetry-buffer { display:none; }
+#orc-telemetry-viewer .screen:is([data-view="help"],[data-view="report"],[data-view="source"]) .terminal-page { display:grid; }
+@media(max-width:680px) {
+  #orc-telemetry-viewer .footer-links { column-gap:1ch; }
+  #orc-telemetry-viewer .screen[data-view="main"] .orc-workspace { grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) minmax(0,1fr);gap:.3em; }
+  #orc-telemetry-viewer .screen[data-view="main"] .orc-aside { grid-row:1;grid-template-columns:minmax(0,1fr) 26ch;grid-template-rows:minmax(0,1fr);gap:1ch; }
+  #orc-telemetry-viewer .screen[data-view="main"] .orc-aside>section:first-child { grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);gap:0; }
+  #orc-telemetry-viewer .screen[data-view="main"] .orc-aside>section:first-child .orc-footnote { display:none; }
+}
+@media(max-height:600px) {
+  #orc-telemetry-viewer .top-bar { display:none; }
+  #orc-telemetry-viewer .terminal-scrollport { grid-template-rows:minmax(0,1fr) auto;gap:.25em; }
+  #orc-telemetry-viewer .orc-subtitle,#orc-telemetry-viewer .orc-legend { display:none; }
+}
