@@ -1,0 +1,14 @@
+{
+  "name": "orc-rig-preparation-definitions",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test"
+  },
+  "dependencies": {
+    "@earendil-works/chord": "1.5.2",
+    "@earendil-works/pi-durable": "1.5.2",
+    "@standardagents/spec": "0.41.14",
+    "zod": "4.1.12"
+  }
+}

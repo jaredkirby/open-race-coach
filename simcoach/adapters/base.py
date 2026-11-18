@@ -57,6 +57,8 @@ class SessionInfo(TypedDict):
     tick_schema_version: int
     lap_schema_version: int
     lap_invalidated: NotRequired[bool]
+    # Transient adapter continuity marker, not a simulator session identity.
+    source_epoch: NotRequired[int]
 
 
 class SimAdapter(ABC):
@@ -76,6 +78,15 @@ class SimAdapter(ABC):
     @abstractmethod
     def read_session_info(self) -> SessionInfo | None:
         """Return current session metadata, or `None` when required metadata is unavailable."""
+
+    def read_observation(self) -> tuple[SessionInfo | None, NormalizedTick | None]:
+        """Legacy sequential fallback; override for coherent metadata/tick acquisition.
+
+        This fallback preserves existing adapters without claiming snapshot coherence.
+        Missing metadata cannot bind a tick to a Recorded Session.
+        """
+        info = self.read_session_info()
+        return info, self.read_tick() if info is not None else None
 
     @abstractmethod
     def disconnect(self) -> None:

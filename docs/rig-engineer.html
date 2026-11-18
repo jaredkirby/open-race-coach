@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<meta name="description" content="How Open Race Coach's Windows Rig Engineer checks the rig between drives and records evidence for the Race Chief.">
+<title>Rig Engineer | Open Race Coach</title>
+<style>
+  :root {
+    color-scheme: dark;
+    --background: #101010;
+    --panel: #181818;
+    --text: #f0f0f0;
+    --muted: #b7b7b7;
+    --line: #414141;
+    --mono: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    font: 100%/1.6 system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--background); color: var(--text); }
+  a { color: inherit; text-underline-offset: .25em; }
+  a:hover { text-decoration-thickness: .15em; }
+  a:focus-visible { outline: 2px solid var(--text); outline-offset: 4px; }
+  h1, h2, h3, p, figure { margin: 0; }
+  .wrap { width: min(100% - 2.5rem, 72rem); margin-inline: auto; }
+  .topbar { border-bottom: 1px solid var(--line); }
+  .topbar .wrap, footer .wrap {
+    display: flex; justify-content: space-between; align-items: baseline;
+    gap: .7rem 2rem; flex-wrap: wrap; padding-block: 1rem;
+  }
+  .brand, .meta, .node-title {
+    font: 600 .78rem/1.5 var(--mono); letter-spacing: .065em; text-transform: uppercase;
+  }
+  .brand { text-decoration: none; }
+  .brand:hover { text-decoration: underline; }
+  .topbar ul { display: flex; flex-wrap: wrap; gap: .4rem 1.25rem; list-style: none; padding: 0; margin: 0; }
+  .topbar nav, footer { font-size: .9rem; color: var(--muted); }
+  .skip { position: absolute; left: 1.25rem; top: .5rem; padding: .5rem .8rem; background: var(--panel); }
+  .skip:not(:focus) { clip-path: inset(50%); }
+  .intro { padding-block: clamp(2.5rem, 8vw, 6rem) clamp(2rem, 5vw, 3.75rem); }
+  .meta { color: var(--muted); }
+  h1 { font-size: clamp(2.7rem, 8vw, 7rem); line-height: .98; letter-spacing: -.075em; margin-block: .7rem 1.25rem; }
+  .lede { max-width: 43rem; font-size: clamp(1.125rem, 2.3vw, 1.5rem); color: var(--muted); line-height: 1.5; }
+  section { border-top: 1px solid var(--line); padding-block: clamp(1.75rem, 4vw, 3.25rem); }
+  h2 { font-size: clamp(1.6rem, 4vw, 2.5rem); line-height: 1.1; letter-spacing: -.035em; margin-bottom: 1.25rem; }
+  h3 { font-size: 1.1rem; line-height: 1.35; }
+  .modes { margin: 0; }
+  .modes > div {
+    display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: .4rem 1.5rem;
+    padding: 1.05rem 0; border-bottom: 1px solid var(--line);
+  }
+  .modes > div:last-child { border-bottom: 0; }
+  dt { font-weight: 650; }
+  dd { margin: 0; color: var(--muted); }
+  .section-intro { max-width: 46rem; color: var(--muted); margin-bottom: 1.5rem; }
+  figure { padding: clamp(.85rem, 3vw, 1.75rem); border: 1px solid var(--line); background: var(--panel); }
+  .diagram { list-style: none; margin: 0; padding: 0; }
+  .diagram li + li { position: relative; margin-top: 1.5rem; }
+  .diagram li + li::before {
+    content: ""; position: absolute; width: .44rem; height: .44rem;
+    border-right: 1px solid var(--muted); border-bottom: 1px solid var(--muted);
+    rotate: 45deg; top: -1.05rem; left: calc(50% - .25rem);
+  }
+  .diagram li + li::after {
+    content: ""; position: absolute; width: 1px; height: .6rem;
+    background: var(--muted); left: 50%; top: -1.2rem;
+  }
+  .node { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: .35rem 1rem; padding: .85rem 1rem; border: 1px solid var(--line); }
+  .node-title { align-self: center; }
+  .node p, figcaption { font-size: .93rem; color: var(--muted); }
+  .node-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .65rem; }
+  .node-pair .node { grid-template-columns: 1fr; }
+  figcaption { margin-top: 1rem; }
+  .two-up { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.5rem 2.5rem; }
+  .two-up h3 + p, .two-up p + p { margin-top: .55rem; }
+  .two-up p { color: var(--muted); }
+  code { font: .9em/1.5 var(--mono); color: var(--text); overflow-wrap: anywhere; }
+  .command { margin-block: .7rem; padding: .7rem .85rem; border-left: 2px solid #888; background: var(--panel); }
+  .command code { display: block; }
+  .closing { color: var(--muted); max-width: 46rem; margin-top: 1.45rem; }
+  footer { border-top: 1px solid var(--line); }
+  @media (max-width: 39rem) {
+    .modes > div, .node, .two-up { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 25rem) {
+    .node-pair { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="topbar">
+  <div class="wrap">
+    <a class="brand" href="index.html">Open Race Coach</a>
+    <nav aria-label="On this page">
+      <ul>
+        <li><a href="#checks">Checks</a></li>
+        <li><a href="#architecture">Architecture</a></li>
+        <li><a href="#at-the-rig">At the rig</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+<main class="wrap" id="main">
+  <header class="intro">
+    <p class="meta">Windows · Automobilista 2</p>
+    <h1>Rig Engineer</h1>
+    <p class="lede">Checks Steam, MOZA device status and saved controls between drives. At your next visit, a guided cockpit check can trace steering and pedal movement from the Windows controller to AMS2.</p>
+  </header>
+
+  <section id="checks" aria-labelledby="checks-title">
+    <h2 id="checks-title">What it checks</h2>
+    <dl class="modes">
+      <div>
+        <dt>Idle Windows desktop</dt>
+        <dd>Reads Steam’s local AMS2 manifest for pending work, Windows Plug and Play for configured MOZA devices, and a fingerprint of the saved AMS2 controller profile. A powered-off base can be expected. A reported device fault or profile change can raise a silent Windows notification.</dd>
+      </div>
+      <div>
+        <dt>AMS2 running</dt>
+        <dd>Defers idle work. The scheduled run can take a silent ten-second sample of AMS2 shared memory. This shows channels that changed on the viewed car. Player identity and physical inputs remain unconfirmed, and an unused channel can remain unknown.</dd>
+      </div>
+      <div>
+        <dt>Driver-confirmed parked check</dt>
+        <dd>In your own live cockpit, parked in neutral with AI driving off, you respond to one cue each for steering, throttle and brake. The check can correlate each gesture with a selected Windows controller axis and the corresponding AMS2 response. It can flag a missing or unexpected simulator response. Calibration and force feedback require separate checks.</dd>
+      </div>
+    </dl>
+  </section>
+
+  <section id="architecture" aria-labelledby="architecture-title">
+    <h2 id="architecture-title">How evidence reaches the Race Chief</h2>
+    <p class="section-intro">The current-user Windows task runs at logon and every 15 minutes while the machine is awake. It launches the same Node CLI used at the rig. The checks and reports run locally without model inference.</p>
+    <figure aria-labelledby="architecture-title">
+      <ol class="diagram">
+        <li class="node">
+          <h3 class="node-title">Windows Task Scheduler / CLI</h3>
+          <p>The scheduled task invokes <code>preflight.mjs once</code>. The driver invokes <code>check-inputs</code> for a cockpit observation.</p>
+        </li>
+        <li class="node-pair">
+          <div class="node">
+            <h3 class="node-title">Idle preflight</h3>
+            <p>The monitor waits for five minutes without desktop input by default. It checks for running sims and repeats the activity check before saving the result, so a driver returning mid-check takes priority.</p>
+          </div>
+          <div class="node">
+            <h3 class="node-title">Rig input observation</h3>
+            <p>AMS2 shared memory supplies viewed-car input evidence. The guided check adds driver confirmation and, when available, Windows WinMM axis samples.</p>
+          </div>
+        </li>
+        <li class="node">
+          <h3 class="node-title">Private JSON state</h3>
+          <p>Records attempts, completed evidence, profile baseline and input history. A single writer coordinates access to the state directory.</p>
+        </li>
+        <li class="node">
+          <h3 class="node-title">Rig Engineer → Race Chief</h3>
+          <p>The Standard Agent Specification defines one Rig Engineer thread owned by the Race Chief. Pi Durable stores the Engineer’s result and the Chief’s copy together in a single SQLite transaction.</p>
+        </li>
+      </ol>
+      <figcaption>The two review requests are <code>last_idle_preflight</code> and <code>last_rig_inputs</code>. The host reconciles the last saved evidence after restart, deduplicates delivery and stores reports for later review by the Race Chief. A separate Chief chat or model session would need its own activation.</figcaption>
+    </figure>
+  </section>
+
+  <section id="at-the-rig" aria-labelledby="rig-title">
+    <h2 id="rig-title">What to do at the rig</h2>
+    <div class="two-up">
+      <div>
+        <h3>Read the timestamps</h3>
+        <p>From the Rig Engineer package, read status using the same private state directory as the scheduled task. If the task specifies a directory, pass it with <code>--data-dir</code>.</p>
+        <p class="command"><code>node preflight.mjs status --json</code></p>
+        <p>The last attempt can be deferred while the last completed observation remains available. Also check when the driver last confirmed inputs. A completed run can contain a blocker or an unknown.</p>
+      </div>
+      <div>
+        <h3>Verify the bindings</h3>
+        <p>Park clear of traffic in a practice or test session, select your own live cockpit and use stationary neutral with AI driving off.</p>
+        <p class="command"><code>node preflight.mjs check-inputs --parked-driver</code></p>
+        <p>Return focus to the cockpit. After five seconds of qualifying telemetry, turn the wheel on one beep, apply throttle on two, and brake on three. Move one control at a time, hold briefly, then release or center it.</p>
+      </div>
+      <div>
+        <h3>Enroll a recovery copy</h3>
+        <p>Add <code>--enable-repair</code> to the guided command to enroll verified bindings after an initial preflight. If you verified the bindings yourself, use <code>accept-controls --fingerprint HASH --enable-repair</code> with the exact hash from status. Acceptance alone records the comparison baseline.</p>
+      </div>
+      <div>
+        <h3>Verify a restore</h3>
+        <p>A later idle cycle can restore only an enrolled, missing profile. It verifies the stored bytes and destination, creates the file only if the path is still absent, then checks the bytes on disk. An existing changed profile stays flagged for review. Use <code>disable-repair</code> to turn off future restores.</p>
+      </div>
+    </div>
+    <p class="closing">Use a fresh cockpit check to verify how restored bindings behave. Pit House or simulator evidence is still needed for the hardware behind the base, and <a href="returning-to-the-rig.md">arrival checks</a> cover SimHub effects and menu navigation.</p>
+  </section>
+</main>
+<footer>
+  <div class="wrap">
+    <a href="idle-rig-preflight.md">Rig Engineer operating guide</a>
+    <a href="../agents/rig-preparation/preflight.mjs">CLI source</a>
+    <a href="../agents/rig-preparation/preflight-runtime.mjs">Durable review source</a>
+  </div>
+</footer>
+</body>
+</html>

@@ -43,3 +43,47 @@ Field details and units:
 | `notes` | yes | no | string | freeform operator notes |
 
 All durable timestamps are timezone-aware ISO 8601 strings with offsets. `track` and `car` are deterministic Matching Keys derived from Simulator Labels by lowercasing, trimming, replacing non-alphanumeric runs with `_`, and stripping leading/trailing `_`.
+
+An observed normalized lap counter decrease creates a new Recorded Session ID
+before the incoming tick is appended, even when the Matching Keys are unchanged.
+The completed predecessor is preserved; the successor receives the incoming tick
+with its original Capture Time and its own lap-invalidated evidence. Recorder logs
+retain the concrete `lap_counter_regressed` boundary reason and old/new counters.
+No new session field or failure-reason enum is implied by this boundary. Failed
+predecessor finalization stops rollover; failed successor allocation cannot rewrite
+the predecessor. Existing completed or failed artifacts are not reinterpreted.
+
+This records a counter discontinuity, not proof of a simulator restart. A reset
+that keeps the same lap counter remains unresolved. Pit/menu/pause states or a
+same-lap distance reversal alone do not create this boundary; existing tick and
+lap eligibility rules still apply.
+
+AMS2 adapter 0.3.0 additionally reports a transient `SessionInfo.source_epoch`
+when an observed source sequence decreases. This is an in-process boundary signal,
+not a durable schema field or proof of restart/wrap. A changed epoch separates
+Recorded Session identities before the next usable tick, even with unchanged lap
+counter and Matching Keys. Equal raw sequences cannot produce fresh normalized
+ticks. Static snapshot conversion for explicit offline replay is unchanged.
+
+Adapter 0.3.1 also changes this epoch when an advancing source page selects a
+different active participant slot. The first usable tick from the new view is
+retained in a successor Recorded Session; returning to the old slot creates
+another boundary. Same-sequence or unusable views cannot erase the last usable
+slot. A participant-count change alone does not split the recording. The adapter
+logs the old/new slot indices without participant names. Slot continuity does
+not identify the human driver or detect a different participant reusing the same
+slot. No persistent participant identity or new session field is introduced.
+
+Adapter 0.3.2 also starts a fresh epoch after an observed missing Windows mapping
+and a previous sequence baseline. The first stable page establishes the new
+baseline. Only advancing pages produce ticks, and Capture Time still uses the
+original connection clock. These observations do not confirm a publisher
+restart or identify a replacement process. They introduce no durable field.
+
+The live Driver Visit recorder explicitly enables `continuous_source_gaps`.
+Grace-expired metadata/tick loss finalizes the supported prefix and waits for a
+usable paired observation before allocating a new Recorded Session. No gap is
+bridged in one lap history. Failed finalization/allocation remains terminal and
+cannot rewrite the predecessor. Source-gap diagnostics belong to worker status;
+this policy adds no durable session field or relaxed tick/lap invariant. The
+standalone finite-recorder default remains unchanged.

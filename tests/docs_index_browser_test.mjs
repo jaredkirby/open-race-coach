@@ -1,6 +1,5 @@
 import { existsSync, readFileSync } from "node:fs";
-import { mkdtemp, rm } from "node:fs/promises";
-import { tmpdir } from "node:os";
+import { mkdir, mkdtemp } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { spawn, spawnSync } from "node:child_process";
 import { pathToFileURL } from "node:url";
@@ -61,7 +60,9 @@ class CdpClient {
 
 function findExecutable(command) {
   if (process.platform === "win32") {
-    const result = spawnSync("where.exe", [command], { encoding: "utf8" });
+    const result = spawnSync("where.exe", [command], {
+      encoding: "utf8", windowsHide: true,
+    });
     return result.status === 0 ? result.stdout.trim().split(/\r?\n/)[0] : null;
   }
   const result = spawnSync("sh", ["-lc", `command -v ${command}`], {
@@ -223,7 +224,10 @@ async function terminateChrome() {
 }
 
 async function main() {
-  userDataDir = await mkdtemp(join(tmpdir(), "orc-index-chrome-"));
+  const artifactRoot = resolve(repoRoot, ".scratch", "test-artifacts", "docs-index");
+  await mkdir(artifactRoot, { recursive: true });
+  userDataDir = await mkdtemp(join(artifactRoot, "chrome-"));
+  console.log(`Browser artifacts: ${userDataDir}`);
   chromePath = findChrome();
   chromeExit = null;
   chromeSpawnError = null;
@@ -240,7 +244,7 @@ async function main() {
     "--remote-debugging-port=0",
     `--user-data-dir=${userDataDir}`,
     pageUrl,
-  ], { stdio: ["ignore", "pipe", "pipe"] });
+  ], { windowsHide: true, stdio: ["ignore", "pipe", "pipe"] });
 
   chrome.stdout.on("data", (chunk) => {
     chromeStdout += String(chunk);
@@ -879,7 +883,5 @@ try {
   if (chrome) {
     await terminateChrome();
   }
-  if (userDataDir) {
-    await rm(userDataDir, { recursive: true, force: true });
-  }
+  // Retain this unique profile on both success and failure for inspection.
 }

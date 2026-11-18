@@ -11,29 +11,12 @@ import time
 from collections import Counter
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import TYPE_CHECKING
 from uuid import uuid4
 
-from simcoach.adapters.ams2 import (
-    GAME_FRONT_END,
-    GAME_FRONT_END_REPLAY,
-    GAME_INGAME_INMENU_TIME_TICKING,
-    GAME_INGAME_PAUSED,
-    GAME_INGAME_PLAYING,
-    GAME_INGAME_REPLAY,
-    PIT_MODE_NONE,
-    SHARED_MEMORY_VERSION,
-    AMS2Adapter,
-    SharedMemory,
-)
-from simcoach.ingest.session import atomic_write_text
+if TYPE_CHECKING:
+    from simcoach.adapters.ams2 import SharedMemory
 
-WAITING_STATES = {
-    GAME_FRONT_END,
-    GAME_INGAME_INMENU_TIME_TICKING,
-    GAME_INGAME_PAUSED,
-    GAME_FRONT_END_REPLAY,
-    GAME_INGAME_REPLAY,
-}
 CONTROL_FIELDS = {
     "speed": "mSpeed",
     "throttle": "mThrottle",
@@ -45,18 +28,23 @@ CONTROL_FIELDS = {
 
 
 def activity(snapshot: SharedMemory | None, *, stale: bool) -> str:
-    if snapshot is None or snapshot.mVersion != SHARED_MEMORY_VERSION or stale:
+    from simcoach.adapters import ams2
+
+    if snapshot is None or snapshot.mVersion != ams2.SHARED_MEMORY_VERSION or stale:
         return "unknown"
-    if snapshot.mGameState in WAITING_STATES:
+    if snapshot.mGameState in {
+        ams2.GAME_FRONT_END, ams2.GAME_INGAME_INMENU_TIME_TICKING,
+        ams2.GAME_INGAME_PAUSED, ams2.GAME_FRONT_END_REPLAY, ams2.GAME_INGAME_REPLAY,
+    }:
         return "not_driving"
-    if snapshot.mGameState != GAME_INGAME_PLAYING:
+    if snapshot.mGameState != ams2.GAME_INGAME_PLAYING:
         return "unknown"
     speed = snapshot.mSpeed
     if not math.isfinite(speed) or speed < 0:
         return "unknown"
     if speed <= 1:
         return "not_driving"
-    return "pit_moving" if snapshot.mPitMode != PIT_MODE_NONE else "driving"
+    return "pit_moving" if snapshot.mPitMode != ams2.PIT_MODE_NONE else "driving"
 
 
 def interval_activity(seconds: float, previous: str, current: str) -> str:
@@ -67,6 +55,11 @@ def interval_activity(seconds: float, previous: str, current: str) -> str:
 
 def save_output(run: Path, source: Path, verdict: str, note: str) -> Path:
     """Preserve the exact reviewed output, including failed or poor results."""
+    from simcoach.utils.llm_logger import configure_logging
+
+    configure_logging(run / "logs")
+    from simcoach.ingest.session import atomic_write_text
+
     content = source.read_bytes()
     message = content.decode("utf-8-sig")
     receipt = {
@@ -83,12 +76,20 @@ def save_output(run: Path, source: Path, verdict: str, note: str) -> Path:
     return destination
 
 
-def track(run: Path) -> int:
-    adapter = AMS2Adapter()
+def track(run: Path, *, adapter=None, monotonic=time.monotonic, sleep=time.sleep) -> int:
+    # Configure before imports that initialize loggers. Each CLI run is a fresh process.
+    from simcoach.utils.llm_logger import configure_logging
+
+    configure_logging(run / "logs")
+    from simcoach.adapters.ams2 import AMS2Adapter
+    from simcoach.ingest.session import atomic_write_text
+
+    if adapter is None:
+        adapter = AMS2Adapter()
     totals: Counter[str] = Counter()
     pending: Counter[str] = Counter()
     controls: dict[str, list[float]] = {}
-    start = previous_at = last_sequence_at = last_saved_at = time.monotonic()
+    start = previous_at = last_sequence_at = last_saved_at = monotonic()
     started_at = datetime.now(UTC).isoformat()
     previous, sequence = "unknown", None
     status = "interrupted"
@@ -119,7 +120,7 @@ def track(run: Path) -> int:
             adapter.connect()
             while not (run / "stop").exists():
                 snapshot = adapter._read_snapshot()
-                now = time.monotonic()
+                now = monotonic()
                 if snapshot is not None and snapshot.mSequenceNumber != sequence:
                     sequence, last_sequence_at = snapshot.mSequenceNumber, now
                 current = activity(snapshot, stale=now - last_sequence_at > 2)
@@ -137,7 +138,7 @@ def track(run: Path) -> int:
                 if now - last_saved_at >= 1:
                     checkpoint(now, "running")
                     last_saved_at = now
-                time.sleep(0.2)
+                sleep(0.2)
             status = "complete"
         except KeyboardInterrupt:
             status = "complete"
@@ -146,7 +147,7 @@ def track(run: Path) -> int:
             raise
         finally:
             adapter.disconnect()
-            now = time.monotonic()
+            now = monotonic()
             totals["unknown"] += now - previous_at
             pending["unknown"] += now - previous_at
             checkpoint(now, status)

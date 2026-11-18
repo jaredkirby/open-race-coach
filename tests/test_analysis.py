@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import math
+import os
 import shutil
 import subprocess
 import sys
@@ -38,6 +39,7 @@ def test_analyze_session_writes_complete_deterministic_artifacts(tmp_path: Path)
         text=True,
         capture_output=True,
         check=True,
+        creationflags=subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0,
     )
 
     assert "reportable" in result.stdout

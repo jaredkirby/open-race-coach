@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import ctypes
-import io
 import json
 from dataclasses import fields
 from pathlib import Path
@@ -44,16 +43,22 @@ CREST_FIXTURE = Path(__file__).parent / "fixtures" / "pcars2" / "crest_example.j
 def test_ams2_capture_time_advances_when_coarse_clock_is_frozen(
     monkeypatch: pytest.MonkeyPatch, origin: float,
 ) -> None:
-    page = io.BytesIO(bytes(make_snapshot()))
+    snapshot = make_snapshot()
+    page = SyntheticAMS2Page(bytes(snapshot))
     counter = iter([origin, origin + 0.001, origin + 0.002])
     monkeypatch.setattr(ams2_adapter.sys, "platform", "win32")
-    monkeypatch.setattr(ams2_adapter.mmap, "mmap", lambda *args, **kwargs: page)
+    monkeypatch.setattr(ams2_adapter, "ExistingMapping", lambda *args, **kwargs: page)
     monkeypatch.setattr(ams2_adapter.time, "monotonic", lambda: 17.0)
     monkeypatch.setattr(ams2_adapter.time, "perf_counter", lambda: next(counter))
     adapter = AMS2Adapter()
     adapter.connect()
     try:
+        assert adapter.read_tick() is None
+        snapshot.mSequenceNumber = 4
+        page.replace(snapshot)
         first = adapter.read_tick()
+        snapshot.mSequenceNumber = 6
+        page.replace(snapshot)
         second = adapter.read_tick()
         assert first is not None and second is not None
         assert first.t == pytest.approx(0.001)
@@ -112,6 +117,211 @@ def test_ams2_snapshot_to_normalized_tick_and_session_info() -> None:
     assert info["lap_dist_m_source"] == "sim"
     assert info["validity_method"] == "sim_flag_plus_inferred"
     assert info["lap_invalidated"] is True
+
+
+def test_ams2_paired_observation_never_combines_adjacent_snapshot_lap_flags(monkeypatch):
+    old, new = make_snapshot(), make_snapshot()
+    baseline = make_snapshot()
+    baseline.mSequenceNumber = 0
+    new.mSequenceNumber = 4
+    old.mParticipantInfo[0].mCurrentLap = 2
+    old.mLapInvalidated = True
+    new.mParticipantInfo[0].mCurrentLap = 3
+    new.mLapInvalidated = False
+    new.mCarName = b"Other Car"
+    snapshots = [baseline, old, new]
+    reads = []
+    adapter = AMS2Adapter()
+    adapter._capture_started_at = 10
+
+    def read():
+        reads.append(True)
+        return snapshots.pop(0)
+
+    monkeypatch.setattr(adapter, "_read_snapshot", read)
+    counter = iter([10.1, 10.2])
+    monkeypatch.setattr(ams2_adapter.time, "perf_counter", lambda: next(counter))
+    assert adapter.read_observation()[1] is None
+    old_info, old_tick = adapter.read_observation()
+    assert len(reads) == 2
+    assert old_info["lap_invalidated"] is True and old_tick.lap == 3
+    assert old_info["car"] == "formula_inter"
+    new_info, new_tick = adapter.read_observation()
+    assert len(reads) == 3
+    assert new_info["lap_invalidated"] is False and new_tick.lap == 4
+    assert new_info["car"] == "other_car"
+    assert old_tick.t < new_tick.t
+
+
+class SyntheticAMS2Page:
+    """Synthetic bytes after the native reader's stability check."""
+
+    def __init__(self, raw):
+        self.raw = raw
+        self.fail_reads = False
+        self.releases = 0
+
+    def close(self):
+        self.releases += 1
+
+    def read(self):
+        if self.fail_reads:
+            raise OSError("synthetic read failure")
+        return self.raw
+
+    def replace(self, snapshot):
+        self.raw = bytes(snapshot) if snapshot.mSequenceNumber % 2 == 0 else None
+
+def fresh_adapter():
+    snapshot = make_snapshot()
+    page = SyntheticAMS2Page(bytes(snapshot))
+    adapter = AMS2Adapter()
+    adapter._source = page
+    adapter._capture_started_at = 0
+    return adapter, page, snapshot
+
+
+def test_ams2_inspection_does_not_consume_tick_sequence_and_apis_share_cursor():
+    adapter, page, snapshot = fresh_adapter()
+    assert adapter._read_snapshot() is not None
+    assert adapter.read_session_info()["source_epoch"] == 0
+    info, tick = adapter.read_observation()
+    assert info is not None and tick is None  # first page only establishes baseline
+    snapshot.mSequenceNumber = 4
+    page.replace(snapshot)
+    assert adapter.read_session_info() is not None
+    assert adapter._read_snapshot().mSequenceNumber == 4
+    first = adapter.read_tick()
+    assert first is not None
+    assert adapter.read_observation() == (info, None)
+    snapshot.mSequenceNumber = 6
+    page.replace(snapshot)
+    second = adapter.read_observation()[1]
+    assert second is not None and second.t > first.t
+    assert first.speed == second.speed  # equal values are valid when source advances
+    assert adapter.read_tick() is None
+
+
+@pytest.mark.parametrize("missing", ["short", "unsupported", "odd", "error"])
+def test_ams2_same_sequence_remains_stale_across_failed_reads(missing):
+    adapter, page, snapshot = fresh_adapter()
+    assert adapter.read_tick() is None
+    snapshot.mSequenceNumber = 4
+    page.replace(snapshot)
+    assert adapter.read_observation()[1] is not None
+    if missing == "short":
+        page.raw = b""
+    elif missing == "unsupported":
+        snapshot.mVersion = 15
+        page.replace(snapshot)
+    elif missing == "odd":
+        snapshot.mSequenceNumber = 5
+        page.replace(snapshot)
+    else:
+        page.fail_reads = True
+    if missing == "error":
+        with pytest.raises(OSError, match="synthetic"):
+            adapter.read_observation()
+        page.fail_reads = False
+    else:
+        assert adapter.read_observation() == (None, None)
+    snapshot.mVersion = 14
+    snapshot.mSequenceNumber = 4
+    page.replace(snapshot)
+    assert adapter.read_tick() is None
+    assert adapter.read_observation()[0]["source_epoch"] == 0
+    snapshot.mSequenceNumber = 6
+    page.replace(snapshot)
+    assert adapter.read_tick() is not None
+
+
+@pytest.mark.parametrize("old,new", [(100, 2), (4294967294, 0)])
+def test_ams2_regression_or_possible_wrap_starts_epoch_without_inventing_tick(old, new):
+    adapter, page, snapshot = fresh_adapter()
+    snapshot.mSequenceNumber = old - 2
+    page.replace(snapshot)
+    assert adapter.read_tick() is None
+    snapshot.mSequenceNumber = old
+    page.replace(snapshot)
+    assert adapter.read_observation()[1] is not None
+    snapshot.mSequenceNumber = new
+    page.replace(snapshot)
+    assert adapter.read_session_info()["source_epoch"] == 0  # inspection only
+    info, tick = adapter.read_observation()
+    assert tick is None and info["source_epoch"] == 1
+    assert adapter.read_tick() is None
+    snapshot.mSequenceNumber = new + 2
+    page.replace(snapshot)
+    info, tick = adapter.read_observation()
+    assert tick is not None and info["source_epoch"] == 1
+
+
+def test_ams2_reconnect_requires_new_baseline_and_advance(monkeypatch):
+    snapshot = make_snapshot()
+    pages = []
+
+    def mapping(*args, **kwargs):
+        page = SyntheticAMS2Page(bytes(snapshot))
+        pages.append(page)
+        return page
+
+    monkeypatch.setattr(ams2_adapter.sys, "platform", "win32")
+    monkeypatch.setattr(ams2_adapter, "ExistingMapping", mapping)
+    adapter = AMS2Adapter()
+    adapter.connect()
+    assert adapter.read_tick() is None
+    snapshot.mSequenceNumber = 4
+    pages[-1].replace(snapshot)
+    assert adapter.read_observation()[1] is not None
+    adapter.disconnect()
+    assert pages[-1].releases == 3 and adapter._capture_started_at is None
+    adapter.connect()
+    info, tick = adapter.read_observation()
+    assert info["source_epoch"] == 2 and tick is None
+    assert adapter.read_tick() is None
+    snapshot.mSequenceNumber = 6
+    pages[-1].replace(snapshot)
+    assert adapter.read_tick() is not None
+    adapter.disconnect()
+
+
+def test_ams2_missing_metadata_consumes_progress_without_resurrecting_page():
+    adapter, page, snapshot = fresh_adapter()
+    assert adapter.read_observation()[1] is None
+    snapshot.mSequenceNumber = 4
+    snapshot.mCarName = b""
+    page.replace(snapshot)
+    assert adapter.read_observation() == (None, None)
+    snapshot.mCarName = b"Formula Inter"
+    page.replace(snapshot)
+    assert adapter.read_observation()[1] is None
+    snapshot.mSequenceNumber = 6
+    page.replace(snapshot)
+    assert adapter.read_observation()[1] is not None
+
+
+@pytest.mark.parametrize("case", ["stable", "unstable", "unsupported", "short_copy"])
+def test_ams2_snapshot_releases_mapping_and_requires_supported_copy(case):
+    snapshot = make_snapshot()
+    if case == "unsupported":
+        snapshot.mVersion = 15
+    raw = bytes(snapshot)
+    if case == "short_copy":
+        raw = raw[:-1]
+    page = SyntheticAMS2Page(None if case == "unstable" else raw)
+    adapter = AMS2Adapter()
+    adapter._source = page
+    result = adapter._read_snapshot()
+    assert (result is not None) == (case == "stable")
+    assert page.releases == 1
+
+def test_ams2_paired_observation_does_not_bind_tick_without_metadata(monkeypatch):
+    snapshot = make_snapshot()
+    snapshot.mCarName = b""
+    adapter = AMS2Adapter()
+    adapter._capture_started_at = 0
+    monkeypatch.setattr(adapter, "_read_snapshot", lambda: snapshot)
+    assert adapter.read_observation() == (None, None)
 
 
 def test_pcars2_rest_cars_shared_memory_sample_maps_to_ams2_adapter() -> None:
@@ -463,3 +673,41 @@ def write_utf16(target: ctypes.Array[ctypes.c_uint16], value: str) -> None:
     encoded = value.encode("utf-16-le")
     for index in range(0, min(len(encoded), (len(target) - 1) * 2), 2):
         target[index // 2] = int.from_bytes(encoded[index : index + 2], "little")
+
+@pytest.mark.skipif(ams2_adapter.sys.platform != "win32", reason="Windows named mappings")
+def test_ams2_starts_empty_and_reopens_new_mapping_without_pinning(monkeypatch):
+    import mmap
+    from uuid import uuid4
+
+    name = "Local\\ORC.AMS2MappingTest." + uuid4().hex
+    monkeypatch.setattr(ams2_adapter, "SHARED_MEMORY_NAME", name)
+    adapter = AMS2Adapter()
+    adapter.connect()
+    try:
+        assert adapter.read_observation() == (None, None)
+        first = make_snapshot()
+        with mmap.mmap(-1, ctypes.sizeof(SharedMemory), tagname=name) as writer:
+            writer[:] = bytes(first)
+            old_info, tick = adapter.read_observation()
+            assert old_info is not None and tick is None
+            first.mSequenceNumber = 4
+            writer[:] = bytes(first)
+            old_tick = adapter.read_observation()[1]
+            assert old_tick is not None
+
+        # The adapter is still connected. Its reader must not keep that object alive.
+        assert adapter.read_observation() == (None, None)
+        assert adapter.read_session_info() is None
+        with mmap.mmap(-1, ctypes.sizeof(SharedMemory), tagname=name) as writer:
+            first.mParticipantInfo[0].mWorldPosition[0] = 101
+            writer[:] = bytes(first)  # The replacement starts at the same even sequence.
+            info, tick = adapter.read_observation()
+            assert tick is None and info["source_epoch"] == old_info["source_epoch"] + 1
+            assert adapter.read_tick() is None
+            first.mSequenceNumber = 6
+            writer[:] = bytes(first)
+            replacement = adapter.read_observation()[1]
+            assert replacement is not None and replacement.pos_x == 101
+            assert replacement.t > old_tick.t
+    finally:
+        adapter.disconnect()

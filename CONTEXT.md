@@ -2,7 +2,12 @@
 
 Open Race Coach is a local-first sim-racing project evolving toward a personal race chief that owns rig readiness, driving-time protection, practice coordination and feedback. Its implemented post-session coaching core turns recorded telemetry into at most one data-supported Coaching Instruction per Analysis Run.
 
-[Race-chief direction](docs/race-chief-direction.md) separates accepted product requirements from proposed implementation. Durable specialist deployment and in-car radio are not implemented. Existing Recorded Session and analysis contracts remain authoritative.
+[Race-chief direction](docs/race-chief-direction.md) separates accepted product requirements from proposed implementation.
+Private durable-specialist pilots exist; general deployment, reboot recovery
+and validated in-car radio remain open.
+Local fuel-supervision and audio-rendering/dispatch prototypes are documented
+separately; offline execution is not evidence of a complete live Race Chief.
+Existing Recorded Session and analysis contracts remain authoritative.
 
 ## Language
 
@@ -11,8 +16,12 @@ The principal agent responsible for the driver's goals, team coordination, prior
 _Avoid_: Making the driver manage specialist chats or reconcile conflicting instructions.
 
 **Driver Visit**:
-An explicitly bounded period when the driver is using the rig. Simulator activity alone does not establish physical presence. Driving, pit movement, rest, waiting and unknown time must remain distinguishable; the current clock does not yet separate rest from avoidable waiting.
+An explicitly bounded period when the driver is using the rig. Simulator activity alone does not establish physical presence. Driving, pit movement, rest, waiting and unknown time must remain distinguishable. The standalone driver clock lacks reason annotations; the experimental visit ledger records declared reasons separately from observed activity.
 _Avoid_: Treating all non-driving time as wasted time or a running simulator as proof of occupancy.
+
+**Input Coordinator**:
+The proposed ORC-owned local component that admits and serializes application/menu actions, verifies fresh targets, yields control to the driver and records ambiguous outcomes. Agent composition uses Standard Agent Specification where appropriate; physical input ownership is a separate ORC contract. It is not an installed desktop controller or an automated driving system.
+_Avoid_: Treating a durable agent identity or completed tool call as proof that a physical action was authorized or achieved.
 
 **Live Reaction**:
 A proposed brief acknowledgment of a sufficiently supported event, delivered while still relevant and appropriate to the driver's workload. It is distinct from a causal diagnosis and from a Coaching Instruction.
@@ -23,8 +32,14 @@ A proposed driver-facing audio message with evidence, priority, validity and exp
 _Avoid_: Treating chat output as delivered audio or allowing independent specialists to speak over one another.
 
 **Recorded Session**:
-The immutable analysis unit captured by Open Race Coach. A Recorded Session is homogeneous for sim, track, car, session type, adapter version, and artifact schema versions; pit stops, pauses, slow laps, invalid laps, and multiple stints may remain inside it as long as that context does not change.
+The immutable analysis unit captured by Open Race Coach. A Recorded Session is homogeneous for sim, track, car, session type, adapter version, and artifact schema versions; pit stops, pauses, slow laps, invalid laps, and multiple stints may remain inside it as long as that context does not change. An observed lap counter regression also starts a new Recorded Session to keep distinct counter histories separate; it does not establish that the simulator restarted.
 _Avoid_: Session when the meaning could be confused with a simulator session, stint, lap, or filesystem directory.
+
+In the live Driver Visit prototype, a grace-expired source gap or an observed
+source-sequence epoch change or observed active viewed-slot change also separates
+Recorded Session identities. A
+supported prefix stays immutable; resumed observations start a new history.
+These are continuity boundaries, not proof that the simulator restarted.
 
 **Recorded Session ID**:
 A stable generated identifier for a Recorded Session. Paths locate a Recorded Session on disk, but the Recorded Session ID identifies it across moves or copies.
@@ -43,7 +58,7 @@ A Live Simulator Validation scenario using one stable simulator, track, car, and
 _Avoid_: Stint test, race simulation, coaching-quality test.
 
 **Recorded Session Boundary**:
-The point where Open Race Coach must finalize one Recorded Session and start another because the recorded context changes.
+The point where Open Race Coach must finalize one Recorded Session and start another because the recorded context changes or an observed lap counter regression makes continued lap identity ambiguous. The latter is a counter discontinuity, not a confirmed simulator restart.
 _Avoid_: Split when the domain event is a change in recording context.
 
 **Simulator Label**:
@@ -157,6 +172,13 @@ _Avoid_: Invalid tile, dirty widget.
 **Coach Refinement**:
 An optional LLM-assisted rewrite of Coach Report prose after deterministic analysis has selected the status, Reference Lap, Corner Segment, and Reportable Delta evidence.
 _Avoid_: Analysis when the model is only rewriting prose.
+
+**Stint Checkpoint**:
+A chief-requested recording boundary within an ongoing Driver Visit. The worker
+records into a successor Recorded Session while one background job validates and
+analyses the prefix. It does not declare departure, prove a pit return or establish
+a completed simulator lap. Its output requires chief review.
+_Avoid_: New visit, automatic pit detection, live validation.
 
 **Coaching Instruction**:
 One concrete, driver-facing action selected from data-supported differences between valid laps and the Reference Lap.

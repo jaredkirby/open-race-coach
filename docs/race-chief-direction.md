@@ -22,6 +22,20 @@ The implemented post-session analysis remains the evidence foundation. This dire
 
 No durable specialist service or in-car audio pipeline was installed during the research. Today's live feedback was text in chat; its timely delivery to the driver was not verified. Coach Refinement was not run.
 
+Subsequent alpha development added an offline-tested
+[fuel/telemetry supervisor](race-watch-prototype.md) and
+[local speech/DSP/radio dispatcher prototype](radio-prototype.md). These are
+components under development: the supervisor's CLI journals shadow decisions
+without audio, and generated WAV files do not establish headset delivery.
+An on-demand engineering queue has also been exercised privately with bounded
+jobs and explicit review; it is not an installed unattended specialist service.
+The [Driver Visit host](driver-visit-prototype.md) now connects explicit presence,
+source-gated recording, prospective waiting reasons, automatic closure and an
+opt-in fuel-radio path. Audio requires a selected output and starts muted;
+[local controls](visit-controls.md) handle mute and departure. These additions
+have offline evidence, not observed ordinary-visit or headset acceptance.
+The integrated visit and listening gates below remain open.
+
 ## What the first live work changed
 
 | Observation | Requirement |
@@ -53,6 +67,13 @@ Setup, strategy and coaching initially share the Race Engineer role. Split them 
 
 ## Durable operation and readiness
 
+The [Development Engineer workflow](development-engineer.md) describes the
+Chief-owned backlog, recurring check-in, isolated jobs and review process.
+Its private Windows deployment now uses a frozen Pi specialist and monitored
+Codex job host. One real job has completed with independent Chief review and
+process-restart verification. This is local prototype evidence; unattended
+scheduled delivery and automatic logon recovery remain unverified.
+
 Keep capture, simple health/fuel rules and essential audio behavior in supervised local software. Models receive compact events and evidence references, then perform bounded work. A model/network/quota outage must not stop raw preservation or an already-supported local operational warning. This is a proposed reliability boundary, not current automatic fuel-call functionality.
 
 ```mermaid
@@ -80,6 +101,17 @@ Keep updates in maintenance windows. Inventory exact versions and settings, stag
 Setup experiments should record a baseline, one intended change, expected effect, driver sensation, measured result and rollback. Strategy includes available time and fuel for the planned laps, return and reserve. Verify actual loaded fuel before release. Do not attribute every slow lap to driving technique.
 
 ## Runtime evaluation
+
+ORC-owned [input orchestration](input-orchestration.md) is accepted direction for
+application and session preparation. One local coordinator must own physical
+input, fresh target checks, human takeover and ambiguous-outcome recovery. Use
+Standard Agent Specification v0.2.0 where appropriate for agent composition,
+typed tools, thread state and lifecycle. Desktop authority remains an explicit
+ORC contract. The checked SAS definitions use a handler-backed Rig Engineer for
+read-only synthetic receipt review. A pinned Windows Pi pilot exercises ordered
+delivery, interruption and a bounded receipt lookup. The Chief's host collects
+the scoped report without an extra model turn. Live input and automatic parent
+activation remain unverified.
 
 Pi Durable and a Codex app-server coordinator are candidates, not supported ORC integrations. Evaluate a pinned version on Windows for restart recovery, bounded jobs, supported authentication, resource use and failure handling before choosing either. Detailed exploratory research stays in private development notes.
 

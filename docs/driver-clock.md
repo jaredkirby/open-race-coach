@@ -44,6 +44,11 @@ The clock updates `clock.json` atomically about once a second and appends
 elapsed increments to `timeline.jsonl`. After a forced stop, preserve the
 last checkpoint and treat a remaining `running` status as incomplete.
 
+The standalone CLI configures logging in that run's `logs/` directory before
+importing the simulator adapter. Run the clock as a separate process to avoid
+sharing another recorder's rotating log. This does not reconfigure logging in
+an embedding process that already initialized the package logger.
+
 Keep copies of the outputs you evaluate, including failed, misleading, or
 insufficient results. For example, attach a validator log or the
 `coach_report.md` from a specific Analysis Run:

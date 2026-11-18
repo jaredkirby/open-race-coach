@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Open Race Coach · Live</title>
+<style>
+:root{color-scheme:dark;font:16px system-ui,sans-serif;background:#101719;color:#e6ece9}
+body{max-width:1000px;margin:0 auto;padding:28px}header{display:flex;justify-content:space-between;gap:20px;align-items:center}
+h1{font-size:1.45rem;margin:0}p{color:#adbbb5;line-height:1.5}#connection{font:700 .85rem monospace;padding:10px;border:1px solid #52655c;border-radius:5px}
+#connection[data-state=fresh]{color:#9fe0b7;border-color:#9fe0b7}#connection[data-state=stale]{color:#f0c273;border-color:#f0c273}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:24px 0}article{background:#182225;border:1px solid #334744;border-radius:8px;padding:20px}
+article span{display:block;color:#adbbb5;font-size:.9rem}article strong{display:block;font:500 clamp(1.7rem,4vw,3rem) ui-monospace,monospace;margin:12px 0 6px}
+article small{color:#adbbb5}form{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:28px}
+input,button{font:inherit;border:1px solid #52655c;border-radius:5px;padding:10px;background:#182225;color:inherit}button{cursor:pointer}
+button:focus-visible,input:focus-visible{outline:3px solid #9fe0b7;outline-offset:3px}footer{margin-top:24px;font-size:.9rem}
+section{border-top:1px solid #52655c;padding-top:16px}h2{font-size:1.2rem}table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}td,th{text-align:left;padding:8px;border-bottom:1px solid #334744}details{margin:16px 0}#supervision{font-weight:600;color:#e6ece9}
+@media(max-width:600px){body{padding:16px}.grid{grid-template-columns:repeat(2,1fr)}header{align-items:flex-start}article{padding:14px}}
+</style>
+<header><h1>Open Race Coach <small>· Live</small></h1><span id="connection" role="status">DISCONNECTED</span></header>
+<p id="context">Waiting for current car and track</p>
+<p id="reason">Not connected</p>
+<p id="supervision">Fuel supervision unverified</p>
+<main class="grid" aria-label="Live telemetry">
+<article><span>Speed</span><strong id="speed">—</strong><small>km/h</small></article>
+<article><span>Gear</span><strong id="gear">—</strong><small>simulator reported</small></article>
+<article><span>Fuel</span><strong id="fuel">—</strong><small>litres</small></article>
+<article><span>Engine</span><strong id="rpm">—</strong><small>RPM</small></article>
+<article><span>Throttle</span><strong id="throttle">—</strong><small>%</small></article>
+<article><span>Brake</span><strong id="brake">—</strong><small>%</small></article>
+<article><span>Current lap</span><strong id="lap">—</strong><small id="validity">—</small></article>
+<article><span>Last lap</span><strong id="last">—</strong><small>seconds · simulator timing</small></article>
+<article><span>Best lap</span><strong id="best">—</strong><small>seconds · simulator timing</small></article>
+</main>
+<section aria-label="Reviewed session feedback"><h2>Reviewed session feedback</h2><p id="feedback-status">No reviewed segment selected</p><div id="feedback-body" hidden><p id="feedback-context"></p><p id="feedback-scope"></p><p id="feedback-summary"></p><p id="feedback-timing-groups"></p><p id="feedback-objective"></p><details><summary>Every lap and exclusion</summary><table><thead><tr><th>Lap</th><th>Time / source</th><th>Eligibility</th></tr></thead><tbody id="feedback-laps"></tbody></table></details></div></section>
+<form id="connect-form"><label for="code">Connection code</label><input id="code" type="password" autocomplete="off" maxlength="128" required><button type="submit">Connect</button><button id="disconnect" type="button">Disconnect</button></form>
+<footer><p>Readings describe the viewed car; driver identity is unconfirmed. Expired readings clear automatically. Fuel supervision is shown separately from audible radio delivery. Driver presence and recording completeness are not inferred.</p></footer>
+<script type="module" src="/live-dashboard.mjs"></script>
+</html>

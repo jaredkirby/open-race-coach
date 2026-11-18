@@ -8,18 +8,17 @@ shared-memory API. Live field fidelity still must be validated with
 from __future__ import annotations
 
 import ctypes
-import mmap
 import sys
 import time
 from typing import Any
 
+from simcoach.adapters.ams2_mapping import SHARED_MEMORY_NAME, ExistingMapping
 from simcoach.adapters.base import NormalizedTick, SessionInfo, SimAdapter, VehicleState
 from simcoach.utils.llm_logger import get_logger
 
 LOGGER = get_logger(__name__)
 
-ADAPTER_VERSION = "0.1.0"
-SHARED_MEMORY_NAME = "$pcars2$"
+ADAPTER_VERSION = "0.3.2"
 SHARED_MEMORY_VERSION = 14
 STRING_LENGTH_MAX = 64
 STORED_PARTICIPANTS_MAX = 64
@@ -289,34 +288,41 @@ class AMS2Adapter(SimAdapter):
     adapter_version = ADAPTER_VERSION
 
     def __init__(self) -> None:
-        self._mmap: mmap.mmap | None = None
+        self._source: ExistingMapping | None = None
+        self._mapping_lost = False
         self._capture_started_at: float | None = None
+        self._last_sequence: int | None = None
+        self._last_view_index: int | None = None
+        self._source_epoch = 0
 
     def connect(self) -> None:
         if sys.platform != "win32":
             raise RuntimeError("AMS2 shared-memory capture requires Windows")
         LOGGER.info("[START] ams2.connect | name=%s", SHARED_MEMORY_NAME)
-        self._mmap = mmap.mmap(
-            -1,
-            ctypes.sizeof(SharedMemory),
-            tagname=SHARED_MEMORY_NAME,
-            access=mmap.ACCESS_READ,
+        self._source = ExistingMapping(
+            ctypes.sizeof(SharedMemory), SharedMemory.mSequenceNumber.offset,
+            name=SHARED_MEMORY_NAME,
         )
+        self._mapping_lost = False
         # Python 3.11 on Windows can back monotonic() with a 15.6 ms clock.
         # Capture Time needs the high-resolution monotonic performance counter.
         self._capture_started_at = time.perf_counter()
+        self._last_sequence = None
+        self._last_view_index = None
+        self._source_epoch += 1
         LOGGER.info("[END] ams2.connect | size=%s", ctypes.sizeof(SharedMemory))
 
     def disconnect(self) -> None:
         LOGGER.info("[START] ams2.disconnect")
-        if self._mmap is not None:
-            self._mmap.close()
-        self._mmap = None
+        if self._source is not None:
+            self._source.close()
+        self._source = None
+        self._capture_started_at = None
         LOGGER.info("[END] ams2.disconnect")
 
     def read_tick(self) -> NormalizedTick | None:
         snapshot = self._read_snapshot()
-        if snapshot is None:
+        if snapshot is None or not self._consume_sequence(snapshot):
             return None
         if self._capture_started_at is None:
             raise RuntimeError("AMS2 capture clock is not initialized")
@@ -327,25 +333,94 @@ class AMS2Adapter(SimAdapter):
         snapshot = self._read_snapshot()
         if snapshot is None:
             return None
-        return self.session_info_from_snapshot(snapshot)
+        return self._session_info(snapshot)
+
+    def read_observation(self) -> tuple[SessionInfo | None, NormalizedTick | None]:
+        """Bind session context, invalidation flag and tick to one stable source copy."""
+        snapshot = self._read_snapshot()
+        if snapshot is None:
+            return None, None
+        fresh = self._consume_sequence(snapshot)
+        info = self._session_info(snapshot)
+        if info is None:
+            return None, None
+        if not fresh:
+            return info, None
+        if self._capture_started_at is None:
+            raise RuntimeError("AMS2 capture clock is not initialized")
+        capture_t = time.perf_counter() - self._capture_started_at
+        return info, self.tick_from_snapshot(snapshot, capture_t)
+
+    def _session_info(self, snapshot: SharedMemory) -> SessionInfo | None:
+        info = self.session_info_from_snapshot(snapshot)
+        if info is not None:
+            info["source_epoch"] = self._source_epoch
+        return info
+
+    def _consume_sequence(self, snapshot: SharedMemory) -> bool:
+        """Require observed progress; absence never makes the same page fresh again.
+
+        A first page, observed mapping absence or lower counter requires a new
+        baseline before accepting a fresh tick. A lower
+        counter may be a reset or wrap; neither is inferred. Its new transient
+        epoch lets the recorder keep ambiguous source histories separate. A
+        changed active viewed slot on an advancing page also separates histories;
+        its first tick remains usable. A slot index is not a player identity.
+        Inspection reads deliberately do not call this method.
+        """
+        sequence = int(snapshot.mSequenceNumber)
+        previous = self._last_sequence
+        if self._mapping_lost:
+            self._mapping_lost = False
+            if previous is not None:
+                self._source_epoch += 1
+            previous = None
+        self._last_sequence = sequence
+        participant = _viewed_participant(snapshot)
+        view_index = int(snapshot.mViewedParticipantIndex) if participant is not None else None
+        if previous is None:
+            self._last_view_index = view_index
+            return False
+        if sequence < previous:
+            self._source_epoch += 1
+            self._last_view_index = view_index
+            LOGGER.warning(
+                "[SKIP] ams2.sequence | discontinuity previous=%s current=%s epoch=%s",
+                previous, sequence, self._source_epoch,
+            )
+            return False
+        if sequence > previous and view_index is not None:
+            if self._last_view_index is not None and view_index != self._last_view_index:
+                self._source_epoch += 1
+                LOGGER.info(
+                    "[BRANCH] ams2.view | previous=%s current=%s epoch=%s",
+                    self._last_view_index, view_index, self._source_epoch,
+                )
+            self._last_view_index = view_index
+        return sequence > previous
 
     def _read_snapshot(self) -> SharedMemory | None:
-        if self._mmap is None:
+        source = self._source
+        if source is None:
             raise RuntimeError("AMS2 adapter is not connected")
-        self._mmap.seek(0)
-        raw = self._mmap.read(ctypes.sizeof(SharedMemory))
-        if len(raw) != ctypes.sizeof(SharedMemory):
-            LOGGER.error("[ERROR] ams2.read_snapshot | short_read size=%s", len(raw))
+        # Release the handle and view after every copy. A connected recorder
+        # must not keep a retired publisher's named mapping alive.
+        try:
+            raw = source.read()
+        except FileNotFoundError:
+            self._mapping_lost = True
+            return None
+        finally:
+            source.close()
+        if raw is None or len(raw) != ctypes.sizeof(SharedMemory):
             return None
         snapshot = SharedMemory.from_buffer_copy(raw)
         if snapshot.mVersion != SHARED_MEMORY_VERSION:
             LOGGER.warning(
-                "[WARN] ams2.read_snapshot | unexpected_version expected=%s actual=%s",
+                "[SKIP] ams2.read_snapshot | unsupported_version expected=%s actual=%s",
                 SHARED_MEMORY_VERSION,
                 snapshot.mVersion,
             )
-        if snapshot.mSequenceNumber % 2 == 1:
-            LOGGER.info("[SKIP] ams2.read_snapshot | sequence write in progress")
             return None
         return snapshot
 

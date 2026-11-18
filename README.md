@@ -45,6 +45,44 @@ supported shared-memory page across pit stops, menus and simulator restarts.
 Keep it running throughout the rig visit so fuel and failed attempts remain
 available for review after individual recordings end.
 
+For an accepted rig, use [returning to the rig](docs/returning-to-the-rig.md).
+Between visits, the [Windows Rig Engineer](docs/idle-rig-preflight.md) can check Steam,
+the expected MOZA USB equipment and the saved AMS2 controls. It can restore missing
+bindings from an enrolled backup and trace wheel and pedal response during a parked check.
+The read-only [capture-health check](docs/capture-health.md) verifies fresh,
+advancing archive status before release; it is one readiness input, not a
+whole-rig certification.
+
+Experimental local components now include a [fuel/telemetry shadow observer](docs/race-watch-prototype.md)
+and [speech rendering, radio DSP and dispatch](docs/radio-prototype.md). Their
+offline tests do not establish in-car delivery or an integrated, unattended
+Race Chief. No prototype audio plays merely by starting the shadow observer.
+
+A separate [read-only live dashboard](docs/live-dashboard.md) has synthetic
+HTTP and browser checks for fresh, stale and disconnected display. It currently
+binds only to loopback; a verified private Mac route and live acceptance remain
+outstanding. The offline debrief viewer is unchanged.
+
+The [Driver Visit coordinator prototype](docs/driver-visit-prototype.md) connects
+explicit presence, [activity and waiting reasons](docs/visit-clock.md), an owned
+recording worker, automatic validation and deterministic debrief artifacts.
+It waits for usable source evidence before launching capture and can explicitly
+enable the [fuel-to-radio adapter](docs/fuel-radio.md) on a selected output,
+initially muted. [Local controls](docs/visit-controls.md) provide mute, departure
+and waiting reasons. Synthetic subprocess tests establish offline behavior;
+ordinary live use, the control window and headset delivery still need acceptance.
+Its [recovery inspection](docs/visit-recovery.md) is read-only, and its
+[outcome report](docs/visit-outcome.md) preserves unsuccessful attempts and
+unknown metrics alongside completed outputs.
+The chief can append [explicit output reviews](docs/visit-review.md) and run
+[bounded archive coverage audits](docs/archive-coverage.md) offline. Review roles,
+audit windows and unknown metrics remain explicit; they do not establish hearing,
+whole-visit coverage or a successful live alpha.
+
+The isolated [lap-invalidation reaction bench](docs/live-reaction-prototype.md)
+evaluates a precise simulator-flag edge with persistent refusal/deduplication
+evidence. It is shadow-only, gives no Coaching Instruction and plays no audio.
+
 Windows agent: start with [Windows rig handoff](docs/windows-agent-handoff.md) for checkout, PowerShell setup, file search, verification, and the first live AMS2 test. ACC remains a separate validation task.
 
 Installed commands used in this repository:
@@ -56,6 +94,20 @@ Installed commands used in this repository:
 - `uv run analyze data/sessions/<session_dir>` (run deterministic analysis)
 
 The `scripts/record.py`, `scripts/validate_session.py`, and `scripts/analyze.py` paths remain thin backwards-compatible wrappers. Prefer the installed commands for new usage.
+
+Inspectable fixture tests retain each run under a fresh `run-<id>` directory in
+`data/test_outputs/inspectable_analysis/` or `data/test_outputs/actual_pcars2_snapshot/`.
+Each successful run includes `output_index.json`; previous and failed outputs are
+preserved. These are synthetic/public-fixture outputs, not live validation evidence.
+
+After editing `docs/DECISIONS.md`, run `uv run python scripts/sync_docs_index.py`
+to refresh the embedded offline fallback. Add `--check` to detect drift without
+editing the page; the browser and source-consistency tests also cover this view.
+
+For chief-operated recovery recording with a durable stop request, see
+[cooperative recording control](docs/recording-control.md). It preserves a fresh
+control directory, waits through source gaps, and closes artifacts without a
+console signal. This offline-tested path does not replace Driver Visit ownership.
 
 ## Typical workflow
 

@@ -6,9 +6,20 @@ Task: prepare the Windows simulator rig, then perform the first AMS2 Minimal Cle
 
 Read the [2026-11-14 results](validation/ams2-2026-11-14.md) before restarting acceptance. First AMS2 validation passed for the documented configuration; ACC remains unvalidated. Preserve that evidence and the later failed attempts. Do not repeat pedal/cut exercises simply because a new agent or chat is taking over.
 
-For a normal return: check current simulator/context, archive heartbeat and coverage, storage, loaded fuel and planned return margin; start a fresh driver clock when the driver returns; arm recording before release. Keep the independent archive active through recording boundaries and driver breaks under the standing preference. Stop the driver clock when the driver leaves. No supported automatic fuel warning or in-car audio exists yet; chat output is not proof of an audible call.
+For a normal return: check current simulator/context, archive heartbeat and coverage, storage, loaded fuel and planned return margin; start a fresh driver clock when the driver returns; arm recording before release. Keep the independent archive active through recording boundaries and driver breaks under the standing preference. Stop the driver clock when the driver leaves. The optional visit fuel-radio path is implemented but not headset-validated; chat output is not proof of an audible call.
 
 Use [race-chief direction](race-chief-direction.md) for the next product milestones. The full sequence below remains the first-acceptance procedure for new rigs or the source of targeted checks after relevant changes.
+
+Use [the ordinary-visit procedure](returning-to-the-rig.md) for capture-health
+checks, run-local clock logging, fuel release checks and visit closure. The
+chief prepares these checks before handing over the controls.
+
+Include the private rig profile's required applications and devices in that
+preparation. For MOZA/SimHub rigs, confirm actual connected controls, the approved
+profile, game connection and intended haptic/display outputs; process presence
+alone is insufficient. Preserve separately confirmed headphone and haptic routes.
+Follow [application and session preparation](returning-to-the-rig.md#rig-applications-and-session-preparation)
+before the driver arrives; do not use an old recipe's fuel load as a universal default.
 
 Repository: https://github.com/jaredkirby/open-race-coach
 Branch: `main`. Record the exact pulled commit in your evidence packet.
@@ -102,7 +113,7 @@ ACC has an adapter and capture script but no equivalent interactive acceptance s
 
 ## 5. Known limits to investigate with evidence
 
-- Metadata, invalidation flags, and ticks are read separately; snapshot coherence is not guaranteed. AMS2's even sequence check does not establish a stable before/after copy. Record suspicious lap-boundary or mixed-context data as a failure or uncertainty.
+- Historical acceptance used separate metadata/tick reads. Current AMS2 adapter 0.3.1 pairs metadata, invalidation and tick from a stable before/copied/after snapshot, requires advancing sequence and separates observed active viewed-slot changes. These changes have offline evidence only; use the next ordinary capture to assess the changed path, preserving suspicious boundaries and gaps. A viewed slot is not proof of driver identity. See [visit behavior](driver-visit-prototype.md).
 - Lap eligibility uses a 1% start tolerance and a following lap transition or explicit 100% sample. Check first/last fragments, skipped lap numbers, and simulator counter behavior against the raw capture. Derived lap timing uses captured endpoints, not a verified simulator timing feed.
 - Coach Refinement has no transaction lock across its output files. Do not run concurrent refinements; it is excluded from this test.
 - The CRT website uses demonstration data. It is not a live view of the Windows capture and is not proof of telemetry quality.

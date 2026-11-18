@@ -299,6 +299,7 @@ def test_docs_index_browser_features_work_in_headless_chrome() -> None:
         capture_output=True,
         timeout=30,
         check=False,
+        creationflags=subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0,
     )
 
     assert result.returncode == 0, result.stdout + result.stderr
