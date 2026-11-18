@@ -1,0 +1,61 @@
+<!doctype html>
+<html id="orc-telemetry-viewer" lang="en" data-bezel="off" data-display-profile="AMBER" data-raster-mode="SCANLINE" data-character-level="3" data-text-warp-level="3" data-frame-warp-level="3">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Open Race Coach | Local Telemetry Viewer</title>
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'">
+{{STYLES}}
+</head><body>{{FILTERS}}
+<main class="app"><section class="terminal-frame" aria-label="Open Race Coach private debrief">
+<div class="crt-screen"><div class="terminal-grid" aria-hidden="true"></div><div class="phosphor-ghost" aria-hidden="true"></div>
+<div class="screen" data-view="main"><div class="terminal-surface"><div class="terminal-scrollport" id="terminalScrollport" tabindex="0" aria-label="Open Race Coach fixed terminal display">
+<header class="top-bar"><pre class="logo-mark" aria-label="Open Race Coach logo">┌─┐┌─┐┌─┐
+└─┘┴└─└─</pre></header>
+<div class="telemetry-buffer"><div class="orc-context"><h3 class="orc-track" data-role="track"></h3><span class="orc-subtitle" data-role="car">Recorded Session</span></div>
+<div class="orc-controls"><label class="orc-field">COMPARE <select data-role="lap" aria-label="Comparison Lap"></select></label><label class="orc-field">SEGMENT <select data-role="segment" aria-label="Corner Segment"><option value="all">Whole Lap</option><option value="custom" hidden disabled>Custom zoom</option></select></label><button class="orc-zoom-reset" type="button" data-role="zoom-reset" disabled>Reset zoom</button><div class="orc-legend"><span><i class="orc-swatch orc-swatch-ref"></i><span data-role="refLegend">Reference</span></span><span><i class="orc-swatch"></i>Comparison</span></div></div>
+<div class="orc-workspace"><div class="orc-traces"><figure class="orc-trace" hidden><figcaption class="orc-caption"><h3>TIME DELTA / s</h3><span class="orc-values" data-role="delta-value"></span></figcaption><canvas class="orc-chart" data-role="delta" role="img" aria-label="Elapsed time difference at matching Lap Progress. Positive is behind the Reference Lap; a rising line loses time, a falling line gains time."></canvas></figure>
+<figure class="orc-trace"><figcaption class="orc-caption"><h3>SPEED / m/s</h3><span class="orc-values" data-role="speed-value"></span></figcaption><canvas class="orc-chart" data-role="speed" role="img" aria-label="Reference and Comparison Lap speed by Lap Progress"></canvas></figure>
+<figure class="orc-trace"><figcaption class="orc-caption"><h3>BRAKE / %</h3><span class="orc-values" data-role="brake-value"></span></figcaption><canvas class="orc-chart" data-role="brake" role="img" aria-label="Reference and Comparison Lap brake input by Lap Progress"></canvas></figure>
+<figure class="orc-trace"><figcaption class="orc-caption"><h3>THROTTLE / %</h3><span class="orc-values" data-role="throttle-value"></span></figcaption><canvas class="orc-chart" data-role="throttle" role="img" aria-label="Reference and Comparison Lap throttle input by Lap Progress"></canvas></figure>
+<div class="orc-axis" data-role="axis"></div>
+<label class="orc-scrub">LAP PROGRESS <input data-role="progress" type="range" min="0" max="256" value="64" aria-label="Shared Lap Progress cursor"><output data-role="progressValue">25.0%</output></label>
+</div><aside class="orc-aside"><section><h3>DRIVEN PATH</h3><canvas class="orc-map" data-role="path" role="img" aria-label="Recorded Reference Lap path with a shared Lap Progress cursor"></canvas><p class="orc-footnote">Reference Lap path / m</p></section><section><table><thead><tr><th>LAP</th><th>TIME / s</th><th title="Lap time minus Reference Lap time, in seconds">+/- s</th><th>STATE</th></tr></thead><tbody data-role="laps"></tbody></table><p class="orc-footnote" data-role="timing"></p></section></aside></div>
+<section class="orc-report"><h3>COACH REPORT</h3><div><p class="orc-result" data-role="result"></p><p class="orc-footnote" data-role="reason"></p></div></section>
+<details><summary>Recording scope and source</summary><pre class="orc-source" data-role="source"></pre></details>
+<p class="orc-footnote" data-role="selection" aria-live="polite"></p></div>
+<pre class="terminal-help">TERMINAL COMMAND LIST
+
+MAIN / REPORT / LAPS / TRACE / MAP / HELP / SOURCE
+MAIN                Traces, track and laps
+Drag across a Main trace to zoom. RESET ZOOM restores the whole lap.
+TRACE               Traces only
+NEXT / PREV         Change text page
+LAP &lt;number&gt;        Select Comparison Lap
+SEGMENT ALL|&lt;id&gt;    Select Corner Segment
+COACH               Coach Report
+STATUS              Recording scope
+CLEAR / CLS         Clear terminal output
+HISTORY             Recent commands
+
+TIME DELTA: comparison elapsed minus reference.
+Positive = behind; rising = losing; falling = gaining.
+Missing timing samples remain gaps.
+
+PROFILE AMBER|GREEN|VGA|LCD
+RASTER GRID|SCANLINE|PIXEL|CLEAN
+BEZEL ON|OFF|TOGGLE
+CHARACTER 0-5|UP|DOWN
+ADJUST ARTIFACT|BLOOM|JITTER|TEXT|FRAME 0-5
+ADJUST RESET
+
+PRIVATE / OFFLINE / READ ONLY
+Recorded telemetry, not a live simulator connection.
+Excluded durations are not comparable lap times.</pre>
+<section class="terminal-page" id="terminalPage"><pre id="terminalPageText"></pre><nav aria-label="Text pages"><button type="button" id="pagePrevious" aria-label="Previous page">&lt;</button> <span id="pageCount"></span> <button type="button" id="pageNext" aria-label="Next page">&gt;</button></nav></section>
+<section class="terminal-console" aria-label="Terminal command area">
+<div class="terminal-output" id="terminalOutput" aria-live="polite" aria-label="Terminal output"></div>
+<form class="terminal-command terminal-flow-row" id="terminalForm"><label for="terminalInput">ORC&gt;</label><input class="terminal-input" id="terminalInput" name="command" autocomplete="off" autocapitalize="none" spellcheck="false"></form>
+<p class="terminal-status terminal-flow-row" id="terminalStatus"></p>
+<footer class="footer-bar"><nav class="footer-links" aria-label="Terminal navigation"><a class="terminal-flow-row" href="#main" data-view-link="main">MAIN</a><a class="terminal-flow-row" href="#report" data-view-link="report">REPORT</a><a class="terminal-flow-row" href="#laps" data-view-link="laps">LAPS</a><a class="terminal-flow-row" href="#trace" data-view-link="trace">TRACE</a><a class="terminal-flow-row" href="#map" data-view-link="map">MAP</a><a class="terminal-flow-row" href="#help" data-view-link="help">HELP</a><button class="terminal-flow-row bezel-toggle" type="button" id="bezelToggle" aria-pressed="false" title="Toggle monitor bezel">BEZEL</button></nav></footer>
+</section></div></div></div></div></section></main>
+<script type="application/json" id="orc-viewer-data">{{DATA}}</script>
+<script type="application/json" id="orc-viewer-timing">{{TIMING}}</script>
+<script>{{VIEWER}}</script></body></html>

@@ -207,6 +207,18 @@ uv run analyze data/sessions/<session_dir> --analysis-run <analysis_run_dir> --c
 
 ChatGPT responses must be JSON-only (plain JSON or one fenced JSON block).
 
+## Local telemetry viewer
+
+Run the CRT viewer with invented telemetry first (Node.js 22 or later):
+
+```bash
+node viewer/build.mjs --demo
+```
+
+Open `.scratch/telemetry-viewer/demo.html` in a browser. For a reviewed display export, use `node viewer/build.mjs --input <export.json>` and open `.scratch/telemetry-viewer/index.html`. Both outputs work offline. The real preview contains the input data; keep it and its JSON export out of version control and public hosting.
+
+See [viewer/README.md](viewer/README.md) for the input format, optional elapsed timing, and tests. The viewer does not record or analyze telemetry.
+
 ## Core artifact contracts
 
 - `schema/session_yaml.md`
