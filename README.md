@@ -9,6 +9,11 @@ Open Race Coach is a local-first post-session sim-racing telemetry coach. It rec
 
 Public home: https://openracecoach.com
 
+The Windows Rig Engineer checks Steam, device connections, and saved AMS2 bindings
+between drives. It can trace steering and pedal response during a guided cockpit
+check and restore an enrolled profile if the file goes missing.
+[Rig Engineer overview](docs/rig-engineer.html) · [Operating guide](docs/idle-rig-preflight.md)
+
 ## What this repo is (and is not)
 
 Current status: `Pre-alpha public-development seed` on `main`.
